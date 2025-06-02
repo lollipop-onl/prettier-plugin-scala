@@ -25,11 +25,11 @@
 
 ### パーサー技術の比較
 
-| アプローチ | 評価 | 理由 |
-|-----------|------|------|
-| scalametaのJS/TS移植 | ❌ | 実装コストが膨大、メンテナンス困難 |
-| WebAssembly変換 | ⚠️ | ファイルサイズ大、デバッグ困難 |
-| **Chevrotain** | ✅ | **軽量・高速・実績あり（推奨）** |
+| アプローチ           | 評価 | 理由                               |
+| -------------------- | ---- | ---------------------------------- |
+| scalametaのJS/TS移植 | ❌   | 実装コストが膨大、メンテナンス困難 |
+| WebAssembly変換      | ⚠️   | ファイルサイズ大、デバッグ困難     |
+| **Chevrotain**       | ✅   | **軽量・高速・実績あり（推奨）**   |
 
 ### Chevrotainを選択した理由
 
@@ -86,7 +86,7 @@ const Var = createToken({ name: "Var", pattern: /var/ });
 class ScalaParser extends CstParser {
   constructor() {
     super(allTokens);
-    
+
     this.classDefinition = this.RULE("classDefinition", () => {
       this.CONSUME(Class);
       this.CONSUME(Identifier);
@@ -112,7 +112,7 @@ function printClassDef(path, options, print) {
     " {",
     indent([line, printClassBody(path, options, print)]),
     line,
-    "}"
+    "}",
   ]);
 }
 ```
@@ -126,26 +126,26 @@ export const options = {
     type: "int",
     category: "Scala",
     default: 80,
-    description: "scalafmtのmaxColumnに相当"
+    description: "scalafmtのmaxColumnに相当",
   },
-  
+
   // インデント設定
   indentMain: {
     type: "int",
     category: "Scala",
     default: 2,
-    description: "メインコードのインデント幅"
+    description: "メインコードのインデント幅",
   },
-  
+
   // アライメント設定
   alignPreset: {
     type: "choice",
     category: "Scala",
     default: "some",
     choices: ["none", "some", "more", "most"],
-    description: "scalafmtのalign.presetに相当"
+    description: "scalafmtのalign.presetに相当",
   },
-  
+
   // その他のscalafmt互換オプション...
 };
 ```
@@ -201,7 +201,8 @@ export const options = {
 
 **課題**: Scalaは文法が複雑で、多様な書き方が可能
 
-**対策**: 
+**対策**:
+
 - 段階的な実装アプローチ
 - prettier-javaの実装パターンを参考
 - 実際のScalaプロジェクトでのテスト
@@ -211,6 +212,7 @@ export const options = {
 **課題**: 完全な互換性の実現は困難
 
 **対策**:
+
 - 主要な設定オプションに焦点を当てる
 - コミュニティからのフィードバックを重視
 - 差異についてはドキュメントで明確化
@@ -220,6 +222,7 @@ export const options = {
 **課題**: 大規模なScalaファイルでの処理速度
 
 **対策**:
+
 - Chevrotainの最適化機能を活用
 - 必要に応じてWebWorkerの使用
 - インクリメンタルなフォーマッティング
