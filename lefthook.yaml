@@ -1,0 +1,10 @@
+pre-commit:
+  commands:
+    prettier:
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: |-
+        npx prettier \
+          --write \
+          --ignore-unknown \
+          {staged_files} \
+        && git update-index --again
