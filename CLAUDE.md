@@ -1,0 +1,2 @@
+- CLAUDE.md は日本語で記載すること
+- コミットメッセージは Conventional Commit のルールに従うこと
