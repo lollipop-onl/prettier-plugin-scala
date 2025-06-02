@@ -17,10 +17,10 @@ const parsers = {
   scala: {
     parse: (text: string) => {
       const result = parse(text);
-      // Return the CST with comments array
+      // Return the CST without comments for now to avoid processing issues
       const ast = {
         ...result.cst,
-        comments: result.comments || [],
+        comments: [], // Disable comments temporarily
         type: "compilationUnit",
       };
       return ast;

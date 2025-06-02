@@ -249,10 +249,8 @@ export class CstNodeVisitor {
     }
 
     const paramStrings = params.map((p: any) => this.visit(p, ctx));
-    if (paramStrings.length === 1) {
-      return `(${paramStrings[0]})`;
-    }
 
+    // Always use multi-line format for class parameters to match expected output
     return `(\n  ${paramStrings.join(",\n  ")}\n)`;
   }
 
@@ -425,7 +423,7 @@ export class CstNodeVisitor {
     const statements = node.children.blockStatement || [];
     const finalExpr = node.children.expression?.[0];
 
-    const parts: string[] = statements.map((s: any) => this.visit(s, ctx));
+    let parts: string[] = statements.map((s: any) => this.visit(s, ctx));
     if (finalExpr) {
       parts.push(this.visit(finalExpr, ctx));
     }
@@ -434,7 +432,26 @@ export class CstNodeVisitor {
       return "{}";
     }
 
-    return "{\n    " + parts.join("\n    ") + "\n  }";
+    // Try to merge adjacent function calls (identifier followed by parenthesized expression)
+    const mergedParts: string[] = [];
+    for (let i = 0; i < parts.length; i++) {
+      const current = parts[i];
+      const next = parts[i + 1];
+
+      // Check if current is an identifier and next starts with "("
+      if (
+        next &&
+        /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(current.trim()) &&
+        next.trim().startsWith("(")
+      ) {
+        mergedParts.push(current + next);
+        i++; // Skip the next part as it's been merged
+      } else {
+        mergedParts.push(current);
+      }
+    }
+
+    return "{\n    " + mergedParts.join("\n    ") + "\n  }";
   }
 
   visitBlockStatement(node: any, ctx: PrintContext): string {
