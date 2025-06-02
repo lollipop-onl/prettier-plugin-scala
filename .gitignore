@@ -1,5 +1,33 @@
 node_modules/
-dist/
 .DS_Store
 *.log
-*.local*
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+/packages/*/lib/
+/packages/*/dist/
+/packages/*/build/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.orig
+.cache/

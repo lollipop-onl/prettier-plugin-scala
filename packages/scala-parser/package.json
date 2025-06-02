@@ -1,0 +1,37 @@
+{
+  "name": "scala-parser",
+  "version": "0.1.0",
+  "description": "Scala parser based on Chevrotain for prettier-plugin-scala",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simochee/prettier-plugin-scala.git",
+    "directory": "packages/scala-parser"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "main": "./lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chevrotain": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
