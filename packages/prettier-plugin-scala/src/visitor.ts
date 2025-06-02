@@ -1,17 +1,4 @@
-import { type Doc } from "prettier";
-
-const { hardline, line, softline, group, indent, join } = (
-  await import("prettier")
-).doc.builders;
-
-// concat is not in doc.builders, define it separately
-function concat(docs: Doc[]): Doc {
-  // Filter out empty strings and return as array for Prettier
-  const filtered = docs.filter((d) => d !== "");
-  if (filtered.length === 0) return "";
-  if (filtered.length === 1) return filtered[0];
-  return filtered;
-}
+// No longer using Prettier Doc builders since we return strings directly
 
 type PrintContext = {
   path: any;
@@ -20,7 +7,7 @@ type PrintContext = {
 };
 
 export class CstNodeVisitor {
-  visit(node: any, ctx: PrintContext): Doc {
+  visit(node: any, ctx: PrintContext): string {
     if (!node) return "";
 
     // Handle token nodes
@@ -30,48 +17,53 @@ export class CstNodeVisitor {
 
     // Handle CST nodes by rule name
     if (node.name) {
-      const methodName = `visit${node.name}`;
+      // Capitalize the first letter of the rule name
+      const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
+      const methodName = `visit${ruleName}`;
       if (typeof (this as any)[methodName] === "function") {
         return (this as any)[methodName](node, ctx);
       }
     }
 
-    // Default handling - visit children
-    return this.visitChildren(node, ctx);
+    // If no specific visitor method exists, try default handling by type
+    if (node.children) {
+      return this.visitChildren(node, ctx);
+    }
+
+    return "";
   }
 
-  visitChildren(node: any, ctx: PrintContext): Doc {
-    const docs: Doc[] = [];
+  visitChildren(node: any, ctx: PrintContext): string {
+    const parts: string[] = [];
+
+    if (!node.children) return "";
 
     for (const key in node.children) {
       const children = node.children[key];
       if (Array.isArray(children)) {
         for (const child of children) {
-          const doc = this.visit(child, ctx);
-          if (doc) docs.push(doc);
+          const part = this.visit(child, ctx);
+          if (part !== "") parts.push(part);
         }
       }
     }
 
-    return concat(docs);
+    return parts.join("");
   }
 
-  visitCompilationUnit(node: any, ctx: PrintContext): Doc {
-    const docs: Doc[] = [];
+  visitCompilationUnit(node: any, ctx: PrintContext): string {
+    let result = "";
 
     if (node.children.packageClause) {
-      docs.push(this.visit(node.children.packageClause[0], ctx));
-      docs.push(hardline);
-      docs.push(hardline);
+      result += this.visit(node.children.packageClause[0], ctx) + "\n\n";
     }
 
     if (node.children.importClause) {
       for (const importNode of node.children.importClause) {
-        docs.push(this.visit(importNode, ctx));
-        docs.push(hardline);
+        result += this.visit(importNode, ctx) + "\n";
       }
       if (node.children.importClause.length > 0) {
-        docs.push(hardline);
+        result += "\n";
       }
     }
 
@@ -79,61 +71,50 @@ export class CstNodeVisitor {
       const defs = node.children.topLevelDefinition.map((def: any) =>
         this.visit(def, ctx),
       );
-      docs.push(join(concat([hardline, hardline]), defs));
+      result += defs.join("\n");
     }
 
-    return concat([...docs, hardline]);
+    return result + "\n";
   }
 
-  visitPackageClause(node: any, ctx: PrintContext): Doc {
-    return concat([
-      "package ",
-      this.visit(node.children.qualifiedIdentifier[0], ctx),
-    ]);
+  visitPackageClause(node: any, ctx: PrintContext): string {
+    return "package " + this.visit(node.children.qualifiedIdentifier[0], ctx);
   }
 
-  visitImportClause(node: any, ctx: PrintContext): Doc {
-    return concat([
-      "import ",
-      this.visit(node.children.importExpression[0], ctx),
-    ]);
+  visitImportClause(node: any, ctx: PrintContext): string {
+    return "import " + this.visit(node.children.importExpression[0], ctx);
   }
 
-  visitImportExpression(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [
-      this.visit(node.children.qualifiedIdentifier[0], ctx),
-    ];
+  visitImportExpression(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.qualifiedIdentifier[0], ctx);
 
     if (node.children.Dot) {
-      parts.push(".");
+      result += ".";
       if (node.children.Underscore) {
-        parts.push("_");
+        result += "_";
       } else if (node.children.LeftBrace) {
         // TODO: Handle import selectors
-        parts.push("{...}");
+        result += "{...}";
       }
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitTopLevelDefinition(node: any, ctx: PrintContext): Doc {
+  visitTopLevelDefinition(node: any, ctx: PrintContext): string {
     const modifiers = this.visitModifiers(node.children.modifier || [], ctx);
     const definition = this.visitDefinition(node, ctx);
 
-    return modifiers ? concat([modifiers, " ", definition]) : definition;
+    return modifiers ? modifiers + " " + definition : definition;
   }
 
-  visitModifiers(modifiers: any[], ctx: PrintContext): Doc {
+  visitModifiers(modifiers: any[], ctx: PrintContext): string {
     if (!modifiers || modifiers.length === 0) return "";
 
-    return join(
-      " ",
-      modifiers.map((mod) => this.visit(mod, ctx)),
-    );
+    return modifiers.map((mod) => this.visit(mod, ctx)).join(" ");
   }
 
-  visitDefinition(node: any, ctx: PrintContext): Doc {
+  visitDefinition(node: any, ctx: PrintContext): string {
     if (node.children.classDefinition) {
       return this.visit(node.children.classDefinition[0], ctx);
     } else if (node.children.objectDefinition) {
@@ -151,288 +132,252 @@ export class CstNodeVisitor {
     return "";
   }
 
-  visitClassDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["class ", node.children.Identifier[0].image];
+  visitClassDefinition(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Add class keyword
+    if (node.children.Class) {
+      result += node.children.Class[0].image + " ";
+    }
+
+    // Add class name
+    if (node.children.Identifier) {
+      result += node.children.Identifier[0].image;
+    }
 
     if (node.children.typeParameters) {
-      parts.push(this.visit(node.children.typeParameters[0], ctx));
+      result += this.visit(node.children.typeParameters[0], ctx);
     }
 
     if (node.children.classParameters) {
-      parts.push(this.visit(node.children.classParameters[0], ctx));
+      result += this.visit(node.children.classParameters[0], ctx);
     }
 
     if (node.children.extendsClause) {
-      parts.push(" ", this.visit(node.children.extendsClause[0], ctx));
+      result += " " + this.visit(node.children.extendsClause[0], ctx);
     }
 
     if (node.children.classBody) {
-      parts.push(" ", this.visit(node.children.classBody[0], ctx));
+      result += " " + this.visit(node.children.classBody[0], ctx);
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitObjectDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["object ", node.children.Identifier[0].image];
+  visitObjectDefinition(node: any, ctx: PrintContext): string {
+    let result = "object " + node.children.Identifier[0].image;
 
     if (node.children.extendsClause) {
-      parts.push(" ", this.visit(node.children.extendsClause[0], ctx));
+      result += " " + this.visit(node.children.extendsClause[0], ctx);
     }
 
     if (node.children.classBody) {
-      parts.push(" ", this.visit(node.children.classBody[0], ctx));
+      result += " " + this.visit(node.children.classBody[0], ctx);
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitTraitDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["trait ", node.children.Identifier[0].image];
+  visitTraitDefinition(node: any, ctx: PrintContext): string {
+    let result = "trait " + node.children.Identifier[0].image;
 
     if (node.children.typeParameters) {
-      parts.push(this.visit(node.children.typeParameters[0], ctx));
+      result += this.visit(node.children.typeParameters[0], ctx);
     }
 
     if (node.children.extendsClause) {
-      parts.push(" ", this.visit(node.children.extendsClause[0], ctx));
+      result += " " + this.visit(node.children.extendsClause[0], ctx);
     }
 
     if (node.children.classBody) {
-      parts.push(" ", this.visit(node.children.classBody[0], ctx));
+      result += " " + this.visit(node.children.classBody[0], ctx);
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitValDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["val ", this.visit(node.children.pattern[0], ctx)];
+  visitValDefinition(node: any, ctx: PrintContext): string {
+    let result = "val " + this.visit(node.children.pattern[0], ctx);
 
     if (node.children.Colon) {
-      parts.push(": ", this.visit(node.children.type[0], ctx));
+      result += ": " + this.visit(node.children.type[0], ctx);
     }
 
-    parts.push(" = ", this.visit(node.children.expression[0], ctx));
+    result += " = " + this.visit(node.children.expression[0], ctx);
 
-    return concat(parts);
+    return result;
   }
 
-  visitVarDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["var ", node.children.Identifier[0].image];
+  visitVarDefinition(node: any, ctx: PrintContext): string {
+    let result = "var " + node.children.Identifier[0].image;
 
     if (node.children.Colon) {
-      parts.push(": ", this.visit(node.children.type[0], ctx));
+      result += ": " + this.visit(node.children.type[0], ctx);
     }
 
-    parts.push(" = ", this.visit(node.children.expression[0], ctx));
+    result += " = " + this.visit(node.children.expression[0], ctx);
 
-    return concat(parts);
+    return result;
   }
 
-  visitDefDefinition(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["def ", node.children.Identifier[0].image];
+  visitDefDefinition(node: any, ctx: PrintContext): string {
+    let result = "def " + node.children.Identifier[0].image;
 
     if (node.children.typeParameters) {
-      parts.push(this.visit(node.children.typeParameters[0], ctx));
+      result += this.visit(node.children.typeParameters[0], ctx);
     }
 
     if (node.children.parameterLists) {
-      parts.push(this.visit(node.children.parameterLists[0], ctx));
+      result += this.visit(node.children.parameterLists[0], ctx);
     }
 
     if (node.children.Colon) {
-      parts.push(": ", this.visit(node.children.type[0], ctx));
+      result += ": " + this.visit(node.children.type[0], ctx);
     }
 
     if (node.children.Equals) {
-      parts.push(" = ", this.visit(node.children.expression[0], ctx));
+      result += " = " + this.visit(node.children.expression[0], ctx);
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitClassParameters(node: any, ctx: PrintContext): Doc {
+  visitClassParameters(node: any, ctx: PrintContext): string {
     const params = node.children.classParameter || [];
-    return group(
-      concat([
-        "(",
-        indent(
-          concat([
-            softline,
-            join(
-              concat([",", line]),
-              params.map((p: any) => this.visit(p, ctx)),
-            ),
-          ]),
-        ),
-        softline,
-        ")",
-      ]),
-    );
+    if (params.length === 0) {
+      return "()";
+    }
+
+    const paramStrings = params.map((p: any) => this.visit(p, ctx));
+    if (paramStrings.length === 1) {
+      return `(${paramStrings[0]})`;
+    }
+
+    return `(\n  ${paramStrings.join(",\n  ")}\n)`;
   }
 
-  visitClassParameter(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [];
+  visitClassParameter(node: any, ctx: PrintContext): string {
+    let result = "";
 
     if (node.children.modifier) {
-      parts.push(this.visitModifiers(node.children.modifier, ctx), " ");
+      const modifiers = this.visitModifiers(node.children.modifier, ctx);
+      result += modifiers + " ";
     }
 
     if (node.children.Val) {
-      parts.push("val ");
+      result += "val ";
     } else if (node.children.Var) {
-      parts.push("var ");
+      result += "var ";
     }
 
-    parts.push(
-      node.children.Identifier[0].image,
-      ": ",
-      this.visit(node.children.type[0], ctx),
-    );
+    result += node.children.Identifier[0].image;
+    result += ": ";
+    result += this.visit(node.children.type[0], ctx);
 
     if (node.children.Equals) {
-      parts.push(" = ", this.visit(node.children.expression[0], ctx));
+      result += " = " + this.visit(node.children.expression[0], ctx);
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitParameterLists(node: any, ctx: PrintContext): Doc {
-    return concat(
-      node.children.parameterList.map((list: any) => this.visit(list, ctx)),
-    );
+  visitParameterLists(node: any, ctx: PrintContext): string {
+    return node.children.parameterList
+      .map((list: any) => this.visit(list, ctx))
+      .join("");
   }
 
-  visitParameterList(node: any, ctx: PrintContext): Doc {
+  visitParameterList(node: any, ctx: PrintContext): string {
     const params = node.children.parameter || [];
-    return group(
-      concat([
-        "(",
-        indent(
-          concat([
-            softline,
-            join(
-              concat([",", line]),
-              params.map((p: any) => this.visit(p, ctx)),
-            ),
-          ]),
-        ),
-        softline,
-        ")",
-      ]),
-    );
-  }
-
-  visitParameter(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [
-      node.children.Identifier[0].image,
-      ": ",
-      this.visit(node.children.type[0], ctx),
-    ];
-
-    if (node.children.Equals) {
-      parts.push(" = ", this.visit(node.children.expression[0], ctx));
+    if (params.length === 0) {
+      return "()";
     }
 
-    return concat(parts);
+    const paramStrings = params.map((p: any) => this.visit(p, ctx));
+    return "(" + paramStrings.join(", ") + ")";
   }
 
-  visitTypeParameters(node: any, ctx: PrintContext): Doc {
+  visitParameter(node: any, ctx: PrintContext): string {
+    let result =
+      node.children.Identifier[0].image +
+      ": " +
+      this.visit(node.children.type[0], ctx);
+
+    if (node.children.Equals) {
+      result += " = " + this.visit(node.children.expression[0], ctx);
+    }
+
+    return result;
+  }
+
+  visitTypeParameters(node: any, ctx: PrintContext): string {
     const params = node.children.typeParameter || [];
-    return concat([
-      "[",
-      join(
-        ", ",
-        params.map((p: any) => this.visit(p, ctx)),
-      ),
-      "]",
-    ]);
+    const paramStrings = params.map((p: any) => this.visit(p, ctx));
+    return "[" + paramStrings.join(", ") + "]";
   }
 
-  visitTypeParameter(node: any, _ctx: PrintContext): Doc {
+  visitTypeParameter(node: any, _ctx: PrintContext): string {
     return node.children.Identifier[0].image;
   }
 
-  visitExtendsClause(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = ["extends ", this.visit(node.children.type[0], ctx)];
+  visitExtendsClause(node: any, ctx: PrintContext): string {
+    let result = "extends " + this.visit(node.children.type[0], ctx);
 
     if (node.children.With) {
       const withTypes = node.children.type.slice(1);
       for (let i = 0; i < withTypes.length; i++) {
-        parts.push(" with ", this.visit(withTypes[i], ctx));
+        result += " with " + this.visit(withTypes[i], ctx);
       }
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitClassBody(node: any, ctx: PrintContext): Doc {
+  visitClassBody(node: any, ctx: PrintContext): string {
     const members = node.children.classMember || [];
 
     if (members.length === 0) {
       return "{}";
     }
 
-    return group(
-      concat([
-        "{",
-        indent(
-          concat([
-            hardline,
-            join(
-              hardline,
-              members.map((m: any) => this.visit(m, ctx)),
-            ),
-          ]),
-        ),
-        hardline,
-        "}",
-      ]),
-    );
+    const memberStrings = members.map((m: any) => this.visit(m, ctx));
+    return `{\n  ${memberStrings.join("\n  ")}\n}`;
   }
 
-  visitClassMember(node: any, ctx: PrintContext): Doc {
+  visitClassMember(node: any, ctx: PrintContext): string {
     const modifiers = this.visitModifiers(node.children.modifier || [], ctx);
     const definition = this.visitDefinition(node, ctx);
 
-    return modifiers ? concat([modifiers, " ", definition]) : definition;
+    return modifiers ? modifiers + " " + definition : definition;
   }
 
-  visitType(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [this.visit(node.children.simpleType[0], ctx)];
+  visitType(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.simpleType[0], ctx);
 
     // Handle array types like Array[String]
     if (node.children.LeftBracket) {
       for (let i = 0; i < node.children.LeftBracket.length; i++) {
-        parts.push("[", this.visit(node.children.type[i], ctx), "]");
+        result += "[" + this.visit(node.children.type[i], ctx) + "]";
       }
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitSimpleType(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [
-      this.visit(node.children.qualifiedIdentifier[0], ctx),
-    ];
+  visitSimpleType(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.qualifiedIdentifier[0], ctx);
 
     // Handle type parameters like List[Int]
     if (node.children.LeftBracket) {
       const types = node.children.type || [];
-      parts.push(
-        "[",
-        join(
-          ", ",
-          types.map((t: any) => this.visit(t, ctx)),
-        ),
-        "]",
-      );
+      const typeStrings = types.map((t: any) => this.visit(t, ctx));
+      result += "[" + typeStrings.join(", ") + "]";
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitPattern(node: any, ctx: PrintContext): Doc {
+  visitPattern(node: any, ctx: PrintContext): string {
     if (node.children.Identifier) {
       return node.children.Identifier[0].image;
     } else if (node.children.Underscore) {
@@ -444,24 +389,23 @@ export class CstNodeVisitor {
     return "";
   }
 
-  visitExpression(node: any, ctx: PrintContext): Doc {
-    const parts: Doc[] = [this.visit(node.children.primaryExpression[0], ctx)];
+  visitExpression(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.primaryExpression[0], ctx);
 
     if (node.children.infixOperator) {
       for (let i = 0; i < node.children.infixOperator.length; i++) {
-        parts.push(
-          " ",
-          this.visit(node.children.infixOperator[i], ctx),
-          " ",
-          this.visit(node.children.primaryExpression[i + 1], ctx),
-        );
+        result +=
+          " " +
+          this.visit(node.children.infixOperator[i], ctx) +
+          " " +
+          this.visit(node.children.primaryExpression[i + 1], ctx);
       }
     }
 
-    return concat(parts);
+    return result;
   }
 
-  visitPrimaryExpression(node: any, ctx: PrintContext): Doc {
+  visitPrimaryExpression(node: any, ctx: PrintContext): string {
     if (node.children.literal) {
       return this.visit(node.children.literal[0], ctx);
     } else if (node.children.Identifier) {
@@ -469,7 +413,7 @@ export class CstNodeVisitor {
     } else if (node.children.This) {
       return "this";
     } else if (node.children.LeftParen) {
-      return concat(["(", this.visit(node.children.expression[0], ctx), ")"]);
+      return "(" + this.visit(node.children.expression[0], ctx) + ")";
     } else if (node.children.blockExpression) {
       return this.visit(node.children.blockExpression[0], ctx);
     }
@@ -477,30 +421,23 @@ export class CstNodeVisitor {
     return "";
   }
 
-  visitBlockExpression(node: any, ctx: PrintContext): Doc {
+  visitBlockExpression(node: any, ctx: PrintContext): string {
     const statements = node.children.blockStatement || [];
     const finalExpr = node.children.expression?.[0];
 
-    const docs: Doc[] = statements.map((s: any) => this.visit(s, ctx));
+    const parts: string[] = statements.map((s: any) => this.visit(s, ctx));
     if (finalExpr) {
-      docs.push(this.visit(finalExpr, ctx));
+      parts.push(this.visit(finalExpr, ctx));
     }
 
-    if (docs.length === 0) {
+    if (parts.length === 0) {
       return "{}";
     }
 
-    return group(
-      concat([
-        "{",
-        indent(concat([hardline, join(hardline, docs)])),
-        hardline,
-        "}",
-      ]),
-    );
+    return "{\n    " + parts.join("\n    ") + "\n  }";
   }
 
-  visitBlockStatement(node: any, ctx: PrintContext): Doc {
+  visitBlockStatement(node: any, ctx: PrintContext): string {
     if (node.children.valDefinition) {
       return this.visit(node.children.valDefinition[0], ctx);
     } else if (node.children.varDefinition) {
@@ -514,27 +451,27 @@ export class CstNodeVisitor {
     return "";
   }
 
-  visitInfixOperator(node: any, _ctx: PrintContext): Doc {
+  visitInfixOperator(node: any, _ctx: PrintContext): string {
     const children = node.children as Record<string, any[]>;
     const token = Object.values(children)[0][0];
     return token.image;
   }
 
-  visitLiteral(node: any, _ctx: PrintContext): Doc {
+  visitLiteral(node: any, _ctx: PrintContext): string {
     const children = node.children as Record<string, any[]>;
     const token = Object.values(children)[0][0];
     return token.image;
   }
 
-  visitQualifiedIdentifier(node: any, _ctx: PrintContext): Doc {
-    const parts: Doc[] = [node.children.Identifier[0].image];
+  visitQualifiedIdentifier(node: any, _ctx: PrintContext): string {
+    let result = node.children.Identifier[0].image;
 
     if (node.children.Dot) {
       for (let i = 1; i < node.children.Identifier.length; i++) {
-        parts.push(".", node.children.Identifier[i].image);
+        result += "." + node.children.Identifier[i].image;
       }
     }
 
-    return concat(parts);
+    return result;
   }
 }

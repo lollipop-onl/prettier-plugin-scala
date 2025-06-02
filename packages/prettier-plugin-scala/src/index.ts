@@ -17,15 +17,17 @@ const parsers = {
   scala: {
     parse: (text: string) => {
       const result = parse(text);
-      // Flatten comments into the CST for now
-      return {
+      // Return the CST with comments array
+      const ast = {
         ...result.cst,
         comments: result.comments || [],
+        type: "compilationUnit",
       };
+      return ast;
     },
     astFormat: "scala-cst",
-    locStart: () => 0,
-    locEnd: () => 1,
+    locStart: (node: any) => node.location?.startOffset || 0,
+    locEnd: (node: any) => node.location?.endOffset || 1,
     hasPragma: () => false,
   },
 };

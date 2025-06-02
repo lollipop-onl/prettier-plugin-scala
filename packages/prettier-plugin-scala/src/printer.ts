@@ -3,17 +3,19 @@ import { type Doc, type Printer, type AstPath } from "prettier";
 
 export function createScalaPrinter(): Printer {
   return {
-    print(path: AstPath, _options: any, print: any): Doc {
+    print(path: AstPath, _options: any, print: any): string {
       const node = path.getValue();
       const visitor = new CstNodeVisitor();
       return visitor.visit(node, { path, options: _options, print });
     },
     printComment(path: AstPath, _options: any): Doc {
       const comment = path.getValue();
-      if (comment.tokenType.name === "LineComment") {
-        return comment.image;
-      } else if (comment.tokenType.name === "BlockComment") {
-        return comment.image;
+      if (comment && comment.tokenType) {
+        if (comment.tokenType.name === "LineComment") {
+          return comment.image || "";
+        } else if (comment.tokenType.name === "BlockComment") {
+          return comment.image || "";
+        }
       }
       return "";
     },
