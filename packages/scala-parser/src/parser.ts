@@ -491,6 +491,7 @@ export class ScalaParser extends CstParser {
     this.OR([
       { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
       { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
+      { ALT: () => this.CONSUME(tokens.InterpolatedStringLiteral) },
       { ALT: () => this.CONSUME(tokens.StringLiteral) },
       { ALT: () => this.CONSUME(tokens.CharLiteral) },
       { ALT: () => this.CONSUME(tokens.True) },

@@ -75,6 +75,12 @@ export const StringLiteral = createToken({
   pattern: /"([^"\\]|\\.)*"/,
 });
 
+export const InterpolatedStringLiteral = createToken({
+  name: "InterpolatedStringLiteral",
+  pattern:
+    /[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\$[a-zA-Z_][a-zA-Z0-9_]*|\$\{[^}]*\})*"/,
+});
+
 export const CharLiteral = createToken({
   name: "CharLiteral",
   pattern: /'([^'\\]|\\.)'/,
@@ -198,6 +204,7 @@ export const allTokens = [
   // Literals
   FloatingPointLiteral, // Must come before IntegerLiteral
   IntegerLiteral,
+  InterpolatedStringLiteral, // Must come before StringLiteral
   StringLiteral,
   CharLiteral,
 
