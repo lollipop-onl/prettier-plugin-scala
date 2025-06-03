@@ -373,19 +373,22 @@ export class ScalaParser extends CstParser {
         },
         {
           ALT: () => {
-            // Type parameters followed by arguments: List[Int](1, 2, 3)
+            // Type parameters only: List[Int], Map[String, Int]
             this.CONSUME(tokens.LeftBracket);
             this.MANY_SEP3({
               SEP: tokens.Comma,
               DEF: () => this.SUBRULE5(this.type),
             });
             this.CONSUME(tokens.RightBracket);
-            this.CONSUME3(tokens.LeftParen);
-            this.MANY_SEP4({
-              SEP: tokens.Comma,
-              DEF: () => this.SUBRULE6(this.expression),
+            // Arguments are optional after type parameters
+            this.OPTION3(() => {
+              this.CONSUME3(tokens.LeftParen);
+              this.MANY_SEP4({
+                SEP: tokens.Comma,
+                DEF: () => this.SUBRULE6(this.expression),
+              });
+              this.CONSUME3(tokens.RightParen);
             });
-            this.CONSUME3(tokens.RightParen);
           },
         },
       ]);

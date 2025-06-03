@@ -450,41 +450,49 @@ export class CstNodeVisitor {
   visitPostfixExpression(node: any, ctx: PrintContext): string {
     let result = this.visit(node.children.primaryExpression[0], ctx);
 
-    // Handle method calls and field access
-    if (node.children.Dot || node.children.LeftParen) {
-      for (let i = 0; i < (node.children.Dot?.length || 0); i++) {
-        result += "." + node.children.Identifier[i].image;
+    // Debug: log the node structure for troubleshooting
+    // console.log("PostfixExpression node:", JSON.stringify(node.children, null, 2));
 
-        // Check if this identifier has method arguments
-        const hasArgs = node.children.LeftParen?.some(() => {
-          // Logic to match parentheses with identifiers
-          return true; // Simplified for now
-        });
+    // Handle type parameters first (they come immediately after the identifier)
+    if (node.children.LeftBracket) {
+      result += "[";
+      if (node.children.type) {
+        const types = node.children.type.map((t: any) => this.visit(t, ctx));
+        result += types.join(", ");
+      }
+      result += "]";
 
-        if (hasArgs) {
-          result += "(";
-          if (node.children.expression) {
-            const args = node.children.expression.map((e: any) =>
-              this.visit(e, ctx),
-            );
-            result += args.join(", ");
-          }
-          result += ")";
+      // Only add arguments if there are parentheses after type parameters
+      if (node.children.LeftParen) {
+        result += "(";
+        if (node.children.expression) {
+          const args = node.children.expression.map((e: any) =>
+            this.visit(e, ctx),
+          );
+          result += args.join(", ");
+        }
+        result += ")";
+      }
+    }
+    // Handle method calls and field access (when no type parameters)
+    else if (node.children.Dot || node.children.LeftParen) {
+      // Handle dot notation: obj.method
+      if (node.children.Dot) {
+        for (let i = 0; i < node.children.Dot.length; i++) {
+          result += "." + node.children.Identifier[i].image;
         }
       }
 
-      // Handle direct function calls (without dot)
-      if (!node.children.Dot && node.children.LeftParen) {
-        for (let i = 0; i < node.children.LeftParen.length; i++) {
-          result += "(";
-          if (node.children.expression) {
-            const args = node.children.expression.map((e: any) =>
-              this.visit(e, ctx),
-            );
-            result += args.join(", ");
-          }
-          result += ")";
+      // Handle function calls (with or without dot)
+      if (node.children.LeftParen) {
+        result += "(";
+        if (node.children.expression) {
+          const args = node.children.expression.map((e: any) =>
+            this.visit(e, ctx),
+          );
+          result += args.join(", ");
         }
+        result += ")";
       }
     }
 
@@ -498,26 +506,6 @@ export class CstNodeVisitor {
         result += cases.join("\n");
       }
       result += "\n}";
-    }
-
-    // Handle type parameters with apply calls: List[Int](1, 2, 3)
-    if (node.children.LeftBracket) {
-      result += "[";
-      if (node.children.type) {
-        const types = node.children.type.map((t: any) => this.visit(t, ctx));
-        result += types.join(", ");
-      }
-      result += "]";
-
-      // Arguments follow type parameters
-      result += "(";
-      if (node.children.expression) {
-        const args = node.children.expression.map((e: any) =>
-          this.visit(e, ctx),
-        );
-        result += args.join(", ");
-      }
-      result += ")";
     }
 
     return result;
