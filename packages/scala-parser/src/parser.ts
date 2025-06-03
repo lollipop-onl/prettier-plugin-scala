@@ -371,6 +371,23 @@ export class ScalaParser extends CstParser {
             this.CONSUME(tokens.RightBrace);
           },
         },
+        {
+          ALT: () => {
+            // Type parameters followed by arguments: List[Int](1, 2, 3)
+            this.CONSUME(tokens.LeftBracket);
+            this.MANY_SEP3({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE5(this.type),
+            });
+            this.CONSUME(tokens.RightBracket);
+            this.CONSUME3(tokens.LeftParen);
+            this.MANY_SEP4({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE6(this.expression),
+            });
+            this.CONSUME3(tokens.RightParen);
+          },
+        },
       ]);
     });
   });
@@ -378,7 +395,6 @@ export class ScalaParser extends CstParser {
   private primaryExpression = this.RULE("primaryExpression", () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.literal) },
-      { ALT: () => this.SUBRULE(this.applyExpression) },
       { ALT: () => this.CONSUME(tokens.Identifier) },
       { ALT: () => this.CONSUME(tokens.This) },
       { ALT: () => this.SUBRULE(this.newExpression) },
@@ -405,16 +421,6 @@ export class ScalaParser extends CstParser {
       });
       this.CONSUME(tokens.RightParen);
     });
-  });
-
-  private applyExpression = this.RULE("applyExpression", () => {
-    this.SUBRULE(this.type);
-    this.CONSUME(tokens.LeftParen);
-    this.MANY_SEP({
-      SEP: tokens.Comma,
-      DEF: () => this.SUBRULE(this.expression),
-    });
-    this.CONSUME(tokens.RightParen);
   });
 
   private caseClause = this.RULE("caseClause", () => {
