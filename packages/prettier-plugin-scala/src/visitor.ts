@@ -490,23 +490,70 @@ export class CstNodeVisitor {
     }
     // Handle method calls and field access (when no type parameters)
     else if (node.children.Dot || node.children.LeftParen) {
-      // Handle dot notation: obj.method
-      if (node.children.Dot) {
-        for (let i = 0; i < node.children.Dot.length; i++) {
-          result += "." + node.children.Identifier[i].image;
-        }
-      }
+      // We need to process function calls in the correct order
+      // The parser accumulates tokens, so we need to split them properly
 
-      // Handle function calls (with or without dot)
-      if (node.children.LeftParen) {
+      const leftParens = node.children.LeftParen || [];
+      const expressions = node.children.expression || [];
+      const dots = node.children.Dot || [];
+      const identifiers = node.children.Identifier || [];
+
+      // Case 1: Just function call on primary expression (no dots)
+      if (leftParens.length > 0 && dots.length === 0) {
         result += "(";
-        if (node.children.expression) {
-          const args = node.children.expression.map((e: any) =>
-            this.visit(e, ctx),
-          );
+        if (expressions.length > 0) {
+          const args = expressions.map((e: any) => this.visit(e, ctx));
           result += args.join(", ");
         }
         result += ")";
+      }
+      // Case 2: Method chaining with dots
+      else if (dots.length > 0) {
+        // First, handle any immediate function call on the primary expression
+        if (leftParens.length > dots.length) {
+          // There's a function call before the dots
+          // Count commas to determine how many expressions belong to the first call
+          let firstCallArgCount = 0;
+          if (leftParens.length > 1) {
+            // Count commas between first and second parentheses positions
+            // This is complex, so let's use a simpler heuristic:
+            // If we have more expressions than method calls, the extras go to the first call
+            const methodCallCount = dots.length;
+            const totalExpressions = expressions.length;
+            firstCallArgCount = totalExpressions - methodCallCount;
+          } else {
+            firstCallArgCount = expressions.length;
+          }
+
+          result += "(";
+          if (firstCallArgCount > 0) {
+            const firstCallArgs = expressions
+              .slice(0, firstCallArgCount)
+              .map((e: any) => this.visit(e, ctx));
+            result += firstCallArgs.join(", ");
+          }
+          result += ")";
+        }
+
+        // Then handle dot notation and method calls
+        for (let i = 0; i < dots.length; i++) {
+          result += "." + identifiers[i].image;
+
+          // For now, only the last method in the chain gets parentheses
+          // This is a simplification - a full implementation would need to track
+          // which specific methods have arguments
+          if (i === dots.length - 1 && leftParens.length > dots.length) {
+            result += "(";
+            // Calculate which expressions belong to this method call
+            const firstCallArgCount = expressions.length - 1; // Last expression goes to last method
+            const methodArgs = expressions.slice(firstCallArgCount);
+            if (methodArgs.length > 0) {
+              const args = methodArgs.map((e: any) => this.visit(e, ctx));
+              result += args.join(", ");
+            }
+            result += ")";
+          }
+        }
       }
     }
 
