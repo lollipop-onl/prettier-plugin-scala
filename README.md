@@ -14,6 +14,7 @@ A [Prettier](https://prettier.io) plugin for formatting Scala code with modern l
 - **Modern Language Features** - Generics, string interpolation, given definitions (Scala 3)
 - **Operators & Expressions** - Logical, bitwise, and infix operators
 - **Project Structure** - Package declarations, imports, top-level definitions
+- **Comment Preservation** - Maintains line and inline comments during formatting
 
 ✨ **Prettier Integration** - Seamless integration with your development workflow:
 
@@ -106,6 +107,7 @@ The plugin automatically detects `.scala` files and applies formatting using Pre
 
 ```scala
 class UserService(database:Database){
+// TODO: Add caching strategy
 private val cache=mutable.Map[String,User]()
 def findUser(id:String):User={cache.get(id)}
 def createUser(name:String,email:String):User={val user=User(name,email)
@@ -119,6 +121,7 @@ user}}
 class UserService(
   database: Database
 ) {
+  // TODO: Add caching strategy
   private val cache = mutable.Map[String, User]()
   def findUser(id: String): User = {
     cache.get(id)
@@ -176,6 +179,14 @@ def process[T <: AnyRef](items: List[T]): List[T]
 ```scala
 given stringValue: String = "default"
 enum Color { case Red, Green, Blue }
+```
+
+✅ **Comment Preservation**
+```scala
+// This comment is preserved
+class Person /* inline comment */ (
+  name: String
+)
 ```
 
 ## Limitations
