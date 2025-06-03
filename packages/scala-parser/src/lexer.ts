@@ -115,6 +115,7 @@ export const LogicalOr = createToken({ name: "LogicalOr", pattern: /\|\|/ });
 export const Exclamation = createToken({ name: "Exclamation", pattern: /!/ });
 export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
+export const RightArrow = createToken({ name: "RightArrow", pattern: /->/ });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
 export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
 export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
@@ -239,6 +240,7 @@ export const allTokens = [
   // Multi-character operators (must come before single-character)
   Arrow,
   LeftArrow,
+  RightArrow,
   SubtypeOf,
   SupertypeOf,
   LessThanEquals,

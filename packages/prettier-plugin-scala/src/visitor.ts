@@ -441,6 +441,29 @@ export class CstNodeVisitor {
       );
     }
 
+    // Handle block lambda expressions: { x => ... }
+    if (
+      node.children.LeftBrace &&
+      node.children.Identifier &&
+      node.children.Arrow
+    ) {
+      let result = "{ " + node.children.Identifier[0].image + " =>";
+
+      if (node.children.blockStatement) {
+        const statements = node.children.blockStatement.map(
+          (s: any) => "  " + this.visit(s, ctx),
+        );
+        result += "\n" + statements.join("\n");
+      }
+
+      if (node.children.expression) {
+        result += "\n  " + this.visit(node.children.expression[0], ctx);
+      }
+
+      result += "\n}";
+      return result;
+    }
+
     // Handle simple lambda expressions: x => x * 2
     if (node.children.Identifier && node.children.Arrow) {
       return (

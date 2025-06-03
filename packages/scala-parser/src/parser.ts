@@ -333,6 +333,28 @@ export class ScalaParser extends CstParser {
       },
       {
         ALT: () => {
+          // Block lambda: { x => ... }
+          this.CONSUME(tokens.LeftBrace);
+          this.CONSUME2(tokens.Identifier);
+          this.CONSUME3(tokens.Arrow);
+          this.MANY(() => this.SUBRULE(this.blockStatement));
+          this.OPTION(() => this.SUBRULE3(this.expression));
+          this.CONSUME(tokens.RightBrace);
+        },
+        GATE: () => {
+          // Only try if we see { followed by identifier and arrow
+          const la2 = this.LA(2);
+          const la3 = this.LA(3);
+          return (
+            la2 &&
+            la2.tokenType === tokens.Identifier &&
+            la3 &&
+            la3.tokenType === tokens.Arrow
+          );
+        },
+      },
+      {
+        ALT: () => {
           // Simple lambda: x => x * 2
           this.CONSUME(tokens.Identifier);
           this.CONSUME2(tokens.Arrow);
@@ -605,6 +627,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.AppendOp) },
       { ALT: () => this.CONSUME(tokens.PrependOp) },
       { ALT: () => this.CONSUME(tokens.ConcatOp) },
+      { ALT: () => this.CONSUME(tokens.RightArrow) },
       { ALT: () => this.CONSUME(tokens.Dot) },
       { ALT: () => this.CONSUME(tokens.To) },
       { ALT: () => this.CONSUME(tokens.Identifier) }, // For general infix methods

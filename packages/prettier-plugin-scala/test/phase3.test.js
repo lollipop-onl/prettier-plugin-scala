@@ -88,7 +88,7 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "list.map(x => x * 2)");
     });
 
-    test.skip("multiline lambda", async () => {
+    test("multiline lambda", async () => {
       const input = `list.map { x =>
   val doubled = x * 2
   doubled + 1
@@ -131,13 +131,13 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "private val cache = Map[String, Int]()");
     });
 
-    test.skip("apply with arguments", async () => {
+    test("apply with arguments", async () => {
       const input = `val map = Map("a" -> 1, "b" -> 2)`;
       const output = await format(input);
       assert.equal(output, `val map = Map("a" -> 1, "b" -> 2)`);
     });
 
-    test.skip("nested apply expressions", async () => {
+    test("nested apply expressions", async () => {
       const input = `val nested = List(Map("key" -> "value"))`;
       const output = await format(input);
       assert.equal(output, `val nested = List(Map("key" -> "value"))`);
