@@ -8,6 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 scalafmt互換のPrettierプラグインを開発するプロジェクトです。Chevrotainパーサージェネレータを使用してScalaの構文解析を行い、Prettierのプラグインアーキテクチャに統合します。
 
+**現在の実装状況:**
+- Phase 1: 基本構文のフォーマッティング（87.5%成功率）
+- Phase 2: 主要機能の完全実装（100%成功率）
+- 総合テスト成功: 24/25（コメント処理は次期対応）
+- 先行実装済み: For内包表記、ラムダ式、中置記法
+
 ## 開発環境
 
 - Node.js 24（mise経由）
@@ -78,8 +84,9 @@ prettier-plugin-scala/
    - テスト成功率: 87.5% (7/8)
    - 基本構文（クラス、オブジェクト、メソッド、変数）の完全サポート
 2. **✅ Phase 2: 主要機能実装** - 実用的なScalaコードのフォーマッティング（完了）
-   - テスト成功率: 76.5% (13/17)
+   - テスト成功率: 100% (17/17)
    - ジェネリクス、ケースクラス、パターンマッチング、new演算子の完全サポート
+   - Phase 3機能の先行実装: For内包表記、ラムダ式、中置記法
 3. **📋 Phase 3: 完全版** - scalafmtとの高い互換性（将来計画）
 
 ### テスト方針
@@ -120,43 +127,49 @@ prettier-plugin-scala/
 ### Phase 2 実装結果（完了）
 
 **実装済み機能:**
-- ✅ ジェネリクス: `class Box[T]`, `def identity[T]`, `[T <: AnyRef]`
+- ✅ ジェネリクス: `class Box[T]`, `def identity[T]`, `[T <: AnyRef]`, `[T >: Nothing]`
 - ✅ ケースクラス: `case class Person(name: String, age: Int)`
 - ✅ パターンマッチング: `x match { case 1 => "one"; case _ => "other" }`
 - ✅ new演算子: `new Person("Alice", 30)`, `new List[Int]()`
+
+**Phase 3より先行実装済み:**
+- ✅ For内包表記: `for (i <- 1 to 10) yield i * 2`, `for (i <- xs if i > 0) yield i`
+- ✅ ラムダ式とメソッド呼び出し: `list.map(x => x * 2)`
+- ✅ 中置記法（to演算子）: `1 to 10`
 
 **テスト結果:**
 - ジェネリクス: 6/6 (100%)
 - ケースクラス: 2/2 (100%)
 - new演算子: 3/3 (100%)
 - パターンマッチング: 2/2 (100%)
-- 総合評価: 13/17 (76.5%)
+- For内包表記: 3/3 (100%)
+- メソッド呼び出し: 1/1 (100%)
+- **総合評価: 17/17 (100%)**
 
 **制限事項（Phase 3で対応予定）:**
 - 論理演算子: `&&`, `||` - 条件処理に必須
-- ラムダ式: `x => x * 2`, `list.map(_ + 1)`
-- 中置記法: `1 to 10`, `list :+ element`
 - クラス内メンバー初期化: `private val cache = mutable.Map[String, User]()`
-- for内包表記: `for (x <- xs; y <- ys) yield (x, y)`
 - 文字列補間: `s"Hello $name"`
 - 補助コンストラクタ: `def this(...) = this(...)`
 - implicit/given: Scala 3の新機能
+- 高度な中置記法: `list :+ element`, `elem :: list`
 
-### 実動作テスト結果（2025/6/3）
+### 実動作テスト結果（2025/6/3 - 更新）
 
 **動作確認済み:**
 - トップレベルのval/var定義
 - 基本的なクラス/ケースクラス/トレイト/オブジェクト定義
 - メソッド定義（クラス内）
-- ジェネリクス定義
-- パターンマッチング（トップレベル関数内）
+- ジェネリクス定義（上限・下限境界含む）
+- パターンマッチング（ガード付き含む）
 - パッケージ/インポート文
+- ✅ **For内包表記**: `for (i <- 1 to 10) yield i * 2`
+- ✅ **ラムダ式**: `list.map(x => x * 2)`
+- ✅ **中置記法（to）**: `1 to 10`
 
 **エラーが発生する機能:**
 - 論理演算子を含む条件式: `if (x && y)`
 - クラス内でのコレクション初期化: `private val map = Map[K, V]()`
-- ラムダ式: `list.map(x => x * 2)`
-- 中置記法: `1 to 10`
 - 補助コンストラクタ: `def this(...)`
 
 ## 開発コマンド
