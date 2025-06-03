@@ -316,21 +316,37 @@ export class ScalaParser extends CstParser {
           // Lambda expression: x => x * 2
           this.CONSUME(tokens.Identifier);
           this.CONSUME(tokens.Arrow);
-          this.SUBRULE3(this.expression);
+          this.SUBRULE(this.expression);
         },
       },
       {
-        ALT: () => {
-          // Regular expression
-          this.SUBRULE(this.postfixExpression);
-          this.MANY(() => {
-            this.SUBRULE(this.infixOperator);
-            this.SUBRULE2(this.postfixExpression);
-          });
-        },
+        ALT: () => this.SUBRULE(this.assignmentOrInfixExpression),
       },
     ]);
   });
+
+  private assignmentOrInfixExpression = this.RULE(
+    "assignmentOrInfixExpression",
+    () => {
+      this.SUBRULE(this.postfixExpression);
+      // First check for compound assignment
+      this.OPTION(() => {
+        this.OR([
+          { ALT: () => this.CONSUME(tokens.PlusEquals) },
+          { ALT: () => this.CONSUME(tokens.MinusEquals) },
+          { ALT: () => this.CONSUME(tokens.StarEquals) },
+          { ALT: () => this.CONSUME(tokens.SlashEquals) },
+          { ALT: () => this.CONSUME(tokens.PercentEquals) },
+        ]);
+        this.SUBRULE3(this.expression);
+      });
+      // Then handle infix operators
+      this.MANY(() => {
+        this.SUBRULE(this.infixOperator);
+        this.SUBRULE2(this.postfixExpression);
+      });
+    },
+  );
 
   private postfixExpression = this.RULE("postfixExpression", () => {
     this.SUBRULE(this.primaryExpression);
@@ -406,6 +422,13 @@ export class ScalaParser extends CstParser {
           // Unary negation: !expression
           this.CONSUME(tokens.Exclamation);
           this.SUBRULE(this.postfixExpression);
+        },
+      },
+      {
+        ALT: () => {
+          // Bitwise complement: ~expression
+          this.CONSUME(tokens.BitwiseTilde);
+          this.SUBRULE2(this.postfixExpression);
         },
       },
       {
@@ -514,6 +537,12 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.NotEquals) },
       { ALT: () => this.CONSUME(tokens.LogicalAnd) },
       { ALT: () => this.CONSUME(tokens.LogicalOr) },
+      { ALT: () => this.CONSUME(tokens.BitwiseAnd) },
+      { ALT: () => this.CONSUME(tokens.BitwiseOr) },
+      { ALT: () => this.CONSUME(tokens.BitwiseXor) },
+      { ALT: () => this.CONSUME(tokens.LeftShift) },
+      { ALT: () => this.CONSUME(tokens.RightShift) },
+      { ALT: () => this.CONSUME(tokens.UnsignedRightShift) },
       { ALT: () => this.CONSUME(tokens.AppendOp) },
       { ALT: () => this.CONSUME(tokens.PrependOp) },
       { ALT: () => this.CONSUME(tokens.ConcatOp) },

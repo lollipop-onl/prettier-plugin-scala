@@ -120,6 +120,26 @@ export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
 export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
 export const PrependOp = createToken({ name: "PrependOp", pattern: /::/ });
 export const ConcatOp = createToken({ name: "ConcatOp", pattern: /\+\+/ });
+// Compound assignment operators
+export const PlusEquals = createToken({ name: "PlusEquals", pattern: /\+=/ });
+export const MinusEquals = createToken({ name: "MinusEquals", pattern: /-=/ });
+export const StarEquals = createToken({ name: "StarEquals", pattern: /\*=/ });
+export const SlashEquals = createToken({ name: "SlashEquals", pattern: /\/=/ });
+export const PercentEquals = createToken({
+  name: "PercentEquals",
+  pattern: /%=/,
+});
+// Bitwise operators
+export const BitwiseAnd = createToken({ name: "BitwiseAnd", pattern: /&/ });
+export const BitwiseOr = createToken({ name: "BitwiseOr", pattern: /\|/ });
+export const BitwiseXor = createToken({ name: "BitwiseXor", pattern: /\^/ });
+export const BitwiseTilde = createToken({ name: "BitwiseTilde", pattern: /~/ });
+export const LeftShift = createToken({ name: "LeftShift", pattern: /<</ });
+export const RightShift = createToken({ name: "RightShift", pattern: />>/ });
+export const UnsignedRightShift = createToken({
+  name: "UnsignedRightShift",
+  pattern: />>>/,
+});
 export const Colon = createToken({ name: "Colon", pattern: /:/ });
 export const Semicolon = createToken({ name: "Semicolon", pattern: /;/ });
 export const Comma = createToken({ name: "Comma", pattern: /,/ });
@@ -230,6 +250,16 @@ export const allTokens = [
   AppendOp,
   PrependOp,
   ConcatOp,
+  // Compound assignment operators
+  PlusEquals,
+  MinusEquals,
+  StarEquals,
+  SlashEquals,
+  PercentEquals,
+  // Bitwise shift operators (must come before single-character)
+  UnsignedRightShift, // >>> must come before >>
+  LeftShift,
+  RightShift,
 
   // Single-character operators
   Equals,
@@ -241,6 +271,10 @@ export const allTokens = [
   LessThan,
   GreaterThan,
   Exclamation,
+  BitwiseAnd,
+  BitwiseOr,
+  BitwiseXor,
+  BitwiseTilde,
   Colon,
   Semicolon,
   Comma,

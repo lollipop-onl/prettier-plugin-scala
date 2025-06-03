@@ -441,7 +441,12 @@ export class CstNodeVisitor {
       );
     }
 
-    // Handle regular expressions
+    // Handle assignmentOrInfixExpression
+    if (node.children.assignmentOrInfixExpression) {
+      return this.visit(node.children.assignmentOrInfixExpression[0], ctx);
+    }
+
+    // Handle regular expressions (fallback for older structure)
     if (node.children.postfixExpression) {
       let result = this.visit(node.children.postfixExpression[0], ctx);
 
@@ -643,6 +648,41 @@ export class CstNodeVisitor {
     }
 
     return "";
+  }
+
+  visitAssignmentOrInfixExpression(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.postfixExpression[0], ctx);
+
+    // Handle compound assignment operators
+    if (
+      node.children.PlusEquals ||
+      node.children.MinusEquals ||
+      node.children.StarEquals ||
+      node.children.SlashEquals ||
+      node.children.PercentEquals
+    ) {
+      const operator =
+        node.children.PlusEquals?.[0] ||
+        node.children.MinusEquals?.[0] ||
+        node.children.StarEquals?.[0] ||
+        node.children.SlashEquals?.[0] ||
+        node.children.PercentEquals?.[0];
+      result += " " + operator.image + " ";
+      result += this.visit(node.children.expression[0], ctx);
+    }
+
+    // Handle infix operators
+    if (node.children.infixOperator) {
+      for (let i = 0; i < node.children.infixOperator.length; i++) {
+        result +=
+          " " +
+          this.visit(node.children.infixOperator[i], ctx) +
+          " " +
+          this.visit(node.children.postfixExpression[i + 1], ctx);
+      }
+    }
+
+    return result;
   }
 
   visitInfixOperator(node: any, _ctx: PrintContext): string {
