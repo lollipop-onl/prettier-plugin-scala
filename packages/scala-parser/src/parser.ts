@@ -308,9 +308,27 @@ export class ScalaParser extends CstParser {
             this.CONSUME(tokens.Identifier);
             this.OPTION(() => {
               this.CONSUME(tokens.LeftParen);
-              this.MANY_SEP({
-                SEP: tokens.Comma,
-                DEF: () => this.SUBRULE(this.expression),
+              this.OPTION2(() => {
+                // Handle lambda expressions as arguments
+                this.OR2([
+                  {
+                    ALT: () => {
+                      // Simple lambda: x => x * 2
+                      this.CONSUME2(tokens.Identifier);
+                      this.CONSUME(tokens.Arrow);
+                      this.SUBRULE3(this.expression);
+                    },
+                  },
+                  {
+                    ALT: () => {
+                      // Regular arguments
+                      this.MANY_SEP({
+                        SEP: tokens.Comma,
+                        DEF: () => this.SUBRULE4(this.expression),
+                      });
+                    },
+                  },
+                ]);
               });
               this.CONSUME(tokens.RightParen);
             });
