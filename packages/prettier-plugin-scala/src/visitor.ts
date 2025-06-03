@@ -229,7 +229,12 @@ export class CstNodeVisitor {
   }
 
   visitDefDefinition(node: any, ctx: PrintContext): string {
-    let result = "def " + node.children.Identifier[0].image;
+    let result = "def ";
+    if (node.children.Identifier) {
+      result += node.children.Identifier[0].image;
+    } else if (node.children.This) {
+      result += "this";
+    }
 
     if (node.children.typeParameters) {
       result += this.visit(node.children.typeParameters[0], ctx);

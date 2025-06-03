@@ -134,7 +134,10 @@ export class ScalaParser extends CstParser {
   // Method definition
   private defDefinition = this.RULE("defDefinition", () => {
     this.CONSUME(tokens.Def);
-    this.CONSUME(tokens.Identifier);
+    this.OR([
+      { ALT: () => this.CONSUME(tokens.Identifier) },
+      { ALT: () => this.CONSUME(tokens.This) }, // For auxiliary constructors
+    ]);
     this.OPTION(() => this.SUBRULE(this.typeParameters));
     this.OPTION2(() => this.SUBRULE(this.parameterLists));
     this.OPTION3(() => {
