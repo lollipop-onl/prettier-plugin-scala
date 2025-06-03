@@ -261,15 +261,26 @@ export class CstNodeVisitor {
     let result = "given";
 
     if (node.children.Identifier) {
-      // Named given: given name: Type = expression
+      // Named given with potential parameters: given name[T](using ord: Type): Type
       result += " " + node.children.Identifier[0].image;
+
+      if (node.children.typeParameters) {
+        result += this.visit(node.children.typeParameters[0], ctx);
+      }
+
+      if (node.children.parameterLists) {
+        result += this.visit(node.children.parameterLists[0], ctx);
+      }
+
       result += ": " + this.visit(node.children.type[0], ctx);
     } else {
       // Anonymous given: given Type = expression
       result += " " + this.visit(node.children.type[0], ctx);
     }
 
-    result += " = " + this.visit(node.children.expression[0], ctx);
+    if (node.children.Equals) {
+      result += " = " + this.visit(node.children.expression[0], ctx);
+    }
 
     return result;
   }

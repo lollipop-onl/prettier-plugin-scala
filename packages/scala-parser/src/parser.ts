@@ -158,10 +158,49 @@ export class ScalaParser extends CstParser {
     this.OR([
       {
         ALT: () => {
-          // Named given: given name: Type = expression
+          // Named given with parameters: given name[T](using ord: Type): Type
           this.CONSUME(tokens.Identifier);
+          this.OPTION(() => this.SUBRULE(this.typeParameters));
+          this.OPTION2(() => this.SUBRULE(this.parameterLists));
           this.CONSUME(tokens.Colon);
           this.SUBRULE(this.type);
+        },
+        GATE: () => {
+          // Look ahead to distinguish from anonymous given
+          // Check if we have Identifier followed by : (with optional type params/params)
+          let i = 1; // Start after Given token
+
+          // Skip over identifier
+          if (this.LA(i)?.tokenType === tokens.Identifier) {
+            i++;
+
+            // Skip over optional type parameters [...]
+            if (this.LA(i)?.tokenType === tokens.LeftBracket) {
+              let bracketCount = 1;
+              i++;
+              while (bracketCount > 0 && this.LA(i)) {
+                if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
+                if (this.LA(i).tokenType === tokens.RightBracket)
+                  bracketCount--;
+                i++;
+              }
+            }
+
+            // Skip over optional parameter lists (...)
+            if (this.LA(i)?.tokenType === tokens.LeftParen) {
+              let parenCount = 1;
+              i++;
+              while (parenCount > 0 && this.LA(i)) {
+                if (this.LA(i).tokenType === tokens.LeftParen) parenCount++;
+                if (this.LA(i).tokenType === tokens.RightParen) parenCount--;
+                i++;
+              }
+            }
+
+            // Check if we have a colon after identifier and optional parts
+            return this.LA(i)?.tokenType === tokens.Colon;
+          }
+          return false;
         },
       },
       {
@@ -171,9 +210,11 @@ export class ScalaParser extends CstParser {
         },
       },
     ]);
-    this.CONSUME(tokens.Equals);
-    this.SUBRULE(this.expression);
-    this.OPTION(() => this.CONSUME(tokens.Semicolon));
+    this.OPTION3(() => {
+      this.CONSUME(tokens.Equals);
+      this.SUBRULE(this.expression);
+    });
+    this.OPTION4(() => this.CONSUME(tokens.Semicolon));
   });
 
   // Class parameters

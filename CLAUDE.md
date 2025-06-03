@@ -242,3 +242,7 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 - [Prettier Plugin API](https://prettier.io/docs/plugins.html)
 - [Chevrotain Documentation](https://chevrotain.io/docs/)
 - [scalafmt Configuration](https://scalameta.org/scalafmt/docs/configuration.html)
+
+### その他のメモ
+
+- git commit に Description 部や署名を含めても構いませんが、ワンライナーで実行するようにします。これにより、ユーザーからの承認なくコミットを実行できます。

@@ -157,7 +157,7 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "given Ordering[String] = Ordering.String");
     });
 
-    test.skip("given with parameters", async () => {
+    test("given with parameters", async () => {
       const input = `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`;
       const output = await format(input);
       assert.match(output, /given listOrdering/);
