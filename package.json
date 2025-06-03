@@ -3,13 +3,10 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "check": "prettier --check --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala",
     "clean": "turbo run clean",
     "postinstall": "lefthook install",
-    "test": "turbo run test",
-    "test:fixtures": "node test-fixtures.js",
-    "test:phase1": "node test-fixtures.js 1",
-    "test:phase2": "node test-fixtures.js 2",
-    "test:phase3": "node test-fixtures.js 3"
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
