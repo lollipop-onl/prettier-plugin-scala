@@ -103,4 +103,54 @@ class Person /* inline comment */ (
     const result = await formatCode(input);
     assert.strictEqual(result, expected);
   });
+
+  describe("Negation operator formatting", () => {
+    it("should format simple negation", async () => {
+      const input = "val x=!true";
+      const expected = "val x = !true\n";
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+
+    it("should format negation with spacing", async () => {
+      const input = "val isEmpty  =  ! hasElements";
+      const expected = "val isEmpty = !hasElements\n";
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+
+    it("should format negation of method call", async () => {
+      const input = "val notEmpty=!list.isEmpty";
+      const expected = "val notEmpty = !list.isEmpty\n";
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+
+    it("should format negation with parentheses", async () => {
+      const input = "val complex = ! ( a>5 && b<10 )";
+      const expected = "val complex = !(a > 5 && b < 10)\n";
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+
+    it("should format negation in complex expressions", async () => {
+      const input = "val result=!a&&b||!c";
+      const expected = "val result = !a && b || !c\n";
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+
+    it("should preserve negation in multiline expressions", async () => {
+      const input = `val condition = {
+  !isEmpty &&
+  !isInvalid
+}`;
+      const expected = `val condition = {
+    !isEmpty && !isInvalid
+  }
+`;
+      const result = await formatCode(input);
+      assert.strictEqual(result, expected);
+    });
+  });
 });

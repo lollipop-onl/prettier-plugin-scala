@@ -105,4 +105,54 @@ describe("ScalaParser", () => {
     assert.ok(result.cst);
     assert.strictEqual(result.comments.length, 2);
   });
+
+  describe("Negation operator", () => {
+    it("should parse simple negation", () => {
+      const input = "val x = !true";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+
+    it("should parse negation of identifier", () => {
+      const input = "val isEmpty = !hasElements";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+
+    it("should parse negation of method call", () => {
+      const input = "val notEmpty = !list.isEmpty";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+
+    it("should parse negation with parentheses", () => {
+      const input = "val complex = !(a > 5 && b < 10)";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+
+    it("should parse double negation", () => {
+      const input = "val doubleNeg = !!flag";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+
+    it("should parse negation in complex expressions", () => {
+      const input = "val result = !a && b || !c";
+      const result = parse(input);
+
+      assert.strictEqual(result.errors.length, 0);
+      assert.ok(result.cst);
+    });
+  });
 });

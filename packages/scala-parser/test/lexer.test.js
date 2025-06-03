@@ -71,6 +71,38 @@ describe("ScalaLexer", () => {
     assert.strictEqual(result.groups.comments.length, 2);
   });
 
+  it("should tokenize negation operator", () => {
+    const input = "!true !isEmpty !(a && b)";
+    const result = ScalaLexer.tokenize(input);
+
+    assert.strictEqual(result.errors.length, 0);
+    const exclamationTokens = result.tokens.filter(
+      (t) => t.tokenType.name === "Exclamation",
+    );
+    assert.strictEqual(exclamationTokens.length, 3);
+  });
+
+  it("should tokenize logical operators", () => {
+    const input = "&& || !";
+    const result = ScalaLexer.tokenize(input);
+
+    assert.strictEqual(result.errors.length, 0);
+    assert.strictEqual(result.tokens[0].tokenType.name, "LogicalAnd");
+    assert.strictEqual(result.tokens[1].tokenType.name, "LogicalOr");
+    assert.strictEqual(result.tokens[2].tokenType.name, "Exclamation");
+  });
+
+  it("should tokenize string interpolation", () => {
+    const input = 's"Hello $name" f"Value: $x%.2f" raw"Path: $path"';
+    const result = ScalaLexer.tokenize(input);
+
+    assert.strictEqual(result.errors.length, 0);
+    const interpolatedStrings = result.tokens.filter(
+      (t) => t.tokenType.name === "InterpolatedStringLiteral",
+    );
+    assert.strictEqual(interpolatedStrings.length, 3);
+  });
+
   it("should tokenize a simple class definition", () => {
     const input = "class Person(name: String) { def getName(): String = name }";
     const result = ScalaLexer.tokenize(input);
