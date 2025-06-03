@@ -114,6 +114,9 @@ export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
 export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
+export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
+export const PrependOp = createToken({ name: "PrependOp", pattern: /::/ });
+export const ConcatOp = createToken({ name: "ConcatOp", pattern: /\+\+/ });
 export const Colon = createToken({ name: "Colon", pattern: /:/ });
 export const Semicolon = createToken({ name: "Semicolon", pattern: /;/ });
 export const Comma = createToken({ name: "Comma", pattern: /,/ });
@@ -219,6 +222,9 @@ export const allTokens = [
   NotEquals,
   LogicalAnd,
   LogicalOr,
+  AppendOp,
+  PrependOp,
+  ConcatOp,
 
   // Single-character operators
   Equals,
