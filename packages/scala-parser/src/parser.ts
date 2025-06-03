@@ -14,6 +14,12 @@ export class ScalaParser extends CstParser {
         { ALT: () => this.SUBRULE(this.packageClause) },
         { ALT: () => this.SUBRULE(this.importClause) },
         { ALT: () => this.SUBRULE(this.topLevelDefinition) },
+        {
+          ALT: () => {
+            this.SUBRULE(this.expression);
+            this.OPTION(() => this.CONSUME(tokens.Semicolon));
+          },
+        },
       ]);
     });
   });
@@ -205,6 +211,22 @@ export class ScalaParser extends CstParser {
 
   private typeParameter = this.RULE("typeParameter", () => {
     this.CONSUME(tokens.Identifier);
+    this.OPTION(() => {
+      this.OR([
+        {
+          ALT: () => {
+            this.CONSUME(tokens.SubtypeOf);
+            this.SUBRULE(this.type);
+          },
+        },
+        {
+          ALT: () => {
+            this.CONSUME(tokens.SupertypeOf);
+            this.SUBRULE2(this.type);
+          },
+        },
+      ]);
+    });
   });
 
   // Extends clause
@@ -269,10 +291,50 @@ export class ScalaParser extends CstParser {
 
   // Expressions (simplified for MVP)
   private expression = this.RULE("expression", () => {
-    this.SUBRULE(this.primaryExpression);
+    this.SUBRULE(this.postfixExpression);
     this.MANY(() => {
       this.SUBRULE(this.infixOperator);
-      this.SUBRULE2(this.primaryExpression);
+      this.SUBRULE2(this.postfixExpression);
+    });
+  });
+
+  private postfixExpression = this.RULE("postfixExpression", () => {
+    this.SUBRULE(this.primaryExpression);
+    this.MANY(() => {
+      this.OR([
+        {
+          ALT: () => {
+            this.CONSUME(tokens.Dot);
+            this.CONSUME(tokens.Identifier);
+            this.OPTION(() => {
+              this.CONSUME(tokens.LeftParen);
+              this.MANY_SEP({
+                SEP: tokens.Comma,
+                DEF: () => this.SUBRULE(this.expression),
+              });
+              this.CONSUME(tokens.RightParen);
+            });
+          },
+        },
+        {
+          ALT: () => {
+            this.CONSUME2(tokens.LeftParen);
+            this.MANY_SEP2({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE2(this.expression),
+            });
+            this.CONSUME2(tokens.RightParen);
+          },
+        },
+        {
+          ALT: () => {
+            this.CONSUME(tokens.Match);
+            this.CONSUME(tokens.LeftBrace);
+            this.MANY2(() => this.SUBRULE(this.caseClause));
+            this.CONSUME(tokens.RightBrace);
+          },
+        },
+      ]);
     });
   });
 
@@ -281,6 +343,8 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.literal) },
       { ALT: () => this.CONSUME(tokens.Identifier) },
       { ALT: () => this.CONSUME(tokens.This) },
+      { ALT: () => this.SUBRULE(this.newExpression) },
+      { ALT: () => this.SUBRULE(this.forExpression) },
       {
         ALT: () => {
           this.CONSUME(tokens.LeftParen);
@@ -290,6 +354,65 @@ export class ScalaParser extends CstParser {
       },
       { ALT: () => this.SUBRULE(this.blockExpression) },
     ]);
+  });
+
+  private newExpression = this.RULE("newExpression", () => {
+    this.CONSUME(tokens.New);
+    this.SUBRULE(this.type);
+    this.OPTION(() => {
+      this.CONSUME(tokens.LeftParen);
+      this.MANY_SEP({
+        SEP: tokens.Comma,
+        DEF: () => this.SUBRULE(this.expression),
+      });
+      this.CONSUME(tokens.RightParen);
+    });
+  });
+
+  private caseClause = this.RULE("caseClause", () => {
+    this.CONSUME(tokens.Case);
+    this.SUBRULE(this.pattern);
+    this.OPTION(() => {
+      this.CONSUME(tokens.If);
+      this.SUBRULE(this.expression);
+    });
+    this.CONSUME(tokens.Arrow);
+    this.SUBRULE2(this.expression);
+  });
+
+  private forExpression = this.RULE("forExpression", () => {
+    this.CONSUME(tokens.For);
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(tokens.LeftParen);
+          this.MANY_SEP({
+            SEP: tokens.Semicolon,
+            DEF: () => this.SUBRULE(this.generator),
+          });
+          this.CONSUME(tokens.RightParen);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(tokens.LeftBrace);
+          this.MANY(() => this.SUBRULE2(this.generator));
+          this.CONSUME(tokens.RightBrace);
+        },
+      },
+    ]);
+    this.OPTION(() => this.CONSUME(tokens.Yield));
+    this.SUBRULE(this.expression);
+  });
+
+  private generator = this.RULE("generator", () => {
+    this.SUBRULE(this.pattern);
+    this.CONSUME(tokens.LeftArrow);
+    this.SUBRULE(this.expression);
+    this.MANY(() => {
+      this.CONSUME(tokens.If);
+      this.SUBRULE2(this.expression);
+    });
   });
 
   private blockExpression = this.RULE("blockExpression", () => {

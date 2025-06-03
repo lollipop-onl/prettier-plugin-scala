@@ -103,6 +103,8 @@ export const EqualsEquals = createToken({
 export const NotEquals = createToken({ name: "NotEquals", pattern: /!=/ });
 export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
+export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
+export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
 export const Colon = createToken({ name: "Colon", pattern: /:/ });
 export const Semicolon = createToken({ name: "Semicolon", pattern: /;/ });
 export const Comma = createToken({ name: "Comma", pattern: /,/ });
@@ -198,6 +200,8 @@ export const allTokens = [
   // Multi-character operators (must come before single-character)
   Arrow,
   LeftArrow,
+  SubtypeOf,
+  SupertypeOf,
   LessThanEquals,
   GreaterThanEquals,
   EqualsEquals,

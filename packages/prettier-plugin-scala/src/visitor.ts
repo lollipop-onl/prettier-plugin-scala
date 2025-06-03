@@ -74,6 +74,14 @@ export class CstNodeVisitor {
       result += defs.join("\n");
     }
 
+    if (node.children.expression) {
+      const exprs = node.children.expression.map((expr: any) =>
+        this.visit(expr, ctx),
+      );
+      if (result) result += "\n";
+      result += exprs.join("\n");
+    }
+
     return result + "\n";
   }
 
@@ -314,8 +322,16 @@ export class CstNodeVisitor {
     return "[" + paramStrings.join(", ") + "]";
   }
 
-  visitTypeParameter(node: any, _ctx: PrintContext): string {
-    return node.children.Identifier[0].image;
+  visitTypeParameter(node: any, ctx: PrintContext): string {
+    let result = node.children.Identifier[0].image;
+
+    if (node.children.SubtypeOf) {
+      result += " <: " + this.visit(node.children.type[0], ctx);
+    } else if (node.children.SupertypeOf) {
+      result += " >: " + this.visit(node.children.type[0], ctx);
+    }
+
+    return result;
   }
 
   visitExtendsClause(node: any, ctx: PrintContext): string {
@@ -388,7 +404,7 @@ export class CstNodeVisitor {
   }
 
   visitExpression(node: any, ctx: PrintContext): string {
-    let result = this.visit(node.children.primaryExpression[0], ctx);
+    let result = this.visit(node.children.postfixExpression[0], ctx);
 
     if (node.children.infixOperator) {
       for (let i = 0; i < node.children.infixOperator.length; i++) {
@@ -396,8 +412,64 @@ export class CstNodeVisitor {
           " " +
           this.visit(node.children.infixOperator[i], ctx) +
           " " +
-          this.visit(node.children.primaryExpression[i + 1], ctx);
+          this.visit(node.children.postfixExpression[i + 1], ctx);
       }
+    }
+
+    return result;
+  }
+
+  visitPostfixExpression(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.primaryExpression[0], ctx);
+
+    // Handle method calls and field access
+    if (node.children.Dot || node.children.LeftParen) {
+      for (let i = 0; i < (node.children.Dot?.length || 0); i++) {
+        result += "." + node.children.Identifier[i].image;
+
+        // Check if this identifier has method arguments
+        const hasArgs = node.children.LeftParen?.some(() => {
+          // Logic to match parentheses with identifiers
+          return true; // Simplified for now
+        });
+
+        if (hasArgs) {
+          result += "(";
+          if (node.children.expression) {
+            const args = node.children.expression.map((e: any) =>
+              this.visit(e, ctx),
+            );
+            result += args.join(", ");
+          }
+          result += ")";
+        }
+      }
+
+      // Handle direct function calls (without dot)
+      if (!node.children.Dot && node.children.LeftParen) {
+        for (let i = 0; i < node.children.LeftParen.length; i++) {
+          result += "(";
+          if (node.children.expression) {
+            const args = node.children.expression.map((e: any) =>
+              this.visit(e, ctx),
+            );
+            result += args.join(", ");
+          }
+          result += ")";
+        }
+      }
+    }
+
+    // Handle match expressions
+    if (node.children.Match) {
+      result += " match {\n";
+      if (node.children.caseClause) {
+        const cases = node.children.caseClause.map(
+          (c: any) => "  " + this.visit(c, ctx),
+        );
+        result += cases.join("\n");
+      }
+      result += "\n}";
     }
 
     return result;
@@ -410,6 +482,10 @@ export class CstNodeVisitor {
       return node.children.Identifier[0].image;
     } else if (node.children.This) {
       return "this";
+    } else if (node.children.newExpression) {
+      return this.visit(node.children.newExpression[0], ctx);
+    } else if (node.children.forExpression) {
+      return this.visit(node.children.forExpression[0], ctx);
     } else if (node.children.LeftParen) {
       return "(" + this.visit(node.children.expression[0], ctx) + ")";
     } else if (node.children.blockExpression) {
@@ -487,6 +563,83 @@ export class CstNodeVisitor {
       for (let i = 1; i < node.children.Identifier.length; i++) {
         result += "." + node.children.Identifier[i].image;
       }
+    }
+
+    return result;
+  }
+
+  visitNewExpression(node: any, ctx: PrintContext): string {
+    let result = "new " + this.visit(node.children.type[0], ctx);
+
+    if (node.children.LeftParen) {
+      result += "(";
+      if (node.children.expression) {
+        const args = node.children.expression.map((e: any) =>
+          this.visit(e, ctx),
+        );
+        result += args.join(", ");
+      }
+      result += ")";
+    }
+
+    return result;
+  }
+
+  visitForExpression(node: any, ctx: PrintContext): string {
+    let result = "for ";
+
+    if (node.children.LeftParen) {
+      result += "(";
+      if (node.children.generator) {
+        const gens = node.children.generator.map((g: any) =>
+          this.visit(g, ctx),
+        );
+        result += gens.join("; ");
+      }
+      result += ")";
+    } else if (node.children.LeftBrace) {
+      result += "{\n";
+      if (node.children.generator) {
+        const gens = node.children.generator.map(
+          (g: any) => "  " + this.visit(g, ctx),
+        );
+        result += gens.join("\n");
+      }
+      result += "\n}";
+    }
+
+    if (node.children.Yield) {
+      result += " yield ";
+    } else {
+      result += " ";
+    }
+
+    result += this.visit(node.children.expression[0], ctx);
+
+    return result;
+  }
+
+  visitGenerator(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.pattern[0], ctx);
+    result += " <- " + this.visit(node.children.expression[0], ctx);
+
+    if (node.children.If) {
+      for (let i = 0; i < node.children.If.length; i++) {
+        result += " if " + this.visit(node.children.expression[i + 1], ctx);
+      }
+    }
+
+    return result;
+  }
+
+  visitCaseClause(node: any, ctx: PrintContext): string {
+    let result = "case " + this.visit(node.children.pattern[0], ctx);
+
+    if (node.children.If) {
+      result += " if " + this.visit(node.children.expression[0], ctx);
+      result += " => " + this.visit(node.children.expression[1], ctx);
+    } else {
+      result += " => " + this.visit(node.children.expression[0], ctx);
     }
 
     return result;
