@@ -542,10 +542,11 @@ export class CstNodeVisitor {
           // For now, only the last method in the chain gets parentheses
           // This is a simplification - a full implementation would need to track
           // which specific methods have arguments
-          if (i === dots.length - 1 && leftParens.length > dots.length) {
+          if (i === dots.length - 1 && leftParens.length > 0) {
             result += "(";
             // Calculate which expressions belong to this method call
-            const firstCallArgCount = expressions.length - 1; // Last expression goes to last method
+            const firstCallArgCount =
+              leftParens.length > dots.length ? expressions.length - 1 : 0; // If there are more parens than dots, first call gets some args
             const methodArgs = expressions.slice(firstCallArgCount);
             if (methodArgs.length > 0) {
               const args = methodArgs.map((e: any) => this.visit(e, ctx));
