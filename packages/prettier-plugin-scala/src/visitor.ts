@@ -432,7 +432,16 @@ export class CstNodeVisitor {
   }
 
   visitExpression(node: any, ctx: PrintContext): string {
-    // Handle lambda expressions
+    // Handle lambda expressions with parameter list: (x: Int, y: Int) => x + y
+    if (node.children.parameterList && node.children.Arrow) {
+      return (
+        this.visit(node.children.parameterList[0], ctx) +
+        " => " +
+        this.visit(node.children.expression[0], ctx)
+      );
+    }
+
+    // Handle simple lambda expressions: x => x * 2
     if (node.children.Identifier && node.children.Arrow) {
       return (
         node.children.Identifier[0].image +

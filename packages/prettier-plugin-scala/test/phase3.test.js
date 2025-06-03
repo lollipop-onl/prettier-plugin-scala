@@ -76,7 +76,7 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "val double = x => x * 2");
     });
 
-    test.skip("lambda with type annotation", async () => {
+    test("lambda with type annotation", async () => {
       const input = `val add = (x: Int, y: Int) => x + y`;
       const output = await format(input);
       assert.equal(output, "val add = (x: Int, y: Int) => x + y");

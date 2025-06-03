@@ -314,11 +314,29 @@ export class ScalaParser extends CstParser {
     this.OR([
       {
         ALT: () => {
-          // Try to parse as lambda expression: x => x * 2
-          // Use backtracking to handle cases where identifier is not followed by =>
-          this.CONSUME(tokens.Identifier);
+          // Lambda with parameter list: (x: Int, y: Int) => x + y
+          this.SUBRULE(this.parameterList);
           this.CONSUME(tokens.Arrow);
           this.SUBRULE(this.expression);
+        },
+        GATE: () => {
+          // Only try if we see ( followed by parameter pattern
+          const la2 = this.LA(2);
+          const la3 = this.LA(3);
+          return (
+            la2 &&
+            la2.tokenType === tokens.Identifier &&
+            la3 &&
+            la3.tokenType === tokens.Colon
+          );
+        },
+      },
+      {
+        ALT: () => {
+          // Simple lambda: x => x * 2
+          this.CONSUME(tokens.Identifier);
+          this.CONSUME2(tokens.Arrow);
+          this.SUBRULE2(this.expression);
         },
         GATE: () => {
           // Only try lambda if we see Identifier followed by Arrow
