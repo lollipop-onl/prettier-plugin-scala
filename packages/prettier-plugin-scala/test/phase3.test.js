@@ -88,13 +88,15 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "list.map(x => x * 2)");
     });
 
-    test.skip("multiline lambda", async () => {
+    test("multiline lambda", async () => {
       const input = `list.map { x =>
-  val doubled = x * 2
+  val doubled = x * 2;
   doubled + 1
 }`;
       const output = await format(input);
       assert.match(output, /list\.map/);
+      assert.match(output, /val doubled = x \* 2/);
+      assert.match(output, /doubled \+ 1/);
     });
   });
 
@@ -160,7 +162,9 @@ describe("Phase 3 Features", () => {
     test("given with parameters", async () => {
       const input = `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`;
       const output = await format(input);
-      assert.match(output, /given listOrdering/);
+      assert.match(output, /given listOrdering\[T\]/);
+      assert.match(output, /using ord: Ordering\[T\]/);
+      assert.match(output, /: Ordering\[List\[T\]\]/);
     });
   });
 

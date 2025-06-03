@@ -478,18 +478,38 @@ export class CstNodeVisitor {
     ) {
       let result = "{ " + node.children.Identifier[0].image + " =>";
 
+      const statements = [];
+
+      // Add statements (val/var/def definitions)
       if (node.children.blockStatement) {
-        const statements = node.children.blockStatement.map(
-          (s: any) => "  " + this.visit(s, ctx),
+        statements.push(
+          ...node.children.blockStatement.map((stmt: any) =>
+            this.visit(stmt, ctx),
+          ),
         );
-        result += "\n" + statements.join("\n");
       }
 
+      // Add final expression
       if (node.children.expression) {
-        result += "\n  " + this.visit(node.children.expression[0], ctx);
+        statements.push(this.visit(node.children.expression[0], ctx));
       }
 
-      result += "\n}";
+      if (statements.length === 0) {
+        result += " }";
+      } else if (statements.length === 1) {
+        // Single expression - keep on same line if short
+        const stmt = statements[0];
+        if (stmt.length < 50) {
+          result += " " + stmt + " }";
+        } else {
+          result += "\n  " + stmt + "\n}";
+        }
+      } else {
+        // Multiple statements - use multiple lines
+        const indentedStmts = statements.map((stmt) => "  " + stmt);
+        result += "\n" + indentedStmts.join("\n") + "\n}";
+      }
+
       return result;
     }
 
@@ -662,55 +682,6 @@ export class CstNodeVisitor {
     return "";
   }
 
-  visitBlockExpression(node: any, ctx: PrintContext): string {
-    const statements = node.children.blockStatement || [];
-    const finalExpr = node.children.expression?.[0];
-
-    let parts: string[] = statements.map((s: any) => this.visit(s, ctx));
-    if (finalExpr) {
-      parts.push(this.visit(finalExpr, ctx));
-    }
-
-    if (parts.length === 0) {
-      return "{}";
-    }
-
-    // Try to merge adjacent function calls (identifier followed by parenthesized expression)
-    const mergedParts: string[] = [];
-    for (let i = 0; i < parts.length; i++) {
-      const current = parts[i];
-      const next = parts[i + 1];
-
-      // Check if current is an identifier and next starts with "("
-      if (
-        next &&
-        /^[a-zA-Z_][a-zA-Z0-9_]*$/.test(current.trim()) &&
-        next.trim().startsWith("(")
-      ) {
-        mergedParts.push(current + next);
-        i++; // Skip the next part as it's been merged
-      } else {
-        mergedParts.push(current);
-      }
-    }
-
-    return "{\n    " + mergedParts.join("\n    ") + "\n  }";
-  }
-
-  visitBlockStatement(node: any, ctx: PrintContext): string {
-    if (node.children.valDefinition) {
-      return this.visit(node.children.valDefinition[0], ctx);
-    } else if (node.children.varDefinition) {
-      return this.visit(node.children.varDefinition[0], ctx);
-    } else if (node.children.defDefinition) {
-      return this.visit(node.children.defDefinition[0], ctx);
-    } else if (node.children.expression) {
-      return this.visit(node.children.expression[0], ctx);
-    }
-
-    return "";
-  }
-
   visitAssignmentStatement(node: any, ctx: PrintContext): string {
     let result = node.children.Identifier[0].image;
 
@@ -862,5 +833,43 @@ export class CstNodeVisitor {
     }
 
     return result;
+  }
+
+  visitBlockExpression(node: any, ctx: PrintContext): string {
+    const statements = node.children.blockStatement || [];
+
+    if (statements.length === 0) {
+      return "{}";
+    }
+
+    // Check if this is a single-line block (just one expression)
+    if (
+      statements.length === 1 &&
+      !statements[0].children.valDefinition &&
+      !statements[0].children.varDefinition &&
+      !statements[0].children.defDefinition &&
+      !statements[0].children.assignmentStatement
+    ) {
+      return "{ " + this.visit(statements[0], ctx) + " }";
+    }
+
+    // Multi-line block
+    const stmtStrings = statements.map((stmt: any) => this.visit(stmt, ctx));
+    return "{\n  " + stmtStrings.join("\n  ") + "\n}";
+  }
+
+  visitBlockStatement(node: any, ctx: PrintContext): string {
+    if (node.children.valDefinition) {
+      return this.visit(node.children.valDefinition[0], ctx);
+    } else if (node.children.varDefinition) {
+      return this.visit(node.children.varDefinition[0], ctx);
+    } else if (node.children.defDefinition) {
+      return this.visit(node.children.defDefinition[0], ctx);
+    } else if (node.children.assignmentStatement) {
+      return this.visit(node.children.assignmentStatement[0], ctx);
+    } else if (node.children.expression) {
+      return this.visit(node.children.expression[0], ctx);
+    }
+    return "";
   }
 }

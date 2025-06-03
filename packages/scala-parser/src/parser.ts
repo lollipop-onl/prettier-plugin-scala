@@ -620,7 +620,6 @@ export class ScalaParser extends CstParser {
   private blockExpression = this.RULE("blockExpression", () => {
     this.CONSUME(tokens.LeftBrace);
     this.MANY(() => this.SUBRULE(this.blockStatement));
-    this.OPTION(() => this.SUBRULE(this.expression));
     this.CONSUME(tokens.RightBrace);
   });
 
@@ -631,7 +630,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.defDefinition) },
       {
         ALT: () => {
-          // Try assignment statement first
+          // Try assignment statement
           this.SUBRULE(this.assignmentStatement);
           this.OPTION(() => this.CONSUME(tokens.Semicolon));
         },
