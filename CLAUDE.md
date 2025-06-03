@@ -11,9 +11,10 @@ scalafmt互換のPrettierプラグインを開発するプロジェクトです�
 **プロジェクト完成度:**
 - 基本機能: 100%完了
 - 中級機能: 100%完了  
-- 高度な機能: 85%完了（ビット演算子実装済み、複合代入は部分的）
-- 実プロジェクト対応: 70%（否定演算子とビット演算子実装により大幅改善）
+- 高度な機能: 90%完了（ビット演算子、ラムダ型注釈、apply式、匿名given実装済み）
+- 実プロジェクト対応: 85%（型注釈付きラムダ、apply式、Scala 3 given対応により大幅改善）
 - 総合テスト成功: 7/7フィクスチャ（100%）
+- skipテスト解消: 5/9完了（56%）
 
 ## 開発環境
 
@@ -120,7 +121,18 @@ prettier-plugin-scala/
 #### 追加改善（2025/6/3）
 - ✅ **否定演算子（!）** - 完全実装済み
 - ✅ **ビット演算子** - &, |, ^, ~, <<, >>, >>> を実装
+- ✅ **右矢印演算子（->）** - Map構築などのペア作成に使用
 - ⚠️ **複合代入演算子** - レキサーへの追加とパーサーの試行実装を行ったが、技術的課題により保留
+
+#### skipテスト解消（2025/6/4）
+- ✅ **Lambda型注釈**: `(x: Int, y: Int) => x + y` - パラメータリストを持つラムダ式の完全サポート
+- ✅ **Apply式（引数付き）**: `Map("a" -> 1, "b" -> 2)` - 引数を持つコンストラクタ呼び出し
+- ✅ **ネストしたApply式**: `List(Map("key" -> "value"))` - 複雑な構造の正しいフォーマット
+- ✅ **匿名Given定義**: `given Ordering[String] = Ordering.String` - Scala 3の匿名given
+- ⚠️ **マルチラインラムダ**: ブロック形式ラムダの複雑な解析課題により保留
+- ⚠️ **パラメータ付きGiven**: 複雑なlookaheadロジックが必要なため保留
+- ❌ **補助コンストラクタ**: 未実装
+- ❌ **コメント保持**: 未実装
 
 ### テスト方針
 
@@ -151,12 +163,17 @@ prettier-plugin-scala/
 - ✅ パッケージ/インポート文
 - ✅ For内包表記: `for (i <- 1 to 10) yield i * 2`
 - ✅ ラムダ式: `list.map(x => x * 2)`
+- ✅ 型注釈付きラムダ: `(x: Int, y: Int) => x + y`
 - ✅ 中置記法: `1 to 10`, `list :+ element`, `elem :: list`
+- ✅ ペア作成: `"key" -> "value"`
 - ✅ 論理演算子: `x && y`, `a || b`, `!flag`
 - ✅ ビット演算子: `a & b`, `x | y`, `~mask`, `val << 2`
 - ✅ 文字列補間: `s"Hello $name"`, `f"Score: $value%.2f"`
 - ✅ 型パラメータ付きコンストラクタ: `new List[Int]()`, `Map[String, User]()`
-- ✅ given定義: `given stringValue: String = "default"`
+- ✅ Apply式（引数付き）: `Map("a" -> 1, "b" -> 2)`
+- ✅ ネストしたApply式: `List(Map("key" -> "value"))`
+- ✅ given定義（名前付き）: `given intOrdering: Ordering[Int] = Ordering.Int`
+- ✅ given定義（匿名）: `given Ordering[String] = Ordering.String`
 
 **技術的制限:**
 - ⚠️ 複合代入演算子（+=, -=, etc.）- パーサー構造上の課題により保留
@@ -184,47 +201,41 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js <file.scala>
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala
 ```
 
-## Skip されているテストの実装TODO（2025/6/3）
+## 残りのSkipテスト実装TODO（2025/6/4更新）
 
 ### 高優先度（実用性が高い）
-1. **Lambda expressions with type annotations** 
-   - `val add = (x: Int, y: Int) => x + y`
-   - パーサーでのパラメータリスト解析とvisitorでの型注釈フォーマット実装が必要
-   
+1. **Auxiliary constructors** 
+   - `def this(size: Double) = this(size, size)`
+   - クラス内補助コンストラクタの完全サポート実装が必要
+   - 現状: 未実装
+
 2. **Multiline lambda expressions**
    - `list.map { x => val doubled = x * 2; doubled + 1 }`
    - ブロック形式ラムダの解析とフォーマット実装が必要
-   
-3. **Apply expressions with arguments**
-   - `val map = Map("a" -> 1, "b" -> 2)`
-   - Map, List等のコンストラクタ呼び出し時の引数解析実装が必要
-   
-4. **Auxiliary constructors**
-   - `def this(size: Double) = this(size, size)`
-   - クラス内補助コンストラクタの完全サポート実装が必要
+   - 現状: パーサー実装済みだが、visitor/フォーマット処理に課題
 
 ### 中優先度（Scala 3機能）
-5. **Anonymous given definitions**
-   - `given Ordering[String] = Ordering.String`
-   - 名前なしgiven定義のパーサー拡張が必要
-   
-6. **Given with parameters**
+3. **Given with parameters**
    - `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`
    - パラメータ付きgiven定義の実装が必要
-   
-7. **Nested apply expressions**
-   - `val nested = List(Map("key" -> "value"))`
-   - ネストしたコンストラクタ呼び出しの解析実装が必要
+   - 現状: パーサーの曖昧性解決が必要
 
 ### 低優先度（開発支援機能）
-8. **Comment preservation**
+4. **Comment preservation**
    - `// This is a comment class Person /* inline comment */ (name: String)`
    - コメント保持機能の実装（lexerとvisitorの拡張が必要）
+   - 現状: 未実装
 
-### 実装方針
-- 各機能ごとに段階的にパーサー、lexer、visitorを修正
-- テストを有効化して動作確認
-- 実装完了後は該当のtest.skipをtestに変更
+### 実装済み機能（2025/6/4）
+- ✅ Lambda expressions with type annotations
+- ✅ Apply expressions with arguments（-> 演算子も実装）
+- ✅ Nested apply expressions
+- ✅ Anonymous given definitions
+
+### 今後の実装方針
+- 補助コンストラクタは比較的単純な実装で対応可能
+- マルチラインラムダとパラメータ付きgivenは技術的課題の解決が必要
+- コメント保持は全体的なアーキテクチャの見直しが必要
 
 ## 参考資料
 
