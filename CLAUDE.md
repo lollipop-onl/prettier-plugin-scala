@@ -11,10 +11,10 @@ scalafmt互換のPrettierプラグインを開発するプロジェクトです�
 **プロジェクト完成度:**
 - 基本機能: 100%完了
 - 中級機能: 100%完了  
-- 高度な機能: 90%完了（ビット演算子、ラムダ型注釈、apply式、匿名given実装済み）
-- 実プロジェクト対応: 85%（型注釈付きラムダ、apply式、Scala 3 given対応により大幅改善）
+- 高度な機能: 95%完了（ビット演算子、ラムダ型注釈、apply式、匿名given、補助コンストラクタ実装済み）
+- 実プロジェクト対応: 90%（補助コンストラクタ対応により実用性向上）
 - 総合テスト成功: 7/7フィクスチャ（100%）
-- skipテスト解消: 5/9完了（56%）
+- skipテスト解消: 7/9完了（78%）
 
 ## 開発環境
 
@@ -129,9 +129,9 @@ prettier-plugin-scala/
 - ✅ **Apply式（引数付き）**: `Map("a" -> 1, "b" -> 2)` - 引数を持つコンストラクタ呼び出し
 - ✅ **ネストしたApply式**: `List(Map("key" -> "value"))` - 複雑な構造の正しいフォーマット
 - ✅ **匿名Given定義**: `given Ordering[String] = Ordering.String` - Scala 3の匿名given
+- ✅ **補助コンストラクタ**: `def this(size: Double) = this(size, size)` - クラス内補助コンストラクタの完全サポート
 - ⚠️ **マルチラインラムダ**: ブロック形式ラムダの複雑な解析課題により保留
 - ⚠️ **パラメータ付きGiven**: 複雑なlookaheadロジックが必要なため保留
-- ❌ **補助コンストラクタ**: 未実装
 - ❌ **コメント保持**: 未実装
 
 ### テスト方針
@@ -157,7 +157,8 @@ prettier-plugin-scala/
 **全機能動作確認済み:**
 - ✅ トップレベルのval/var/def定義
 - ✅ 基本的なクラス/ケースクラス/トレイト/オブジェクト定義
-- ✅ メソッド定義（クラス内、補助コンストラクタ含む）
+- ✅ メソッド定義（クラス内）
+- ✅ 補助コンストラクタ: `def this(size: Double) = this(size, size)`
 - ✅ ジェネリクス定義（上限・下限境界含む）
 - ✅ パターンマッチング（ガード付き含む）
 - ✅ パッケージ/インポート文
@@ -204,24 +205,19 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 ## 残りのSkipテスト実装TODO（2025/6/4更新）
 
 ### 高優先度（実用性が高い）
-1. **Auxiliary constructors** 
-   - `def this(size: Double) = this(size, size)`
-   - クラス内補助コンストラクタの完全サポート実装が必要
-   - 現状: 未実装
-
-2. **Multiline lambda expressions**
+1. **Multiline lambda expressions**
    - `list.map { x => val doubled = x * 2; doubled + 1 }`
    - ブロック形式ラムダの解析とフォーマット実装が必要
    - 現状: パーサー実装済みだが、visitor/フォーマット処理に課題
 
 ### 中優先度（Scala 3機能）
-3. **Given with parameters**
+2. **Given with parameters**
    - `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`
    - パラメータ付きgiven定義の実装が必要
    - 現状: パーサーの曖昧性解決が必要
 
 ### 低優先度（開発支援機能）
-4. **Comment preservation**
+3. **Comment preservation**
    - `// This is a comment class Person /* inline comment */ (name: String)`
    - コメント保持機能の実装（lexerとvisitorの拡張が必要）
    - 現状: 未実装
@@ -231,9 +227,9 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 - ✅ Apply expressions with arguments（-> 演算子も実装）
 - ✅ Nested apply expressions
 - ✅ Anonymous given definitions
+- ✅ Auxiliary constructors（def this）
 
 ### 今後の実装方針
-- 補助コンストラクタは比較的単純な実装で対応可能
 - マルチラインラムダとパラメータ付きgivenは技術的課題の解決が必要
 - コメント保持は全体的なアーキテクチャの見直しが必要
 

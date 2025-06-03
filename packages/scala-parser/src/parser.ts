@@ -135,10 +135,7 @@ export class ScalaParser extends CstParser {
   // Method definition
   private defDefinition = this.RULE("defDefinition", () => {
     this.CONSUME(tokens.Def);
-    this.OR([
-      { ALT: () => this.CONSUME(tokens.Identifier) },
-      { ALT: () => this.CONSUME(tokens.This) }, // For auxiliary constructors
-    ]);
+    this.CONSUME(tokens.Identifier);
     this.OPTION(() => this.SUBRULE(this.typeParameters));
     this.OPTION2(() => this.SUBRULE(this.parameterLists));
     this.OPTION3(() => {
@@ -150,6 +147,16 @@ export class ScalaParser extends CstParser {
       this.SUBRULE(this.expression);
     });
     this.OPTION5(() => this.CONSUME(tokens.Semicolon));
+  });
+
+  // Auxiliary constructor
+  private auxiliaryConstructor = this.RULE("auxiliaryConstructor", () => {
+    this.CONSUME(tokens.Def);
+    this.CONSUME(tokens.This);
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.parameterList));
+    this.CONSUME(tokens.Equals);
+    this.SUBRULE(this.expression);
+    this.OPTION(() => this.CONSUME(tokens.Semicolon));
   });
 
   // Given definition (Scala 3)
@@ -319,6 +326,16 @@ export class ScalaParser extends CstParser {
   private classMember = this.RULE("classMember", () => {
     this.MANY(() => this.SUBRULE(this.modifier));
     this.OR([
+      {
+        ALT: () => this.SUBRULE(this.auxiliaryConstructor),
+        GATE: () => {
+          // Check if this is "def this"
+          return (
+            this.LA(1).tokenType === tokens.Def &&
+            this.LA(2).tokenType === tokens.This
+          );
+        },
+      },
       { ALT: () => this.SUBRULE(this.valDefinition) },
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },

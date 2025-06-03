@@ -135,6 +135,8 @@ export class CstNodeVisitor {
       return this.visit(node.children.varDefinition[0], ctx);
     } else if (node.children.defDefinition) {
       return this.visit(node.children.defDefinition[0], ctx);
+    } else if (node.children.auxiliaryConstructor) {
+      return this.visit(node.children.auxiliaryConstructor[0], ctx);
     } else if (node.children.givenDefinition) {
       return this.visit(node.children.givenDefinition[0], ctx);
     }
@@ -281,6 +283,21 @@ export class CstNodeVisitor {
     if (node.children.Equals) {
       result += " = " + this.visit(node.children.expression[0], ctx);
     }
+
+    return result;
+  }
+
+  visitAuxiliaryConstructor(node: any, ctx: PrintContext): string {
+    let result = "def this";
+
+    if (node.children.parameterList) {
+      const params = node.children.parameterList.map((list: any) =>
+        this.visit(list, ctx),
+      );
+      result += params.join("");
+    }
+
+    result += " = " + this.visit(node.children.expression[0], ctx);
 
     return result;
   }

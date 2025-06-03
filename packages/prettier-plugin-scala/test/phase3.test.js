@@ -165,7 +165,7 @@ describe("Phase 3 Features", () => {
   });
 
   describe("Auxiliary Constructors", () => {
-    test.skip("auxiliary constructor with this", async () => {
+    test("auxiliary constructor with this", async () => {
       const input = `class Rectangle(width: Double, height: Double) {
   def this(size: Double) = this(size, size)
 }`;
@@ -174,7 +174,7 @@ describe("Phase 3 Features", () => {
       assert.match(output, /= this\(size, size\)/);
     });
 
-    test.skip("multiple auxiliary constructors", async () => {
+    test("multiple auxiliary constructors", async () => {
       const input = `class Person(name: String, age: Int) {
   def this(name: String) = this(name, 0)
   def this() = this("Unknown", 0)
