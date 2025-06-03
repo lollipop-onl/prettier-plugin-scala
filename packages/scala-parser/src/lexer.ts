@@ -51,6 +51,8 @@ export const Override = createToken({
   name: "Override",
   pattern: /override\b/,
 });
+export const Given = createToken({ name: "Given", pattern: /given\b/ });
+export const Using = createToken({ name: "Using", pattern: /using\b/ });
 export const To = createToken({ name: "To", pattern: /to\b/ });
 
 // Identifiers (must come after keywords)
@@ -202,6 +204,8 @@ export const allTokens = [
   Implicit,
   Lazy,
   Override,
+  Given,
+  Using,
   To,
 
   // Literals

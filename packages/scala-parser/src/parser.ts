@@ -59,6 +59,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.valDefinition) },
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },
+      { ALT: () => this.SUBRULE(this.givenDefinition) },
     ]);
   });
 
@@ -151,6 +152,19 @@ export class ScalaParser extends CstParser {
     this.OPTION5(() => this.CONSUME(tokens.Semicolon));
   });
 
+  // Given definition (Scala 3)
+  private givenDefinition = this.RULE("givenDefinition", () => {
+    this.CONSUME(tokens.Given);
+    this.OPTION(() => this.CONSUME(tokens.Identifier));
+    this.OPTION2(() => {
+      this.CONSUME(tokens.Colon);
+      this.SUBRULE(this.type);
+    });
+    this.CONSUME(tokens.Equals);
+    this.SUBRULE(this.expression);
+    this.OPTION3(() => this.CONSUME(tokens.Semicolon));
+  });
+
   // Class parameters
   private classParameters = this.RULE("classParameters", () => {
     this.CONSUME(tokens.LeftParen);
@@ -193,10 +207,11 @@ export class ScalaParser extends CstParser {
   });
 
   private parameter = this.RULE("parameter", () => {
+    this.OPTION(() => this.CONSUME(tokens.Using));
     this.CONSUME(tokens.Identifier);
     this.CONSUME(tokens.Colon);
     this.SUBRULE(this.type);
-    this.OPTION(() => {
+    this.OPTION2(() => {
       this.CONSUME(tokens.Equals);
       this.SUBRULE(this.expression);
     });
@@ -255,6 +270,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.valDefinition) },
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },
+      { ALT: () => this.SUBRULE(this.givenDefinition) },
       { ALT: () => this.SUBRULE(this.classDefinition) },
       { ALT: () => this.SUBRULE(this.objectDefinition) },
       { ALT: () => this.SUBRULE(this.traitDefinition) },

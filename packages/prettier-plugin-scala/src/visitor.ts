@@ -135,6 +135,8 @@ export class CstNodeVisitor {
       return this.visit(node.children.varDefinition[0], ctx);
     } else if (node.children.defDefinition) {
       return this.visit(node.children.defDefinition[0], ctx);
+    } else if (node.children.givenDefinition) {
+      return this.visit(node.children.givenDefinition[0], ctx);
     }
 
     return "";
@@ -255,6 +257,22 @@ export class CstNodeVisitor {
     return result;
   }
 
+  visitGivenDefinition(node: any, ctx: PrintContext): string {
+    let result = "given";
+
+    if (node.children.Identifier) {
+      result += " " + node.children.Identifier[0].image;
+    }
+
+    if (node.children.Colon) {
+      result += ": " + this.visit(node.children.type[0], ctx);
+    }
+
+    result += " = " + this.visit(node.children.expression[0], ctx);
+
+    return result;
+  }
+
   visitClassParameters(node: any, ctx: PrintContext): string {
     const params = node.children.classParameter || [];
     if (params.length === 0) {
@@ -309,10 +327,15 @@ export class CstNodeVisitor {
   }
 
   visitParameter(node: any, ctx: PrintContext): string {
-    let result =
-      node.children.Identifier[0].image +
-      ": " +
-      this.visit(node.children.type[0], ctx);
+    let result = "";
+
+    if (node.children.Using) {
+      result += "using ";
+    }
+
+    result += node.children.Identifier[0].image;
+    result += ": ";
+    result += this.visit(node.children.type[0], ctx);
 
     if (node.children.Equals) {
       result += " = " + this.visit(node.children.expression[0], ctx);
