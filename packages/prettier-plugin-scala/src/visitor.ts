@@ -842,20 +842,9 @@ export class CstNodeVisitor {
       return "{}";
     }
 
-    // Check if this is a single-line block (just one expression)
-    if (
-      statements.length === 1 &&
-      !statements[0].children.valDefinition &&
-      !statements[0].children.varDefinition &&
-      !statements[0].children.defDefinition &&
-      !statements[0].children.assignmentStatement
-    ) {
-      return "{ " + this.visit(statements[0], ctx) + " }";
-    }
-
-    // Multi-line block
+    // Always use multi-line format for block expressions
     const stmtStrings = statements.map((stmt: any) => this.visit(stmt, ctx));
-    return "{\n  " + stmtStrings.join("\n  ") + "\n}";
+    return "{\n    " + stmtStrings.join("\n    ") + "\n  }";
   }
 
   visitBlockStatement(node: any, ctx: PrintContext): string {
