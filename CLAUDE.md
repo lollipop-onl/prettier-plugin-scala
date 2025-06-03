@@ -9,10 +9,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 scalafmt互換のPrettierプラグインを開発するプロジェクトです。Chevrotainパーサージェネレータを使用してScalaの構文解析を行い、Prettierのプラグインアーキテクチャに統合します。
 
 **プロジェクト完成度（2025/6/4時点）:**
-- **基本機能: 100%実装完了** 🎉 単体プロジェクトとしては完成
-- **テスト成功率: 100%** (55/55テスト成功、skipテスト0)
+- **基本機能: 100%実装完了** 🎉 Scala 2基本構文は完成
+- **テスト成功率: 100%** (55/55テスト成功、skipテスト0)  
 - **コメント保持機能: 実装完了** ✅ 行コメント・インラインコメント対応
-- **実プロダクション対応度: 70%** OSSプロジェクト調査により実用上の課題を発見
+- **言語仕様カバレッジ: 40%** scalafmt比較により重大なギャップを発見
+- **実プロダクション対応度: 60%** 制御構文・Scala 3機能の不足が影響
 
 ## 開発環境
 
@@ -115,26 +116,45 @@ prettier-plugin-scala/
 - CHANGELOGを維持
 - npm公開前にalpha/betaリリースを実施
 
-## 実プロダクション対応の課題（2025/6/4 OSSプロジェクト調査結果）
+## 言語仕様ギャップ分析（2025/6/4 scalafmt比較調査結果）
 
-### 🚨 高優先度 - 実用上必須（ほぼ全てのScalaプロジェクトで使用）
-- ❌ **複数インポート記法** `import cats.{A, B, C}` - パースエラー 
-- ❌ **アノテーション** `@Inject()` `@Test` - パースエラー
+### 🔴 Critical Priority - 基本制御構文不足（使用頻度: Very High）
+- ❌ **if/else文** - 全Scalaプロジェクトで必須、実装難易度: Low
+- ❌ **while文** - 一般的な制御構文、実装難易度: Low  
+- ❌ **try/catch/finally** - 例外処理必須、実装難易度: Medium
+- ❌ **複数インポート記法** `import cats.{A, B, C}` - 実装難易度: Medium
+- ❌ **アノテーション** `@Inject()` `@Test` - DIフレームワーク必須、実装難易度: Medium
 
-### ⚠️ 中優先度 - Scala 3移行で重要
-- ❌ **Enum定義** `enum Color { case Red }` - Scala 3主要機能
-- ❌ **Extension Methods** `extension (s: String)` - Scala 3主要機能
+### 🚨 Scala 3新機能 - 高優先度（Scala 3移行で必須）
+- ❌ **enum定義** `enum Color { case Red }` - Scala 3の核心機能、実装難易度: Medium
+- ❌ **extension methods** `extension (s: String)` - Scala 3差別化機能、実装難易度: High
+- ❌ **export句** `export mypackage.*` - モジュールシステム、実装難易度: Medium
+- ❌ **union types** `String | Int` - 新型システム、実装難易度: High
+- ❌ **intersection types** `A & B` - 新型システム、実装難易度: High
 
-### 🔧 低優先度 - 回避策あり・特殊用途
-- ❌ **Kind Projector記法** `Map[String, *]` - type lambda短縮記法
+### ⚠️ 高度な機能 - 中優先度（特定用途で重要）
+- ❌ **opaque types** - 型安全性向上、実装難易度: Medium
+- ❌ **match types** - 型レベルプログラミング、実装難易度: Very High
+- ❌ **type lambdas** `[X] =>> F[X]` - 関数型プログラミング、実装難易度: Very High
+- ❌ **Kind Projector記法** `Map[String, *]` - type lambda短縮記法、実装難易度: High
+
+### 🔧 メタプログラミング - 特殊用途（専門的用途）
+- ❌ **inline/transparent** - コンパイル時処理、実装難易度: High
+- ❌ **quotes and splices** `'{ }`, `${ }` - マクロシステム、実装難易度: Very High
 - ⚠️ **複合代入演算子** (+=, -=, etc.) - パーサー構造上の課題
 - ⚠️ **大規模ファイル** (10KB以上) のパフォーマンス問題
-- ⚠️ **制御フロー文** (if/else, while, try/catch) - 基本制御構文未対応
 
-### 📊 影響度分析
-- **現状**: 基本的なScala構文は完全サポート、単体テストは100%成功
-- **課題**: 実際のOSSプロジェクト（Cats、Play、Akka）でパースエラー多発
-- **実用性**: プロダクションコードの約30%が未対応構文を含む可能性
+### 📊 言語仕様カバレッジ分析
+- **Scala 2基本機能**: 100%サポート（classes, objects, traits, generics等）
+- **Scala 3基本機能**: 40%サポート（given/usingのみ）
+- **制御構文**: 20%サポート（match式のみ）
+- **高度な型システム**: 10%サポート（基本ジェネリクスのみ）
+- **メタプログラミング**: 0%サポート
+
+### 🆚 scalafmt比較
+- **scalafmt**: 上記機能をほぼ100%サポート
+- **prettier-plugin-scala**: Critical機能の大部分が未実装
+- **ギャップ**: 約60%の言語仕様が未対応
 
 ## 開発コマンド
 
@@ -158,43 +178,63 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js <file.scala>
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala
 ```
 
-## 次期開発タスク（実プロダクション対応版）
+## 次期開発ロードマップ（scalafmt互換性達成）
 
-### Phase 4: 実用性向上 - 高優先度タスク
+### Phase 1: Critical Features（1-2ヶ月）- 基本制御構文の実装
 
-#### 🚨 **複数インポート記法サポート** (最高優先度)
-- **対象構文**: `import cats.{Applicative, FlatMap, Monad}`
-- **技術課題**: レキサーに `{`, `}` 対応追加、パーサーにimportSelector規則追加
-- **影響度**: ほぼ全てのScalaプロジェクトで使用される必須機能
-- **実装方針**: 既存importExpression規則を拡張
+#### 🔴 **制御構文実装** (最重要)
+- **if/else文**: `if (condition) { action } else { alternative }` - 実装難易度: Low
+- **while文**: `while (condition) { body }` - 実装難易度: Low
+- **try/catch/finally**: 例外処理ブロック - 実装難易度: Medium
+- **技術課題**: 既存expression規則の拡張、新制御フロー規則追加
+- **期待効果**: 言語仕様カバレッジ 40% → 65%
 
-#### 🚨 **アノテーション基本サポート** (最高優先度)  
-- **対象構文**: `@Inject()`, `@Test`, `@deprecated("message")`
-- **技術課題**: `@` トークン認識追加、アノテーション構文のパーサー規則追加
-- **影響度**: DIフレームワーク、テスト、メタデータで必須
-- **実装方針**: クラス・メソッド・パラメータのアノテーション対応
+#### 🔴 **基本構文補完** (最重要)
+- **複数インポート記法**: `import cats.{A, B, C}` - 実装難易度: Medium
+- **アノテーション**: `@Inject()`, `@Test` - 実装難易度: Medium
+- **技術課題**: レキサーに新トークン追加、パーサー規則拡張
+- **期待効果**: 実プロダクション対応度 60% → 80%
 
-### Phase 5: Scala 3強化 - 中優先度タスク
+### Phase 2: Scala 3 Core Features（3-4ヶ月）- 新世代機能
 
-#### ⚠️ **Enum定義サポート**
-- **対象構文**: `enum Color { case Red, Green, Blue }`
-- **技術課題**: `enum` キーワード追加、enum本体のパーサー規則追加
-- **影響度**: Scala 3移行プロジェクトで重要
-- **実装方針**: sealed trait + case objectパターンを基に設計
+#### 🚨 **Scala 3必須機能** (高優先度)
+- **enum定義**: `enum Color { case Red, Green, Blue }` - 実装難易度: Medium
+- **extension methods**: `extension (s: String) { def double }` - 実装難易度: High
+- **export句**: `export mypackage.{given, *}` - 実装難易度: Medium
+- **技術課題**: 新キーワード認識、複雑な構文パターン解析
+- **期待効果**: Scala 3サポート 40% → 85%
 
-#### ⚠️ **Extension Methodsサポート**
-- **対象構文**: `extension (s: String) { def reverse: String }`
-- **技術課題**: `extension` キーワード追加、extension構文のパーサー規則追加
-- **影響度**: Scala 3の表現力拡張で重要
-- **実装方針**: implicit classパターンを基に設計
+#### 🚨 **型システム強化** (高優先度)
+- **union types**: `String | Int` - 実装難易度: High
+- **intersection types**: `A & B` - 実装難易度: High
+- **opaque types**: `opaque type UserId = String` - 実装難易度: Medium
+- **技術課題**: 型表現の拡張、演算子優先順位の調整
+- **期待効果**: 高度な型システム 10% → 70%
 
-### Phase 6: 高度な機能 - 低優先度タスク
+### Phase 3: Advanced Features（5-6ヶ月）- 専門機能
 
-#### 🔧 **Kind Projector記法サポート**
-- **対象構文**: `Map[String, *]`
-- **技術課題**: type lambda短縮記法の実装、`*` トークンの特別処理
-- **影響度**: 関数型プログラミングで便利だが回避策あり
-- **実装方針**: 段階的実装、互換性重視
+#### ⚠️ **高度な型機能** (中優先度)
+- **match types**: `type Elem[X] = X match { case String => Char }` - 実装難易度: Very High
+- **type lambdas**: `[X] =>> F[X]` - 実装難易度: Very High
+- **dependent function types**: - 実装難易度: Very High
+- **技術課題**: 複雑な型レベルプログラミング対応
+- **期待効果**: 言語仕様カバレッジ → 90%
+
+#### 🔧 **メタプログラミング** (特殊用途)
+- **inline/transparent**: `inline def debug` - 実装難易度: High
+- **quotes and splices**: `'{ code }`, `${ expr }` - 実装難易度: Very High
+- **Kind Projector記法**: `Map[String, *]` - 実装難易度: High
+- **技術課題**: マクロシステム理解、コンパイル時処理
+- **期待効果**: メタプログラミング 0% → 80%
+
+### 🎯 マイルストーン目標
+
+| Phase | 期間 | 言語仕様カバレッジ | 実プロダクション対応度 | 主要達成項目 |
+|-------|------|-------------------|----------------------|-------------|
+| **Current** | - | 40% | 60% | Scala 2基本構文完成 |
+| **Phase 1** | 1-2ヶ月 | 65% | 80% | 制御構文・基本機能完成 |
+| **Phase 2** | 3-4ヶ月 | 80% | 90% | Scala 3核心機能対応 |
+| **Phase 3** | 5-6ヶ月 | 90% | 95% | scalafmt互換レベル達成 |
 
 ## プロジェクト現在状況
 
@@ -217,6 +257,7 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 - [Chevrotain Documentation](https://chevrotain.io/docs/)
 - [scalafmt Configuration](https://scalameta.org/scalafmt/docs/configuration.html)
 - [Edge Case Report](./edge-case-report.md) - OSSプロジェクト調査結果詳細
+- [Language Gap Analysis](./docs/language-gap-analysis-report.md) - scalafmt比較・言語仕様ギャップ詳細分析
 
 ### その他のメモ
 
