@@ -155,14 +155,25 @@ export class ScalaParser extends CstParser {
   // Given definition (Scala 3)
   private givenDefinition = this.RULE("givenDefinition", () => {
     this.CONSUME(tokens.Given);
-    this.OPTION(() => this.CONSUME(tokens.Identifier));
-    this.OPTION2(() => {
-      this.CONSUME(tokens.Colon);
-      this.SUBRULE(this.type);
-    });
+    this.OR([
+      {
+        ALT: () => {
+          // Named given: given name: Type = expression
+          this.CONSUME(tokens.Identifier);
+          this.CONSUME(tokens.Colon);
+          this.SUBRULE(this.type);
+        },
+      },
+      {
+        ALT: () => {
+          // Anonymous given: given Type = expression
+          this.SUBRULE2(this.type);
+        },
+      },
+    ]);
     this.CONSUME(tokens.Equals);
     this.SUBRULE(this.expression);
-    this.OPTION3(() => this.CONSUME(tokens.Semicolon));
+    this.OPTION(() => this.CONSUME(tokens.Semicolon));
   });
 
   // Class parameters

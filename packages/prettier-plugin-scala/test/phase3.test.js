@@ -151,7 +151,7 @@ describe("Phase 3 Features", () => {
       assert.equal(output, "given intOrdering: Ordering[Int] = Ordering.Int");
     });
 
-    test.skip("given without name", async () => {
+    test("given without name", async () => {
       const input = `given Ordering[String] = Ordering.String`;
       const output = await format(input);
       assert.equal(output, "given Ordering[String] = Ordering.String");

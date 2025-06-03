@@ -261,11 +261,12 @@ export class CstNodeVisitor {
     let result = "given";
 
     if (node.children.Identifier) {
+      // Named given: given name: Type = expression
       result += " " + node.children.Identifier[0].image;
-    }
-
-    if (node.children.Colon) {
       result += ": " + this.visit(node.children.type[0], ctx);
+    } else {
+      // Anonymous given: given Type = expression
+      result += " " + this.visit(node.children.type[0], ctx);
     }
 
     result += " = " + this.visit(node.children.expression[0], ctx);
