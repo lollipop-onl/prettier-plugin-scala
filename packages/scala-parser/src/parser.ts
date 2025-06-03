@@ -359,6 +359,7 @@ export class ScalaParser extends CstParser {
   private primaryExpression = this.RULE("primaryExpression", () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.literal) },
+      { ALT: () => this.SUBRULE(this.applyExpression) },
       { ALT: () => this.CONSUME(tokens.Identifier) },
       { ALT: () => this.CONSUME(tokens.This) },
       { ALT: () => this.SUBRULE(this.newExpression) },
@@ -385,6 +386,16 @@ export class ScalaParser extends CstParser {
       });
       this.CONSUME(tokens.RightParen);
     });
+  });
+
+  private applyExpression = this.RULE("applyExpression", () => {
+    this.SUBRULE(this.type);
+    this.CONSUME(tokens.LeftParen);
+    this.MANY_SEP({
+      SEP: tokens.Comma,
+      DEF: () => this.SUBRULE(this.expression),
+    });
+    this.CONSUME(tokens.RightParen);
   });
 
   private caseClause = this.RULE("caseClause", () => {

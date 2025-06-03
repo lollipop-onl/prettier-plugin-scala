@@ -478,6 +478,8 @@ export class CstNodeVisitor {
   visitPrimaryExpression(node: any, ctx: PrintContext): string {
     if (node.children.literal) {
       return this.visit(node.children.literal[0], ctx);
+    } else if (node.children.applyExpression) {
+      return this.visit(node.children.applyExpression[0], ctx);
     } else if (node.children.Identifier) {
       return node.children.Identifier[0].image;
     } else if (node.children.This) {
@@ -581,6 +583,19 @@ export class CstNodeVisitor {
       }
       result += ")";
     }
+
+    return result;
+  }
+
+  visitApplyExpression(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.type[0], ctx);
+
+    result += "(";
+    if (node.children.expression) {
+      const args = node.children.expression.map((e: any) => this.visit(e, ctx));
+      result += args.join(", ");
+    }
+    result += ")";
 
     return result;
   }
