@@ -102,6 +102,8 @@ export const EqualsEquals = createToken({
   pattern: /==/,
 });
 export const NotEquals = createToken({ name: "NotEquals", pattern: /!=/ });
+export const LogicalAnd = createToken({ name: "LogicalAnd", pattern: /&&/ });
+export const LogicalOr = createToken({ name: "LogicalOr", pattern: /\|\|/ });
 export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
@@ -208,6 +210,8 @@ export const allTokens = [
   GreaterThanEquals,
   EqualsEquals,
   NotEquals,
+  LogicalAnd,
+  LogicalOr,
 
   // Single-character operators
   Equals,

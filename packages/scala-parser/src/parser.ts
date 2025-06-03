@@ -467,6 +467,8 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.GreaterThanEquals) },
       { ALT: () => this.CONSUME(tokens.EqualsEquals) },
       { ALT: () => this.CONSUME(tokens.NotEquals) },
+      { ALT: () => this.CONSUME(tokens.LogicalAnd) },
+      { ALT: () => this.CONSUME(tokens.LogicalOr) },
       { ALT: () => this.CONSUME(tokens.Dot) },
       { ALT: () => this.CONSUME(tokens.To) },
       { ALT: () => this.CONSUME(tokens.Identifier) }, // For general infix methods
