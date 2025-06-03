@@ -74,13 +74,13 @@ export const FloatingPointLiteral = createToken({
 
 export const StringLiteral = createToken({
   name: "StringLiteral",
-  pattern: /"([^"\\]|\\.)*"/,
+  pattern: /"""[\s\S]*?"""|"([^"\\]|\\.)*"/,
 });
 
 export const InterpolatedStringLiteral = createToken({
   name: "InterpolatedStringLiteral",
   pattern:
-    /[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\$[a-zA-Z_][a-zA-Z0-9_]*|\$\{[^}]*\})*"/,
+    /[a-zA-Z_][a-zA-Z0-9_]*"""[\s\S]*?"""|[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\$[a-zA-Z_][a-zA-Z0-9_]*|\$\{[^}]*\})*"/,
 });
 
 export const CharLiteral = createToken({
