@@ -403,6 +403,13 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.forExpression) },
       {
         ALT: () => {
+          // Unary negation: !expression
+          this.CONSUME(tokens.Exclamation);
+          this.SUBRULE(this.postfixExpression);
+        },
+      },
+      {
+        ALT: () => {
           this.CONSUME(tokens.LeftParen);
           this.SUBRULE(this.expression);
           this.CONSUME(tokens.RightParen);

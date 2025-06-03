@@ -584,6 +584,9 @@ export class CstNodeVisitor {
       return this.visit(node.children.newExpression[0], ctx);
     } else if (node.children.forExpression) {
       return this.visit(node.children.forExpression[0], ctx);
+    } else if (node.children.Exclamation) {
+      // Handle negation operator
+      return "!" + this.visit(node.children.postfixExpression[0], ctx);
     } else if (node.children.LeftParen) {
       return "(" + this.visit(node.children.expression[0], ctx) + ")";
     } else if (node.children.blockExpression) {

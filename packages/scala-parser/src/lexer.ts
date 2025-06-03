@@ -112,6 +112,7 @@ export const EqualsEquals = createToken({
 export const NotEquals = createToken({ name: "NotEquals", pattern: /!=/ });
 export const LogicalAnd = createToken({ name: "LogicalAnd", pattern: /&&/ });
 export const LogicalOr = createToken({ name: "LogicalOr", pattern: /\|\|/ });
+export const Exclamation = createToken({ name: "Exclamation", pattern: /!/ });
 export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
@@ -239,6 +240,7 @@ export const allTokens = [
   Percent,
   LessThan,
   GreaterThan,
+  Exclamation,
   Colon,
   Semicolon,
   Comma,
