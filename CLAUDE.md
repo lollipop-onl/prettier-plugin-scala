@@ -184,6 +184,48 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js <file.scala>
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala
 ```
 
+## Skip されているテストの実装TODO（2025/6/3）
+
+### 高優先度（実用性が高い）
+1. **Lambda expressions with type annotations** 
+   - `val add = (x: Int, y: Int) => x + y`
+   - パーサーでのパラメータリスト解析とvisitorでの型注釈フォーマット実装が必要
+   
+2. **Multiline lambda expressions**
+   - `list.map { x => val doubled = x * 2; doubled + 1 }`
+   - ブロック形式ラムダの解析とフォーマット実装が必要
+   
+3. **Apply expressions with arguments**
+   - `val map = Map("a" -> 1, "b" -> 2)`
+   - Map, List等のコンストラクタ呼び出し時の引数解析実装が必要
+   
+4. **Auxiliary constructors**
+   - `def this(size: Double) = this(size, size)`
+   - クラス内補助コンストラクタの完全サポート実装が必要
+
+### 中優先度（Scala 3機能）
+5. **Anonymous given definitions**
+   - `given Ordering[String] = Ordering.String`
+   - 名前なしgiven定義のパーサー拡張が必要
+   
+6. **Given with parameters**
+   - `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`
+   - パラメータ付きgiven定義の実装が必要
+   
+7. **Nested apply expressions**
+   - `val nested = List(Map("key" -> "value"))`
+   - ネストしたコンストラクタ呼び出しの解析実装が必要
+
+### 低優先度（開発支援機能）
+8. **Comment preservation**
+   - `// This is a comment class Person /* inline comment */ (name: String)`
+   - コメント保持機能の実装（lexerとvisitorの拡張が必要）
+
+### 実装方針
+- 各機能ごとに段階的にパーサー、lexer、visitorを修正
+- テストを有効化して動作確認
+- 実装完了後は該当のtest.skipをtestに変更
+
 ## 参考資料
 
 - [Prettier Plugin API](https://prettier.io/docs/plugins.html)
