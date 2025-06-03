@@ -310,13 +310,20 @@ export class ScalaParser extends CstParser {
 
   // Expressions (simplified for MVP)
   private expression = this.RULE("expression", () => {
+    // Try lambda expression with backtracking
     this.OR([
       {
         ALT: () => {
-          // Lambda expression: x => x * 2
+          // Try to parse as lambda expression: x => x * 2
+          // Use backtracking to handle cases where identifier is not followed by =>
           this.CONSUME(tokens.Identifier);
           this.CONSUME(tokens.Arrow);
           this.SUBRULE(this.expression);
+        },
+        GATE: () => {
+          // Only try lambda if we see Identifier followed by Arrow
+          const nextTokens = this.LA(2);
+          return nextTokens && nextTokens.tokenType === tokens.Arrow;
         },
       },
       {
@@ -515,11 +522,45 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.defDefinition) },
       {
         ALT: () => {
-          this.SUBRULE(this.expression);
+          // Try assignment statement first
+          this.SUBRULE(this.assignmentStatement);
           this.OPTION(() => this.CONSUME(tokens.Semicolon));
+        },
+        GATE: () => {
+          // Check if this looks like an assignment
+          const first = this.LA(1);
+          const second = this.LA(2);
+          return (
+            first.tokenType === tokens.Identifier &&
+            (second.tokenType === tokens.PlusEquals ||
+              second.tokenType === tokens.MinusEquals ||
+              second.tokenType === tokens.StarEquals ||
+              second.tokenType === tokens.SlashEquals ||
+              second.tokenType === tokens.PercentEquals ||
+              second.tokenType === tokens.Equals)
+          );
+        },
+      },
+      {
+        ALT: () => {
+          this.SUBRULE(this.expression);
+          this.OPTION2(() => this.CONSUME2(tokens.Semicolon));
         },
       },
     ]);
+  });
+
+  private assignmentStatement = this.RULE("assignmentStatement", () => {
+    this.CONSUME(tokens.Identifier);
+    this.OR([
+      { ALT: () => this.CONSUME(tokens.Equals) },
+      { ALT: () => this.CONSUME(tokens.PlusEquals) },
+      { ALT: () => this.CONSUME(tokens.MinusEquals) },
+      { ALT: () => this.CONSUME(tokens.StarEquals) },
+      { ALT: () => this.CONSUME(tokens.SlashEquals) },
+      { ALT: () => this.CONSUME(tokens.PercentEquals) },
+    ]);
+    this.SUBRULE(this.expression);
   });
 
   private infixOperator = this.RULE("infixOperator", () => {

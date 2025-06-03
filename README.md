@@ -186,7 +186,8 @@ class UserService(
 #### Scala-Specific Syntax
 - **String interpolation**: `s"Hello $name"`, `f"Score: $value%.2f"`
 - **Infix notation**: `1 to 10`, `list :+ element`, `elem :: list`
-- **Logical operators**: `x && y`, `a || b`
+- **Logical operators**: `x && y`, `a || b`, `!flag`
+- **Bitwise operators**: `&`, `|`, `^`, `~`, `<<`, `>>`, `>>>`
 - **Constructor calls**: `new Person("Alice", 30)`, `new List[Int]()`
 - **Given definitions**: `given stringValue: String = "default"` (Scala 3)
 
@@ -196,7 +197,20 @@ class UserService(
 - **Access modifiers**: `private`, `protected`, `final`
 - **Variable declarations**: `val x = 42`, `var counter: Int = 0`
 
+### ⚠️ Known Limitations
+
+The following features are not yet supported:
+
+- **Compound assignment operators**: `+=`, `-=`, `*=`, `/=`, `%=` 
+  - Workaround: Use regular assignment (e.g., `x = x + 5` instead of `x += 5`)
+- **If/else statements**: Traditional if/else blocks
+- **While loops**: `while (condition) { ... }`
+- **Try/catch/finally**: Exception handling blocks
+- **Large files**: Performance issues with files over 10KB
+
 ### 🔮 Future Enhancements
+- **Compound assignment operators** (technical challenges identified, see docs)
+- **Control flow statements** (if/else, while, try/catch)
 - **Implicit parameters and conversions**
 - **Extension methods** (Scala 3)
 - **Union and intersection types** (Scala 3)

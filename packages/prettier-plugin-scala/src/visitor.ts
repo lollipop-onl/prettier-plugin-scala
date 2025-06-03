@@ -650,6 +650,23 @@ export class CstNodeVisitor {
     return "";
   }
 
+  visitAssignmentStatement(node: any, ctx: PrintContext): string {
+    let result = node.children.Identifier[0].image;
+
+    const operator =
+      node.children.Equals?.[0] ||
+      node.children.PlusEquals?.[0] ||
+      node.children.MinusEquals?.[0] ||
+      node.children.StarEquals?.[0] ||
+      node.children.SlashEquals?.[0] ||
+      node.children.PercentEquals?.[0];
+
+    result += " " + operator.image + " ";
+    result += this.visit(node.children.expression[0], ctx);
+
+    return result;
+  }
+
   visitAssignmentOrInfixExpression(node: any, ctx: PrintContext): string {
     let result = this.visit(node.children.postfixExpression[0], ctx);
 
