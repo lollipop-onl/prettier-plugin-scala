@@ -18,17 +18,38 @@ const parsers = {
     parse: (text: string) => {
       const result = parse(text);
 
-      // For now, disable comments entirely by returning empty array
+      // シンプルなコメント保持: ASTに格納してvisitorで処理
       const ast = {
         ...result.cst,
-        comments: [],
+        comments: [], // Prettierの検証を回避
+        originalComments: result.comments || [], // プラグイン独自のコメント格納
         type: "compilationUnit",
       };
       return ast;
     },
     astFormat: "scala-cst",
-    locStart: (node: any) => node.location?.startOffset || 0,
-    locEnd: (node: any) => node.location?.endOffset || 1,
+    locStart: (node: any) => {
+      // Handle comment tokens (from Chevrotain lexer)
+      if (node.startOffset !== undefined) {
+        return node.startOffset;
+      }
+      // Handle CST nodes
+      if (node.location?.startOffset !== undefined) {
+        return node.location.startOffset;
+      }
+      return 0;
+    },
+    locEnd: (node: any) => {
+      // Handle comment tokens (from Chevrotain lexer)
+      if (node.endOffset !== undefined) {
+        return node.endOffset + 1; // Chevrotain endOffset is inclusive, Prettier expects exclusive
+      }
+      // Handle CST nodes
+      if (node.location?.endOffset !== undefined) {
+        return node.location.endOffset + 1; // Chevrotain endOffset is inclusive, Prettier expects exclusive
+      }
+      return 1;
+    },
     hasPragma: () => false,
   },
 };

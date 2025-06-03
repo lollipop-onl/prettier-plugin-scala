@@ -10,6 +10,16 @@ export class CstNodeVisitor {
   visit(node: any, ctx: PrintContext): string {
     if (!node) return "";
 
+    // Handle root node with original comments
+    if (node.type === "compilationUnit" && node.originalComments) {
+      const nodeResult = this.visitCore(node, ctx);
+      return this.attachOriginalComments(nodeResult, node.originalComments);
+    }
+
+    return this.visitCore(node, ctx);
+  }
+
+  private visitCore(node: any, ctx: PrintContext): string {
     // Handle token nodes
     if (node.image !== undefined) {
       return node.image;
@@ -31,6 +41,40 @@ export class CstNodeVisitor {
     }
 
     return "";
+  }
+
+  private attachOriginalComments(code: string, comments: any[]): string {
+    if (!comments || comments.length === 0) return code;
+
+    // Improved approach: try to maintain comment positions based on line information
+    const lines = code.split("\n");
+    const commentsByLine = new Map<number, string[]>();
+
+    // Group comments by line number
+    comments.forEach((comment) => {
+      const line = comment.startLine || 1;
+      if (!commentsByLine.has(line)) {
+        commentsByLine.set(line, []);
+      }
+      commentsByLine.get(line)!.push(comment.image);
+    });
+
+    // Insert comments before their corresponding lines
+    const result: string[] = [];
+    lines.forEach((line, index) => {
+      const lineNumber = index + 1;
+
+      // Add comments that should appear before this line
+      if (commentsByLine.has(lineNumber)) {
+        commentsByLine.get(lineNumber)!.forEach((comment) => {
+          result.push(comment);
+        });
+      }
+
+      result.push(line);
+    });
+
+    return result.join("\n");
   }
 
   visitChildren(node: any, ctx: PrintContext): string {
