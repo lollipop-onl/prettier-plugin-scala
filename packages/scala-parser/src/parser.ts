@@ -310,11 +310,26 @@ export class ScalaParser extends CstParser {
 
   // Expressions (simplified for MVP)
   private expression = this.RULE("expression", () => {
-    this.SUBRULE(this.postfixExpression);
-    this.MANY(() => {
-      this.SUBRULE(this.infixOperator);
-      this.SUBRULE2(this.postfixExpression);
-    });
+    this.OR([
+      {
+        ALT: () => {
+          // Lambda expression: x => x * 2
+          this.CONSUME(tokens.Identifier);
+          this.CONSUME(tokens.Arrow);
+          this.SUBRULE3(this.expression);
+        },
+      },
+      {
+        ALT: () => {
+          // Regular expression
+          this.SUBRULE(this.postfixExpression);
+          this.MANY(() => {
+            this.SUBRULE(this.infixOperator);
+            this.SUBRULE2(this.postfixExpression);
+          });
+        },
+      },
+    ]);
   });
 
   private postfixExpression = this.RULE("postfixExpression", () => {
@@ -328,26 +343,10 @@ export class ScalaParser extends CstParser {
             this.OPTION(() => {
               this.CONSUME(tokens.LeftParen);
               this.OPTION2(() => {
-                // Handle lambda expressions as arguments
-                this.OR2([
-                  {
-                    ALT: () => {
-                      // Simple lambda: x => x * 2
-                      this.CONSUME2(tokens.Identifier);
-                      this.CONSUME(tokens.Arrow);
-                      this.SUBRULE3(this.expression);
-                    },
-                  },
-                  {
-                    ALT: () => {
-                      // Regular arguments
-                      this.MANY_SEP({
-                        SEP: tokens.Comma,
-                        DEF: () => this.SUBRULE4(this.expression),
-                      });
-                    },
-                  },
-                ]);
+                this.MANY_SEP({
+                  SEP: tokens.Comma,
+                  DEF: () => this.SUBRULE4(this.expression),
+                });
               });
               this.CONSUME(tokens.RightParen);
             });

@@ -432,19 +432,33 @@ export class CstNodeVisitor {
   }
 
   visitExpression(node: any, ctx: PrintContext): string {
-    let result = this.visit(node.children.postfixExpression[0], ctx);
-
-    if (node.children.infixOperator) {
-      for (let i = 0; i < node.children.infixOperator.length; i++) {
-        result +=
-          " " +
-          this.visit(node.children.infixOperator[i], ctx) +
-          " " +
-          this.visit(node.children.postfixExpression[i + 1], ctx);
-      }
+    // Handle lambda expressions
+    if (node.children.Identifier && node.children.Arrow) {
+      return (
+        node.children.Identifier[0].image +
+        " => " +
+        this.visit(node.children.expression[0], ctx)
+      );
     }
 
-    return result;
+    // Handle regular expressions
+    if (node.children.postfixExpression) {
+      let result = this.visit(node.children.postfixExpression[0], ctx);
+
+      if (node.children.infixOperator) {
+        for (let i = 0; i < node.children.infixOperator.length; i++) {
+          result +=
+            " " +
+            this.visit(node.children.infixOperator[i], ctx) +
+            " " +
+            this.visit(node.children.postfixExpression[i + 1], ctx);
+        }
+      }
+
+      return result;
+    }
+
+    return this.visitChildren(node, ctx);
   }
 
   visitPostfixExpression(node: any, ctx: PrintContext): string {
