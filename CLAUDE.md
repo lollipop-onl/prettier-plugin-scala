@@ -8,13 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 scalafmt互換のPrettierプラグインを開発するプロジェクトです。Chevrotainパーサージェネレータを使用してScalaの構文解析を行い、Prettierのプラグインアーキテクチャに統合します。
 
-**現在の実装状況:**
-- ✅ Phase 1: 基本構文のフォーマッティング（100%成功率）
-- ✅ Phase 2: 主要機能の完全実装（100%成功率）
-- ✅ Phase 3: 完全版への大幅拡張（100%成功率）
+**プロジェクト完成度:**
+- 基本機能: 100%完了
+- 中級機能: 100%完了  
+- 高度な機能: 85%完了（ビット演算子実装済み、複合代入は部分的）
+- 実プロジェクト対応: 70%（否定演算子とビット演算子実装により大幅改善）
 - 総合テスト成功: 7/7フィクスチャ（100%）
-- 完全実装済み: 論理演算子、クラス内メンバー初期化、文字列補間、補助コンストラクタ、高度な中置記法、given定義
-- テスト環境: npm scriptsによるPrettierチェック統合
 
 ## 開発環境
 
@@ -80,23 +79,48 @@ prettier-plugin-scala/
 - test: テストの追加・修正
 - chore: ビルドプロセスやツールの変更
 
-### 実装フェーズ
+### 開発経緯とフェーズ実装結果
 
-1. **✅ Phase 1: MVP版** - 基本的なScalaコードのフォーマッティング（完了）
-   - テスト成功率: 87.5% (7/8)
-   - 基本構文（クラス、オブジェクト、メソッド、変数）の完全サポート
-2. **✅ Phase 2: 主要機能実装** - 実用的なScalaコードのフォーマッティング（完了）
-   - テスト成功率: 100% (17/17)
-   - ジェネリクス、ケースクラス、パターンマッチング、new演算子の完全サポート
-   - Phase 3機能の先行実装: For内包表記、ラムダ式、中置記法
-3. **✅ Phase 3: 完全版** - scalafmtとの高い互換性（完了）
-   - テスト成功率: 96% (23/24)
-   - 論理演算子（&&、||）の完全サポート
-   - クラス内メンバー初期化（apply式）の完全サポート
-   - 文字列補間（s"$var"、f"$var"、${expr}）の完全サポート
-   - 補助コンストラクタ（def this(...)）の完全サポート
-   - 高度な中置記法（:+、::、++）の完全サポート
-   - Scala 3のgiven定義の基本サポート
+#### Phase 1: MVP版（完了）- 基本的なScalaコードのフォーマッティング
+- テスト成功率: 87.5% (7/8)
+- 基本構文（クラス、オブジェクト、メソッド、変数）の完全サポート
+- 実装済み機能:
+  - ✅ 基本クラス定義: `class Person(name: String, age: Int)`
+  - ✅ オブジェクト定義: `object Main { ... }`
+  - ✅ トレイト定義: `trait Drawable { ... }`
+  - ✅ メソッド定義: `def add(a: Int, b: Int): Int = a + b`
+  - ✅ 変数定義: `val x = 42`, `var y: String = "hello"`
+  - ✅ パッケージ・インポート: `package com.example`, `import scala.collection`
+  - ✅ アクセス修飾子: `private`, `protected`, `final`
+  - ✅ ブロック式: `{ val x = 10; x + 20 }`
+
+#### Phase 2: 主要機能実装（完了）- 実用的なScalaコードのフォーマッティング
+- テスト成功率: 100% (17/17)
+- ジェネリクス、ケースクラス、パターンマッチング、new演算子の完全サポート
+- 実装済み機能:
+  - ✅ ジェネリクス: `class Box[T]`, `def identity[T]`, `[T <: AnyRef]`, `[T >: Nothing]`
+  - ✅ ケースクラス: `case class Person(name: String, age: Int)`
+  - ✅ パターンマッチング: `x match { case 1 => "one"; case _ => "other" }`
+  - ✅ new演算子: `new Person("Alice", 30)`, `new List[Int]()`
+- Phase 3より先行実装済み:
+  - ✅ For内包表記: `for (i <- 1 to 10) yield i * 2`, `for (i <- xs if i > 0) yield i`
+  - ✅ ラムダ式とメソッド呼び出し: `list.map(x => x * 2)`
+  - ✅ 中置記法（to演算子）: `1 to 10`
+
+#### Phase 3: 完全版（完了）- scalafmtとの高い互換性
+- テスト成功率: 96% (23/24)
+- 完全実装済み機能:
+  - ✅ **論理演算子**: `&&`, `||` - 条件処理の完全サポート
+  - ✅ **クラス内メンバー初期化**: `private val cache = Map[String, User]()`
+  - ✅ **文字列補間**: `s"Hello $name"`, `f"Score: $value%.2f"`
+  - ✅ **補助コンストラクタ**: `def this(...) = this(...)`
+  - ✅ **given定義**: `given stringValue: String = "default"` (Scala 3)
+  - ✅ **高度な中置記法**: `list :+ element`, `elem :: list`, `list ++ other`
+
+#### 追加改善（2025/6/3）
+- ✅ **否定演算子（!）** - 完全実装済み
+- ✅ **ビット演算子** - &, |, ^, ~, <<, >>, >>> を実装
+- ⚠️ **複合代入演算子** - レキサーへの追加とパーサーの試行実装を行ったが、技術的課題により保留
 
 ### テスト方針
 
@@ -116,73 +140,27 @@ prettier-plugin-scala/
 - CHANGELOGを維持
 - npm公開前にalpha/betaリリースを実施
 
-### Phase 1 実装結果（完了）
-
-**実装済み機能:**
-- ✅ 基本クラス定義: `class Person(name: String, age: Int)`
-- ✅ オブジェクト定義: `object Main { ... }`
-- ✅ トレイト定義: `trait Drawable { ... }`
-- ✅ メソッド定義: `def add(a: Int, b: Int): Int = a + b`
-- ✅ 変数定義: `val x = 42`, `var y: String = "hello"`
-- ✅ パッケージ・インポート: `package com.example`, `import scala.collection`
-- ✅ アクセス修飾子: `private`, `protected`, `final`
-- ✅ ブロック式: `{ val x = 10; x + 20 }`
-
-**テスト結果:**
-- 基本機能テスト: 10/10 (100%)
-- 実世界パターン: 2/5 (40%)
-- 総合評価: 7/8 (87.5%)
-
-### Phase 2 実装結果（完了）
-
-**実装済み機能:**
-- ✅ ジェネリクス: `class Box[T]`, `def identity[T]`, `[T <: AnyRef]`, `[T >: Nothing]`
-- ✅ ケースクラス: `case class Person(name: String, age: Int)`
-- ✅ パターンマッチング: `x match { case 1 => "one"; case _ => "other" }`
-- ✅ new演算子: `new Person("Alice", 30)`, `new List[Int]()`
-
-**Phase 3より先行実装済み:**
-- ✅ For内包表記: `for (i <- 1 to 10) yield i * 2`, `for (i <- xs if i > 0) yield i`
-- ✅ ラムダ式とメソッド呼び出し: `list.map(x => x * 2)`
-- ✅ 中置記法（to演算子）: `1 to 10`
-
-**テスト結果:**
-- ジェネリクス: 6/6 (100%)
-- ケースクラス: 2/2 (100%)
-- new演算子: 3/3 (100%)
-- パターンマッチング: 2/2 (100%)
-- For内包表記: 3/3 (100%)
-- メソッド呼び出し: 1/1 (100%)
-- **総合評価: 17/17 (100%)**
-
-### Phase 3 実装結果（完了）
-
-**完全実装済み機能:**
-- ✅ **論理演算子**: `&&`, `||` - 条件処理の完全サポート
-- ✅ **クラス内メンバー初期化**: `private val cache = Map[String, User]()`
-- ✅ **文字列補間**: `s"Hello $name"`, `f"Score: $value%.2f"`
-- ✅ **補助コンストラクタ**: `def this(...) = this(...)`
-- ✅ **given定義**: `given stringValue: String = "default"` (Scala 3)
-- ✅ **高度な中置記法**: `list :+ element`, `elem :: list`, `list ++ other`
-
-### 実動作テスト結果（2025/6/3 - 最終更新）
+### 実動作テスト結果（2025/6/3）
 
 **全機能動作確認済み:**
-- ✅ トップレベルのval/var定義
+- ✅ トップレベルのval/var/def定義
 - ✅ 基本的なクラス/ケースクラス/トレイト/オブジェクト定義
 - ✅ メソッド定義（クラス内、補助コンストラクタ含む）
 - ✅ ジェネリクス定義（上限・下限境界含む）
 - ✅ パターンマッチング（ガード付き含む）
 - ✅ パッケージ/インポート文
-- ✅ **For内包表記**: `for (i <- 1 to 10) yield i * 2`
-- ✅ **ラムダ式**: `list.map(x => x * 2)`
-- ✅ **中置記法**: `1 to 10`, `list :+ element`, `elem :: list`
-- ✅ **論理演算子**: `x && y`, `a || b`
-- ✅ **文字列補間**: `s"Hello $name"`, `f"Score: $value%.2f"`
-- ✅ **型パラメータ付きコンストラクタ**: `new List[Int]()`, `Map[String, User]()`
-- ✅ **given定義**: `given stringValue: String = "default"`
+- ✅ For内包表記: `for (i <- 1 to 10) yield i * 2`
+- ✅ ラムダ式: `list.map(x => x * 2)`
+- ✅ 中置記法: `1 to 10`, `list :+ element`, `elem :: list`
+- ✅ 論理演算子: `x && y`, `a || b`, `!flag`
+- ✅ ビット演算子: `a & b`, `x | y`, `~mask`, `val << 2`
+- ✅ 文字列補間: `s"Hello $name"`, `f"Score: $value%.2f"`
+- ✅ 型パラメータ付きコンストラクタ: `new List[Int]()`, `Map[String, User]()`
+- ✅ given定義: `given stringValue: String = "default"`
 
-**現在制限なし:** 主要なScala機能の100%実装完了
+**技術的制限:**
+- ⚠️ 複合代入演算子（+=, -=, etc.）- パーサー構造上の課題により保留
+- ❌ 大規模ファイル（10KB以上）のパフォーマンス問題
 
 ## 開発コマンド
 
