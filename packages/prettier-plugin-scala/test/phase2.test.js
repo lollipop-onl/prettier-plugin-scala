@@ -132,4 +132,46 @@ describe("Phase 2 Features", () => {
       assert.match(output, /\.map\(/);
     });
   });
+
+  describe("Enum Definitions (Scala 3)", () => {
+    test("simple enum", async () => {
+      const input = `enum Color { case Red case Green case Blue }`;
+      const output = await format(input);
+      assert.match(output, /enum Color \{/);
+      assert.match(output, /case Red/);
+      assert.match(output, /case Green/);
+      assert.match(output, /case Blue/);
+    });
+
+    test("enum with parameters", async () => {
+      const input = `enum Planet { case Earth }`;
+      const output = await format(input);
+      assert.match(output, /enum Planet/);
+      assert.match(output, /case Earth/);
+    });
+
+    test("generic enum", async () => {
+      const input = `enum Option[+T] { case Some(value: T) case None }`;
+      const output = await format(input);
+      assert.match(output, /enum Option\[\+T\]/);
+      assert.match(output, /case Some\(/);
+      assert.match(output, /case None/);
+    });
+  });
+
+  describe("Extension Methods (Scala 3)", () => {
+    test("simple extension method", async () => {
+      const input = `extension (s: String) { def double: String = s + s }`;
+      const output = await format(input);
+      assert.match(output, /extension \(s: String\) \{/);
+      assert.match(output, /def double: String = s \+ s/);
+    });
+
+    test("extension with type parameters", async () => {
+      const input = `extension [T](list: List[T]) { def head: T = list(0) }`;
+      const output = await format(input);
+      assert.match(output, /extension\[T\] \(list: List\[T\]\) \{/);
+      assert.match(output, /def head: T = list\(0\)/);
+    });
+  });
 });

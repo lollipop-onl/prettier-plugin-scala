@@ -298,6 +298,10 @@ export class CstNodeVisitor {
       return this.visit(node.children.objectDefinition[0], ctx);
     } else if (node.children.traitDefinition) {
       return this.visit(node.children.traitDefinition[0], ctx);
+    } else if (node.children.enumDefinition) {
+      return this.visit(node.children.enumDefinition[0], ctx);
+    } else if (node.children.extensionDefinition) {
+      return this.visit(node.children.extensionDefinition[0], ctx);
     } else if (node.children.valDefinition) {
       return this.visit(node.children.valDefinition[0], ctx);
     } else if (node.children.varDefinition) {
@@ -375,6 +379,78 @@ export class CstNodeVisitor {
     }
 
     return result;
+  }
+
+  visitEnumDefinition(node: any, ctx: PrintContext): string {
+    let result = "enum " + node.children.Identifier[0].image;
+
+    if (node.children.typeParameters) {
+      result += this.visit(node.children.typeParameters[0], ctx);
+    }
+
+    if (node.children.classParameters) {
+      result += this.visit(node.children.classParameters[0], ctx);
+    }
+
+    if (node.children.extendsClause) {
+      result += " " + this.visit(node.children.extendsClause[0], ctx);
+    }
+
+    result += " {\n";
+
+    if (node.children.enumCase) {
+      const cases = node.children.enumCase.map(
+        (c: any) => "  " + this.visit(c, ctx),
+      );
+      result += cases.join("\n");
+    }
+
+    result += "\n}";
+
+    return result;
+  }
+
+  visitEnumCase(node: any, ctx: PrintContext): string {
+    let result = "case " + node.children.Identifier[0].image;
+
+    if (node.children.classParameters) {
+      result += this.visit(node.children.classParameters[0], ctx);
+    }
+
+    if (node.children.extendsClause) {
+      result += " " + this.visit(node.children.extendsClause[0], ctx);
+    }
+
+    return result;
+  }
+
+  visitExtensionDefinition(node: any, ctx: PrintContext): string {
+    let result = "extension";
+
+    if (node.children.typeParameters) {
+      result += this.visit(node.children.typeParameters[0], ctx);
+    }
+
+    result += " (" + node.children.Identifier[0].image + ": ";
+    result += this.visit(node.children.type[0], ctx) + ") {\n";
+
+    if (node.children.extensionMember) {
+      const members = node.children.extensionMember.map(
+        (m: any) => "  " + this.visit(m, ctx),
+      );
+      result += members.join("\n");
+    }
+
+    result += "\n}";
+
+    return result;
+  }
+
+  visitExtensionMember(node: any, ctx: PrintContext): string {
+    const modifiers = this.visitModifiers(node.children.modifier || [], ctx);
+    const definition = this.visit(node.children.defDefinition[0], ctx);
+
+    return modifiers ? modifiers + " " + definition : definition;
   }
 
   visitValDefinition(node: any, ctx: PrintContext): string {
@@ -549,7 +625,16 @@ export class CstNodeVisitor {
   }
 
   visitTypeParameter(node: any, ctx: PrintContext): string {
-    let result = node.children.Identifier[0].image;
+    let result = "";
+
+    // Add variance annotation if present
+    if (node.children.Plus) {
+      result += "+";
+    } else if (node.children.Minus) {
+      result += "-";
+    }
+
+    result += node.children.Identifier[0].image;
 
     if (node.children.SubtypeOf) {
       result += " <: " + this.visit(node.children.type[0], ctx);
