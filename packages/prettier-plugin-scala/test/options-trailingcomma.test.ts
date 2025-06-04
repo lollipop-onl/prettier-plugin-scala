@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { test } from "node:test";
 import { format } from "prettier";
+import { test, expect } from "vitest";
 
 test("trailingComma option integration - should not add trailing commas when trailingComma=none", async () => {
   const code = `class Person(name: String, age: Int, city: String) { def info() = List(name, age, city) }`;
@@ -14,11 +13,11 @@ test("trailingComma option integration - should not add trailing commas when tra
   });
 
   // Should not have trailing commas
-  assert(
+  expect(
     !result.includes(",\n)"),
     "Should not have trailing comma in parameters",
-  );
-  assert(!result.includes(",\n]"), "Should not have trailing comma in lists");
+  ).toBe(true);
+  expect(!result.includes(",\n]")).toBe(true); //Should not have trailing comma in lists
 });
 
 test("trailingComma option integration - should add trailing commas when trailingComma=all", async () => {
@@ -33,7 +32,6 @@ test("trailingComma option integration - should add trailing commas when trailin
 
   // Should add trailing commas in multi-line contexts
   const lines = result.split("\n");
-
   if (lines.length > 2) {
     // Only check if actually multi-line
     const hasTrailingComma =
@@ -41,13 +39,13 @@ test("trailingComma option integration - should add trailing commas when trailin
       (result.includes("String,\n") ||
         result.includes("Int,\n") ||
         result.includes("Boolean,\n"));
-    assert(
+    expect(
       hasTrailingComma,
       `Should have trailing commas in multi-line contexts. Got: ${result}`,
-    );
+    ).toBe(true);
   } else {
     // If it's still single line, that's acceptable
-    assert(true, "Single line format is acceptable");
+    expect(true).toBe(true); //Single line format is acceptable
   }
 });
 
@@ -62,14 +60,14 @@ test("trailingComma option integration - should handle single-line correctly", a
   });
 
   // Should not add trailing comma to single-line expressions
-  assert(
+  expect(
     result.includes("List(1, 2, 3)"),
     "Should preserve single-line format",
-  );
-  assert(
+  ).toBe(true);
+  expect(
     !result.includes("3,"),
     "Should not add trailing comma to single-line",
-  );
+  ).toBe(true);
 });
 
 test("trailingComma option integration - should handle method parameters", async () => {
@@ -83,9 +81,9 @@ test("trailingComma option integration - should handle method parameters", async
   });
 
   // Should not add trailing commas to parameters
-  assert(result.includes("process"), "Should preserve method definition");
-  assert(
+  expect(result.includes("process")).toBe(true); //Should preserve method definition
+  expect(
     !result.includes("Boolean,"),
     "Should not have trailing comma in parameters",
-  );
+  ).toBe(true);
 });

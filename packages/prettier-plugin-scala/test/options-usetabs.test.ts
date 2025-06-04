@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { test } from "node:test";
 import { format } from "prettier";
+import { test, expect } from "vitest";
 
 test("useTabs option integration - should use tabs when useTabs=true", async () => {
   const code = `class Calculator { def add(a: Int, b: Int): Int = a + b; def multiply(a: Int, b: Int): Int = a * b }`;
@@ -17,10 +16,8 @@ test("useTabs option integration - should use tabs when useTabs=true", async () 
   const lines = result.split("\n");
   const indentedLines = lines.filter((line) => line.startsWith("\t"));
   if (indentedLines.length > 0) {
-    assert(
-      indentedLines.every((line) => line.match(/^\t[^\t]/)),
-      "Should use tab indentation",
-    );
+    // Should use tab indentation
+    expect(indentedLines.every((line) => line.match(/^\t[^\t]/))).toBe(true);
   }
 });
 
@@ -35,18 +32,14 @@ test("useTabs option integration - should use spaces when useTabs=false (default
   });
 
   // Should use space characters for indentation
-  assert(
-    !result.includes("\t"),
-    "Should not contain tab characters when useTabs=false",
-  );
+  // Should not contain tab characters when useTabs=false
+  expect(result.includes("\t")).toBe(false);
 
   const lines = result.split("\n");
   const indentedLines = lines.filter((line) => line.startsWith("  "));
   if (indentedLines.length > 0) {
-    assert(
-      indentedLines.every((line) => line.match(/^  [^ ]/)),
-      "Should use space indentation",
-    );
+    // Should use space indentation
+    expect(indentedLines.every((line) => line.match(/^  [^ ]/))).toBe(true);
   }
 });
 
@@ -65,10 +58,8 @@ test("useTabs option integration - should override deprecated scalaIndentStyle",
   const lines = result.split("\n");
   const indentedLines = lines.filter((line) => line.startsWith("\t"));
   if (indentedLines.length > 0) {
-    assert(
-      indentedLines.length > 0,
-      "Should use tabs when useTabs=true regardless of scalaIndentStyle",
-    );
+    // Should use tabs when useTabs=true regardless of scalaIndentStyle
+    expect(indentedLines.length > 0).toBe(true);
   }
 });
 
@@ -86,9 +77,7 @@ test("useTabs option integration - should work with tabWidth for tab size", asyn
   const lines = result.split("\n");
   const caseLines = lines.filter((line) => line.includes("case "));
   if (caseLines.length > 0) {
-    assert(
-      caseLines.every((line) => line.startsWith("\t")),
-      "Enum cases should use tab indentation",
-    );
+    // Enum cases should use tab indentation
+    expect(caseLines.every((line) => line.startsWith("\t"))).toBe(true);
   }
 });

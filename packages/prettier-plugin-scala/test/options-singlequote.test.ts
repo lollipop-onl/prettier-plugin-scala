@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { test } from "node:test";
 import { format } from "prettier";
+import { test, expect } from "vitest";
 
 test("singleQuote option integration - should preserve double quotes when singleQuote=false (default)", async () => {
   const code = `val message = "Hello World"; val name = "John"; val greeting = "Welcome"`;
@@ -13,12 +12,12 @@ test("singleQuote option integration - should preserve double quotes when single
   });
 
   // Should preserve double quotes (Scala standard)
-  assert(
-    result.includes('"Hello World"'),
-    "Should use double quotes for strings",
-  );
-  assert(result.includes('"John"'), "Should use double quotes for strings");
-  assert(result.includes('"Welcome"'), "Should use double quotes for strings");
+  // Should use double quotes for strings
+  expect(result.includes('"Hello World"')).toBe(true);
+  // Should use double quotes for strings
+  expect(result.includes('"John"')).toBe(true);
+  // Should use double quotes for strings
+  expect(result.includes('"Welcome"')).toBe(true);
 });
 
 test("singleQuote option integration - should use single quotes when singleQuote=true", async () => {
@@ -32,12 +31,12 @@ test("singleQuote option integration - should use single quotes when singleQuote
 
   // Should convert double quotes to single quotes (if supported)
   // Note: In Scala, single quotes are typically for Char literals, but this option allows string formatting choice
-  assert(
-    result.includes("'Hello World'"),
-    "Should use single quotes for strings",
-  );
-  assert(result.includes("'John'"), "Should use single quotes for strings");
-  assert(result.includes("'Welcome'"), "Should use single quotes for strings");
+  // Should use single quotes for strings
+  expect(result.includes("'Hello World'")).toBe(true);
+  // Should use single quotes for strings
+  expect(result.includes("'John'")).toBe(true);
+  // Should use single quotes for strings
+  expect(result.includes("'Welcome'")).toBe(true);
 });
 
 test("singleQuote option integration - should handle simple string correctly", async () => {
@@ -50,8 +49,10 @@ test("singleQuote option integration - should handle simple string correctly", a
   });
 
   // Should preserve double quotes
-  assert(result.includes('"test"'), "Should use double quotes");
-  assert(result.includes("val simple"), "Should preserve variable declaration");
+  // Should use double quotes
+  expect(result.includes('"test"')).toBe(true);
+  // Should preserve variable declaration
+  expect(result.includes("val simple")).toBe(true);
 });
 
 test("singleQuote option integration - should preserve string interpolation quotes", async () => {
@@ -64,10 +65,9 @@ test("singleQuote option integration - should preserve string interpolation quot
   });
 
   // Should handle string interpolation appropriately
-  assert(
-    result.includes("'John'"),
-    "Should use single quotes for simple strings",
-  );
+  // Should use single quotes for simple strings
+  expect(result.includes("'John'")).toBe(true);
   // String interpolation might need to preserve double quotes for compatibility
-  assert(result.includes("Hello"), "Should preserve interpolation content");
+  // Should preserve interpolation content
+  expect(result.includes("Hello")).toBe(true);
 });

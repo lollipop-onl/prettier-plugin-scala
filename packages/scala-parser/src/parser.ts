@@ -240,7 +240,7 @@ export class ScalaParser extends CstParser {
 
   // Object definition
   private objectDefinition = this.RULE("objectDefinition", () => {
-    this.CONSUME(tokens.Object);
+    this.CONSUME(tokens.ObjectKeyword);
     this.CONSUME(tokens.Identifier);
     this.OPTION(() => this.SUBRULE(this.extendsClause));
     this.OPTION2(() => this.SUBRULE(this.classBody));

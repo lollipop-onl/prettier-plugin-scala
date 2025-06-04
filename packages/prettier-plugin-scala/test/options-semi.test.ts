@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { test } from "node:test";
 import { format } from "prettier";
+import { test, expect } from "vitest";
 
 test("semi option integration - should not add semicolons when semi=false (default for Scala)", async () => {
   const code = `class Person { val name = "John"; def age = 25; def greet() = println("Hello") }`;
@@ -23,10 +22,8 @@ test("semi option integration - should not add semicolons when semi=false (defau
 
   // Check that statements don't end with semicolons
   statementLines.forEach((line) => {
-    assert(
-      !line.trim().endsWith(";"),
-      `Line should not end with semicolon: ${line.trim()}`,
-    );
+    // Line should not end with semicolon
+    expect(line.trim().endsWith(";")).toBe(false);
   });
 });
 
@@ -52,7 +49,8 @@ test("semi option integration - should preserve semicolons when semi=true", asyn
   const hasSemicolons = statementLines.some((line) =>
     line.trim().endsWith(";"),
   );
-  assert(hasSemicolons, "Should have some semicolons when semi=true");
+  // Should have some semicolons when semi=true
+  expect(hasSemicolons).toBe(true);
 });
 
 test("semi option integration - should handle multiple statements correctly", async () => {
@@ -65,10 +63,10 @@ test("semi option integration - should handle multiple statements correctly", as
   });
 
   // Should format multiple statements without trailing semicolons
-  assert(!result.includes(";\n"), "Should not have semicolons at line endings");
-  assert(result.includes("val x = 1"), "Should preserve first statement");
-  assert(result.includes("val y = 2"), "Should preserve second statement");
-  assert(result.includes("val z = x + y"), "Should preserve third statement");
+  expect(result.includes(";\n")).toBe(false); // Should not have semicolons at line endings
+  expect(result).toContain("val x = 1"); // Should preserve first statement
+  expect(result).toContain("val y = 2"); // Should preserve second statement
+  expect(result).toContain("val z = x + y"); // Should preserve third statement
 });
 
 test("semi option integration - should handle method definitions correctly", async () => {
@@ -81,12 +79,6 @@ test("semi option integration - should handle method definitions correctly", asy
   });
 
   // Should handle method definitions correctly without semicolons
-  assert(
-    result.includes("def process() = calculate()"),
-    "Should preserve method definition",
-  );
-  assert(
-    !result.trim().endsWith(";"),
-    "Should not end with semicolon when semi=false",
-  );
+  expect(result).toContain("def process() = calculate()"); // Should preserve method definition
+  expect(result.trim().endsWith(";")).toBe(false); // Should not end with semicolon when semi=false
 });

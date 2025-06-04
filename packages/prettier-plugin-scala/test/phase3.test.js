@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
-import { describe, test } from "node:test";
 import path from "path";
 import * as prettier from "prettier";
 import { fileURLToPath } from "url";
+import { describe, test, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pluginPath = path.join(__dirname, "..", "lib", "index.js");
@@ -21,25 +20,25 @@ describe("Phase 3 Features", () => {
     test("logical AND operator", async () => {
       const input = `val result = a && b`;
       const output = await format(input);
-      assert.equal(output, "val result = a && b");
+      expect(output).toBe("val result = a && b");
     });
 
     test("logical OR operator", async () => {
       const input = `val result = a || b`;
       const output = await format(input);
-      assert.equal(output, "val result = a || b");
+      expect(output).toBe("val result = a || b");
     });
 
     test("complex logical expressions", async () => {
       const input = `val complex = (a && b) || (c && d)`;
       const output = await format(input);
-      assert.equal(output, "val complex = (a && b) || (c && d)");
+      expect(output).toBe("val complex = (a && b) || (c && d)");
     });
 
     test("logical operators with comparisons", async () => {
       const input = `val isValid = x > 0 && x < 100`;
       const output = await format(input);
-      assert.equal(output, "val isValid = x > 0 && x < 100");
+      expect(output).toBe("val isValid = x > 0 && x < 100");
     });
   });
 
@@ -47,25 +46,25 @@ describe("Phase 3 Features", () => {
     test("s-string interpolation", async () => {
       const input = `val message = s"Hello, $name"`;
       const output = await format(input);
-      assert.equal(output, `val message = s"Hello, $name"`);
+      expect(output).toMatch(`val message = s"Hello, $name"`);
     });
 
     test("f-string interpolation", async () => {
       const input = `val formatted = f"Value: $value%.2f"`;
       const output = await format(input);
-      assert.equal(output, `val formatted = f"Value: $value%.2f"`);
+      expect(output).toMatch(`val formatted = f"Value: $value%.2f"`);
     });
 
     test("string interpolation with expressions", async () => {
       const input = `val msg = s"Sum: \${a + b}"`;
       const output = await format(input);
-      assert.equal(output, `val msg = s"Sum: \${a + b}"`);
+      expect(output).toMatch(`val msg = s"Sum: \${a + b}"`);
     });
 
     test("raw string interpolation", async () => {
       const input = `val path = raw"C:\\\\Users\\\\$username"`;
       const output = await format(input);
-      assert.equal(output, `val path = raw"C:\\\\Users\\\\$username"`);
+      expect(output).toMatch(`val path = raw"C:\\\\Users\\\\$username"`);
     });
   });
 
@@ -73,19 +72,19 @@ describe("Phase 3 Features", () => {
     test("simple lambda", async () => {
       const input = `val double = x => x * 2`;
       const output = await format(input);
-      assert.equal(output, "val double = x => x * 2");
+      expect(output).toBe("val double = x => x * 2");
     });
 
     test("lambda with type annotation", async () => {
       const input = `val add = (x: Int, y: Int) => x + y`;
       const output = await format(input);
-      assert.equal(output, "val add = (x: Int, y: Int) => x + y");
+      expect(output).toBe("val add = (x: Int, y: Int) => x + y");
     });
 
     test("lambda in method call", async () => {
       const input = `list.map(x => x * 2)`;
       const output = await format(input);
-      assert.equal(output, "list.map(x => x * 2)");
+      expect(output).toBe("list.map(x => x * 2)");
     });
 
     test("multiline lambda", async () => {
@@ -94,9 +93,9 @@ describe("Phase 3 Features", () => {
   doubled + 1
 }`;
       const output = await format(input);
-      assert.match(output, /list\.map/);
-      assert.match(output, /val doubled = x \* 2/);
-      assert.match(output, /doubled \+ 1/);
+      expect(output).toMatch(/list\.map/);
+      expect(output).toMatch(/val doubled = x \* 2/);
+      expect(output).toMatch(/doubled \+ 1/);
     });
   });
 
@@ -104,25 +103,25 @@ describe("Phase 3 Features", () => {
     test("to operator", async () => {
       const input = `val range = 1 to 10`;
       const output = await format(input);
-      assert.equal(output, "val range = 1 to 10");
+      expect(output).toBe("val range = 1 to 10");
     });
 
     test("cons operator", async () => {
       const input = `val list = 1 :: 2 :: Nil`;
       const output = await format(input);
-      assert.equal(output, "val list = 1 :: 2 :: Nil");
+      expect(output).toBe("val list = 1 :: 2 :: Nil");
     });
 
     test("append operator", async () => {
       const input = `val newList = list :+ element`;
       const output = await format(input);
-      assert.equal(output, "val newList = list :+ element");
+      expect(output).toBe("val newList = list :+ element");
     });
 
     test("concat operator", async () => {
       const input = `val combined = list1 ++ list2`;
       const output = await format(input);
-      assert.equal(output, "val combined = list1 ++ list2");
+      expect(output).toBe("val combined = list1 ++ list2");
     });
   });
 
@@ -130,19 +129,19 @@ describe("Phase 3 Features", () => {
     test("class member initialization with apply", async () => {
       const input = `private val cache = Map[String, Int]()`;
       const output = await format(input);
-      assert.equal(output, "private val cache = Map[String, Int]()");
+      expect(output).toBe("private val cache = Map[String, Int]()");
     });
 
     test("apply with arguments", async () => {
       const input = `val map = Map("a" -> 1, "b" -> 2)`;
       const output = await format(input);
-      assert.equal(output, `val map = Map("a" -> 1, "b" -> 2)`);
+      expect(output).toMatch(`val map = Map("a" -> 1, "b" -> 2)`);
     });
 
     test("nested apply expressions", async () => {
       const input = `val nested = List(Map("key" -> "value"))`;
       const output = await format(input);
-      assert.equal(output, `val nested = List(Map("key" -> "value"))`);
+      expect(output).toMatch(`val nested = List(Map("key" -> "value"))`);
     });
   });
 
@@ -150,21 +149,21 @@ describe("Phase 3 Features", () => {
     test("simple given definition", async () => {
       const input = `given intOrdering: Ordering[Int] = Ordering.Int`;
       const output = await format(input);
-      assert.equal(output, "given intOrdering: Ordering[Int] = Ordering.Int");
+      expect(output).toBe("given intOrdering: Ordering[Int] = Ordering.Int");
     });
 
     test("given without name", async () => {
       const input = `given Ordering[String] = Ordering.String`;
       const output = await format(input);
-      assert.equal(output, "given Ordering[String] = Ordering.String");
+      expect(output).toBe("given Ordering[String] = Ordering.String");
     });
 
     test("given with parameters", async () => {
       const input = `given listOrdering[T](using ord: Ordering[T]): Ordering[List[T]]`;
       const output = await format(input);
-      assert.match(output, /given listOrdering\[T\]/);
-      assert.match(output, /using ord: Ordering\[T\]/);
-      assert.match(output, /: Ordering\[List\[T\]\]/);
+      expect(output).toMatch(/given listOrdering\[T\]/);
+      expect(output).toMatch(/using ord: Ordering\[T\]/);
+      expect(output).toMatch(/: Ordering\[List\[T\]\]/);
     });
   });
 
@@ -174,8 +173,8 @@ describe("Phase 3 Features", () => {
   def this(size: Double) = this(size, size)
 }`;
       const output = await format(input);
-      assert.match(output, /def this/);
-      assert.match(output, /= this\(size, size\)/);
+      expect(output).toMatch(/def this/);
+      expect(output).toMatch(/= this\(size, size\)/);
     });
 
     test("multiple auxiliary constructors", async () => {
@@ -184,8 +183,8 @@ describe("Phase 3 Features", () => {
   def this() = this("Unknown", 0)
 }`;
       const output = await format(input);
-      assert.match(output, /def this\(name: String\)/);
-      assert.match(output, /def this\(\)/);
+      expect(output).toMatch(/def this\(name: String\)/);
+      expect(output).toMatch(/def this\(\)/);
     });
   });
 });

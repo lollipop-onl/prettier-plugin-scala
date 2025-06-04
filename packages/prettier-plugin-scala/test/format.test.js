@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { describe, it } from "node:test";
 import { format } from "prettier";
+import { describe, it, expect } from "vitest";
 
 describe("Prettier Plugin Scala", () => {
   const formatCode = (code, options = {}) => {
@@ -16,14 +15,14 @@ describe("Prettier Plugin Scala", () => {
     const input = "class Person";
     const expected = "class Person\n";
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format a class with parameters", async () => {
     const input = "class Person(name:String,age:Int)";
     const expected = "class Person(\n  name: String,\n  age: Int\n)\n";
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format a class with body", async () => {
@@ -37,7 +36,7 @@ val age: Int = 25
 }
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format an object definition", async () => {
@@ -53,7 +52,7 @@ println("Hello, World!")
 }
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format val and var definitions", async () => {
@@ -63,7 +62,7 @@ var y:String="hello"`;
 var y: String = "hello"
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format package and import statements", async () => {
@@ -77,7 +76,7 @@ import scala.collection.mutable
 class MyClass
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should format modifiers", async () => {
@@ -87,7 +86,7 @@ protected def protectedMethod(): Unit = {}`;
 protected def protectedMethod(): Unit = {}
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("should preserve comments", async () => {
@@ -97,7 +96,7 @@ class Person /* inline comment */ (name: String)`;
 class Person /* inline comment */ (name: String)
 `;
     const result = await formatCode(input);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   describe("Negation operator formatting", () => {
@@ -105,35 +104,35 @@ class Person /* inline comment */ (name: String)
       const input = "val x=!true";
       const expected = "val x = !true\n";
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
 
     it("should format negation with spacing", async () => {
       const input = "val isEmpty  =  ! hasElements";
       const expected = "val isEmpty = !hasElements\n";
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
 
     it("should format negation of method call", async () => {
       const input = "val notEmpty=!list.isEmpty";
       const expected = "val notEmpty = !list.isEmpty\n";
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
 
     it("should format negation with parentheses", async () => {
       const input = "val complex = ! ( a>5 && b<10 )";
       const expected = "val complex = !(a > 5 && b < 10)\n";
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
 
     it("should format negation in complex expressions", async () => {
       const input = "val result=!a&&b||!c";
       const expected = "val result = !a && b || !c\n";
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
 
     it("should preserve negation in multiline expressions", async () => {
@@ -146,7 +145,7 @@ class Person /* inline comment */ (name: String)
   }
 `;
       const result = await formatCode(input);
-      assert.strictEqual(result, expected);
+      expect(result).toBe(expected);
     });
   });
 });

@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint src",
-    "test": "node --test --disable-warning=ExperimentalWarning",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

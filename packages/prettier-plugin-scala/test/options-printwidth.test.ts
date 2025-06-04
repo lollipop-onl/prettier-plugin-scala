@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { test } from "node:test";
 import { format } from "prettier";
+import { test, expect } from "vitest";
 
 test("printWidth option integration - should respect printWidth=40 (short line)", async () => {
   const longCode = `class VeryLongClassName(veryLongParameterName: String, anotherVeryLongParameterName: Int, yetAnotherVeryLongParameterName: Boolean) { def veryLongMethodName(): String = veryLongParameterName }`;
@@ -13,13 +12,11 @@ test("printWidth option integration - should respect printWidth=40 (short line)"
   });
 
   // Should break long lines when they exceed 40 characters
-  assert(
-    result.includes("\n"),
-    "Result should contain newlines for long content",
-  );
-  assert(
-    result.split("\n").some((line) => line.trim().length <= 40),
-    "Some lines should fit within 40 characters",
+  // Result should contain newlines for long content
+  expect(result.includes("\n")).toBe(true);
+  // Some lines should fit within 40 characters
+  expect(result.split("\n").some((line) => line.trim().length <= 40)).toBe(
+    true,
   );
 });
 
@@ -33,10 +30,8 @@ test("printWidth option integration - should respect printWidth=120 (long line)"
   });
 
   // Should allow longer lines up to 120 characters
-  assert(
-    result.split("\n").some((line) => line.length > 40),
-    "Some lines should be longer than 40 chars when printWidth=120",
-  );
+  // Some lines should be longer than 40 chars when printWidth=120
+  expect(result.split("\n").some((line) => line.length > 40)).toBe(true);
 });
 
 test("printWidth option integration - should use printWidth instead of deprecated scalaLineWidth", async () => {
@@ -48,7 +43,7 @@ test("printWidth option integration - should use printWidth instead of deprecate
     printWidth: 80,
   });
 
-  assert.strictEqual(result.trim(), "class Person(name: String)");
+  expect(result.trim()).toBe("class Person(name: String)");
 });
 
 test("printWidth option integration - printWidth should override scalaLineWidth if both provided", async () => {
@@ -60,5 +55,5 @@ test("printWidth option integration - printWidth should override scalaLineWidth 
   });
 
   // Should use printWidth (80) and not scalaLineWidth (40)
-  assert.strictEqual(result.trim(), "class Person(name: String)");
+  expect(result.trim()).toBe("class Person(name: String)");
 });

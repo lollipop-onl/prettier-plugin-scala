@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
-import { describe, test } from "node:test";
 import path from "path";
 import * as prettier from "prettier";
 import { fileURLToPath } from "url";
+import { describe, test, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pluginPath = path.join(__dirname, "..", "lib", "index.js");
@@ -21,37 +20,37 @@ describe("Phase 2 Features", () => {
     test("basic type parameters", async () => {
       const input = `class Box[T](value: T)`;
       const output = await format(input);
-      assert.match(output, /class Box\[T\]/);
+      expect(output).toMatch(/class Box\[T\]/);
     });
 
     test("multiple type parameters", async () => {
       const input = `class Map[K, V]`;
       const output = await format(input);
-      assert.equal(output, "class Map[K, V]");
+      expect(output).toBe("class Map[K, V]");
     });
 
     test("type parameter with upper bound", async () => {
       const input = `class Container[T <: AnyRef](value: T)`;
       const output = await format(input);
-      assert.match(output, /\[T <: AnyRef\]/);
+      expect(output).toMatch(/\[T <: AnyRef\]/);
     });
 
     test("type parameter with lower bound", async () => {
       const input = `class Container[T >: Nothing](value: T)`;
       const output = await format(input);
-      assert.match(output, /\[T >: Nothing\]/);
+      expect(output).toMatch(/\[T >: Nothing\]/);
     });
 
     test("generic method", async () => {
       const input = `def identity[T](x: T): T = x`;
       const output = await format(input);
-      assert.equal(output, "def identity[T](x: T): T = x");
+      expect(output).toBe("def identity[T](x: T): T = x");
     });
 
     test("type parameters in trait", async () => {
       const input = `trait Collection[T] { def add(item: T): Unit }`;
       const output = await format(input);
-      assert.match(output, /trait Collection\[T\]/);
+      expect(output).toMatch(/trait Collection\[T\]/);
     });
   });
 
@@ -59,13 +58,13 @@ describe("Phase 2 Features", () => {
     test("simple case class", async () => {
       const input = `case class Person(name: String, age: Int)`;
       const output = await format(input);
-      assert.match(output, /case class Person/);
+      expect(output).toMatch(/case class Person/);
     });
 
     test("case class with type parameters", async () => {
       const input = `case class Option[T](value: T)`;
       const output = await format(input);
-      assert.match(output, /case class Option\[T\]/);
+      expect(output).toMatch(/case class Option\[T\]/);
     });
   });
 
@@ -73,19 +72,19 @@ describe("Phase 2 Features", () => {
     test("simple constructor call", async () => {
       const input = `val person = new Person("Alice", 30)`;
       const output = await format(input);
-      assert.equal(output, 'val person = new Person("Alice", 30)');
+      expect(output).toBe('val person = new Person("Alice", 30)');
     });
 
     test("constructor with type parameters", async () => {
       const input = `val list = new List[Int]()`;
       const output = await format(input);
-      assert.equal(output, "val list = new List[Int]()");
+      expect(output).toBe("val list = new List[Int]()");
     });
 
     test("constructor without arguments", async () => {
       const input = `val obj = new Object`;
       const output = await format(input);
-      assert.equal(output, "val obj = new Object");
+      expect(output).toBe("val obj = new Object");
     });
   });
 
@@ -93,15 +92,15 @@ describe("Phase 2 Features", () => {
     test("simple match expression", async () => {
       const input = `x match { case 1 => "one" case 2 => "two" case _ => "other" }`;
       const output = await format(input);
-      assert.match(output, /match \{/);
-      assert.match(output, /case 1 => "one"/);
-      assert.match(output, /case _ => "other"/);
+      expect(output).toMatch(/match \{/);
+      expect(output).toMatch(/case 1 => "one"/);
+      expect(output).toMatch(/case _ => "other"/);
     });
 
     test("match with guard", async () => {
       const input = `x match { case n if n > 0 => "positive" case _ => "non-positive" }`;
       const output = await format(input);
-      assert.match(output, /case n if n > 0 =>/);
+      expect(output).toMatch(/case n if n > 0 =>/);
     });
   });
 
@@ -109,19 +108,19 @@ describe("Phase 2 Features", () => {
     test("simple for loop", async () => {
       const input = `for (i <- 1 to 10) println(i)`;
       const output = await format(input);
-      assert.match(output, /for \(i <- 1 to 10\)/);
+      expect(output).toMatch(/for \(i <- 1 to 10\)/);
     });
 
     test("for yield", async () => {
       const input = `for (i <- 1 to 10) yield i * 2`;
       const output = await format(input);
-      assert.match(output, /for \(i <- 1 to 10\) yield/);
+      expect(output).toMatch(/for \(i <- 1 to 10\) yield/);
     });
 
     test("for with guard", async () => {
       const input = `for (i <- 1 to 10 if i % 2 == 0) yield i`;
       const output = await format(input);
-      assert.match(output, /if i % 2 == 0/);
+      expect(output).toMatch(/if i % 2 == 0/);
     });
   });
 
@@ -129,7 +128,7 @@ describe("Phase 2 Features", () => {
     test("method call with arguments", async () => {
       const input = `list.map(x => x * 2)`;
       const output = await format(input);
-      assert.match(output, /\.map\(/);
+      expect(output).toMatch(/\.map\(/);
     });
   });
 
@@ -137,25 +136,25 @@ describe("Phase 2 Features", () => {
     test("simple enum", async () => {
       const input = `enum Color { case Red case Green case Blue }`;
       const output = await format(input);
-      assert.match(output, /enum Color \{/);
-      assert.match(output, /case Red/);
-      assert.match(output, /case Green/);
-      assert.match(output, /case Blue/);
+      expect(output).toMatch(/enum Color \{/);
+      expect(output).toMatch(/case Red/);
+      expect(output).toMatch(/case Green/);
+      expect(output).toMatch(/case Blue/);
     });
 
     test("enum with parameters", async () => {
       const input = `enum Planet { case Earth }`;
       const output = await format(input);
-      assert.match(output, /enum Planet/);
-      assert.match(output, /case Earth/);
+      expect(output).toMatch(/enum Planet/);
+      expect(output).toMatch(/case Earth/);
     });
 
     test("generic enum", async () => {
       const input = `enum Option[+T] { case Some(value: T) case None }`;
       const output = await format(input);
-      assert.match(output, /enum Option\[\+T\]/);
-      assert.match(output, /case Some\(/);
-      assert.match(output, /case None/);
+      expect(output).toMatch(/enum Option\[\+T\]/);
+      expect(output).toMatch(/case Some\(/);
+      expect(output).toMatch(/case None/);
     });
   });
 
@@ -163,15 +162,15 @@ describe("Phase 2 Features", () => {
     test("simple extension method", async () => {
       const input = `extension (s: String) { def double: String = s + s }`;
       const output = await format(input);
-      assert.match(output, /extension \(s: String\) \{/);
-      assert.match(output, /def double: String = s \+ s/);
+      expect(output).toMatch(/extension \(s: String\) \{/);
+      expect(output).toMatch(/def double: String = s \+ s/);
     });
 
     test("extension with type parameters", async () => {
       const input = `extension [T](list: List[T]) { def head: T = list(0) }`;
       const output = await format(input);
-      assert.match(output, /extension\[T\] \(list: List\[T\]\) \{/);
-      assert.match(output, /def head: T = list\(0\)/);
+      expect(output).toMatch(/extension\[T\] \(list: List\[T\]\) \{/);
+      expect(output).toMatch(/def head: T = list\(0\)/);
     });
   });
 });

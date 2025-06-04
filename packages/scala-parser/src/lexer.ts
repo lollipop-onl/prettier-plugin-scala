@@ -5,7 +5,10 @@ export const Val = createToken({ name: "Val", pattern: /val\b/ });
 export const Var = createToken({ name: "Var", pattern: /var\b/ });
 export const Def = createToken({ name: "Def", pattern: /def\b/ });
 export const Class = createToken({ name: "Class", pattern: /class\b/ });
-export const Object = createToken({ name: "Object", pattern: /object\b/ });
+export const ObjectKeyword = createToken({
+  name: "Object",
+  pattern: /object\b/,
+});
 export const Trait = createToken({ name: "Trait", pattern: /trait\b/ });
 export const Extends = createToken({ name: "Extends", pattern: /extends\b/ });
 export const With = createToken({ name: "With", pattern: /with\b/ });
@@ -230,7 +233,7 @@ export const allTokens = [
   Var,
   Def,
   Class,
-  Object,
+  ObjectKeyword,
   Trait,
   Extends,
   With,

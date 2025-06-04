@@ -1,7 +1,6 @@
 import plugin from "../lib/index.js";
-import assert from "node:assert";
-import { describe, it } from "node:test";
 import { format } from "prettier";
+import { describe, it, expect } from "vitest";
 
 describe("Match types formatting", () => {
   const formatCode = (code, options = {}) => {
@@ -16,7 +15,7 @@ describe("Match types formatting", () => {
     const code = "type Elem[X] = X match { case String => Char }";
     const expected = "type Elem[X] = X match {\n  case String => Char\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats multiple match type cases", async () => {
@@ -27,7 +26,7 @@ describe("Match types formatting", () => {
     const expected =
       "type Elem[X] = X match {\n  case String => Char\n  case Array[t] => t\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats complex match type with generic patterns", async () => {
@@ -38,7 +37,7 @@ describe("Match types formatting", () => {
     const expected =
       "type Head[X] = X match {\n  case List[h] => h\n  case EmptyTuple => Nothing\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats nested match types", async () => {
@@ -50,7 +49,7 @@ describe("Match types formatting", () => {
     const expected =
       "type Flatten[X] = X match {\n  case Array[Array[t]] => Array[t]\n  case Array[t] => Array[t]\n  case t => t\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats match type with union result", async () => {
@@ -61,7 +60,7 @@ describe("Match types formatting", () => {
     const expected =
       "type StringOrChar[X] = X match {\n  case String => Char\n  case Int => String | Char\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats match type with intersection result", async () => {
@@ -72,14 +71,14 @@ describe("Match types formatting", () => {
     const expected =
       "type Combined[X] = X match {\n  case String => Named & Aged\n  case Int => String\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats single case match type", async () => {
     const code = "type Single[X] = X match { case Any => String }";
     const expected = "type Single[X] = X match {\n  case Any => String\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats match type with type parameters", async () => {
@@ -90,7 +89,7 @@ describe("Match types formatting", () => {
     const expected =
       "type Map[K, V] = (K, V) match {\n  case (String, Int) => StringIntMap\n  case (String, String) => StringStringMap\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats match type with complex input type", async () => {
@@ -101,7 +100,7 @@ describe("Match types formatting", () => {
     const expected =
       "type Result[X] = List[X] | Option[X] match {\n  case List[String] => Char\n  case Option[Int] => Boolean\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 
   it("formats multiple match type definitions", async () => {
@@ -111,6 +110,6 @@ type Head[X] = X match { case List[h] => h }`;
     const expected =
       "type Elem[X] = X match {\n  case String => Char\n}\ntype Size[X] = X match {\n  case Array[t] => Int\n}\ntype Head[X] = X match {\n  case List[h] => h\n}\n";
     const result = await formatCode(code);
-    assert.strictEqual(result, expected);
+    expect(result).toBe(expected);
   });
 });
