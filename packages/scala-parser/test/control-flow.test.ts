@@ -1,21 +1,20 @@
 import { parse } from "../lib/index.js";
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 describe("Control Flow Statements", () => {
   describe("If-Else Expressions", () => {
     it("should parse simple if-else", () => {
       const input = 'val result = if (x > 0) "positive" else "non-positive"';
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
 
     it("should parse if without else", () => {
       const input = "if (condition) doSomething()";
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
 
     it("should parse if-else with blocks", () => {
@@ -27,8 +26,8 @@ describe("Control Flow Statements", () => {
         "Error!"
       }`;
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
   });
 
@@ -38,15 +37,15 @@ describe("Control Flow Statements", () => {
         println(i)
       }`;
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
 
     it("should parse while with single statement", () => {
       const input = "while (running) doWork()";
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
   });
 
@@ -60,8 +59,8 @@ describe("Control Flow Statements", () => {
         cleanup()
       }`;
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
 
     it("should parse try-finally without catch", () => {
@@ -71,8 +70,8 @@ describe("Control Flow Statements", () => {
         closeResources()
       }`;
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
 
     it("should parse try-catch without finally", () => {
@@ -82,8 +81,8 @@ describe("Control Flow Statements", () => {
         case _ => 0
       }`;
       const result = parse(input);
-      assert.strictEqual(result.errors.length, 0);
-      assert(result.cst);
+      expect(result.errors.length).toBe(0);
+      expect(result.cst).toBeDefined();
     });
   });
 });

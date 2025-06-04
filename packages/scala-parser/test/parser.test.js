@@ -1,30 +1,29 @@
 import { parse } from "../lib/index.js";
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 describe("ScalaParser", () => {
   it("should parse a simple class definition", () => {
     const input = "class Person";
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse a class with parameters", () => {
     const input = "class Person(name: String, age: Int)";
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse a class with extends", () => {
     const input = "class Employee extends Person";
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse a class with body", () => {
@@ -34,8 +33,8 @@ describe("ScalaParser", () => {
     }`;
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse an object definition", () => {
@@ -46,32 +45,32 @@ describe("ScalaParser", () => {
     }`;
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse val definitions", () => {
     const input = "val x = 42";
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse var definitions", () => {
     const input = 'var y: String = "hello"';
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse method definitions", () => {
     const input = "def add(x: Int, y: Int): Int = x + y";
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse package and import statements", () => {
@@ -82,8 +81,8 @@ describe("ScalaParser", () => {
     class MyClass`;
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should parse modifiers", () => {
@@ -92,8 +91,8 @@ describe("ScalaParser", () => {
     override lazy val lazyValue = 42`;
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
   });
 
   it("should handle comments", () => {
@@ -101,9 +100,9 @@ describe("ScalaParser", () => {
     class Person /* inline comment */ (name: String)`;
     const result = parse(input);
 
-    assert.strictEqual(result.errors.length, 0);
-    assert.ok(result.cst);
-    assert.strictEqual(result.comments.length, 2);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst).toBeDefined();
+    expect(result.comments.length).toBe(2);
   });
 
   describe("Negation operator", () => {

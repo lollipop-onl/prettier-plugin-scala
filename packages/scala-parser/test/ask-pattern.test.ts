@@ -1,24 +1,23 @@
 import { parse } from "../lib/index.js";
-import { strict as assert } from "node:assert";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 describe("Ask pattern operator parsing", () => {
   it("parses basic ask pattern", () => {
     const code = `val result = actor ? message`;
     const result = parse(code);
-    assert.ok(result);
+    expect(result).toBeDefined();
   });
 
   it("parses ask pattern with parentheses", () => {
     const code = `val result = (actor ? message)`;
     const result = parse(code);
-    assert.ok(result);
+    expect(result).toBeDefined();
   });
 
   it("parses ask pattern in complex expression", () => {
     const code = `val future = (greeter ? Greet("Akka")).mapTo[String]`;
     const result = parse(code);
-    assert.ok(result);
+    expect(result).toBeDefined();
   });
 
   it("parses ask pattern with method chaining", () => {
@@ -29,7 +28,7 @@ describe("Ask pattern operator parsing", () => {
       }
     `;
     const result = parse(code);
-    assert.ok(result);
+    expect(result).toBeDefined();
   });
 
   it("parses multiple ask operations", () => {
@@ -38,6 +37,6 @@ describe("Ask pattern operator parsing", () => {
       val result2 = actor2 ? message2
     `;
     const result = parse(code);
-    assert.ok(result);
+    expect(result).toBeDefined();
   });
 });

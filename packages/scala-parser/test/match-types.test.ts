@@ -1,13 +1,12 @@
 import { parse } from "../lib/index.js";
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, it, expect } from "vitest";
 
 describe("Match types parsing", () => {
   it("parses basic match type", () => {
     const result = parse("type Elem[X] = X match { case String => Char }");
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
-    assert.strictEqual(result.cst.children.topLevelDefinition.length, 1);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
+    expect(result.cst.children.topLevelDefinition.length).toBe(1);
   });
 
   it("parses multiple match type cases", () => {
@@ -15,8 +14,8 @@ describe("Match types parsing", () => {
       case String => Char
       case Array[t] => t
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses complex match type with generic patterns", () => {
@@ -24,8 +23,8 @@ describe("Match types parsing", () => {
       case List[h] => h
       case EmptyTuple => Nothing
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses nested match types", () => {
@@ -34,8 +33,8 @@ describe("Match types parsing", () => {
       case Array[t] => Array[t]
       case t => t
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses match type with union result", () => {
@@ -43,8 +42,8 @@ describe("Match types parsing", () => {
       case String => Char
       case Int => String | Char
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses match type with intersection result", () => {
@@ -52,14 +51,14 @@ describe("Match types parsing", () => {
       case String => Named & Aged
       case Int => String
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses single case match type", () => {
     const result = parse("type Single[X] = X match { case Any => String }");
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses match type with type parameters", () => {
@@ -67,8 +66,8 @@ describe("Match types parsing", () => {
       case (String, Int) => StringIntMap
       case (String, String) => StringStringMap
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses match type with complex input type", () => {
@@ -76,8 +75,8 @@ describe("Match types parsing", () => {
       case List[String] => Char
       case Option[Int] => Boolean
     }`);
-    assert.strictEqual(result.errors.length, 0);
-    assert(result.cst.children.topLevelDefinition);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition).toBeDefined();
   });
 
   it("parses multiple match type definitions", () => {
@@ -87,7 +86,7 @@ type Size[X] = X match { case Array[t] => Int }
 type Head[X] = X match { case List[h] => h }
 `;
     const result = parse(code);
-    assert.strictEqual(result.errors.length, 0);
-    assert.strictEqual(result.cst.children.topLevelDefinition.length, 3);
+    expect(result.errors.length).toBe(0);
+    expect(result.cst.children.topLevelDefinition.length).toBe(3);
   });
 });
