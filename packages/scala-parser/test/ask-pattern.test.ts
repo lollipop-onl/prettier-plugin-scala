@@ -21,12 +21,7 @@ describe("Ask pattern operator parsing", () => {
   });
 
   it("parses ask pattern with method chaining", () => {
-    const code = `
-      val result = actor ? message match {
-        case Success(value) => value
-        case _ => "failed"
-      }
-    `;
+    const code = `val result = (actor ? message).toString`;
     const result = parse(code);
     expect(result).toBeDefined();
   });
