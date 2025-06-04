@@ -55,7 +55,7 @@ export class CstNodeVisitor {
   // Helper method to handle semicolon formatting (supports Prettier semi option)
   private formatStatement(statement: string, ctx: PrintContext): string {
     // Use Prettier's semi option
-    // For Scala, default to false (no semicolons) unless explicitly set to true
+    // The plugin sets default semi=false for Scala, but respect explicit user choice
     const useSemi = ctx.options.semi === true;
 
     // Remove existing trailing semicolon

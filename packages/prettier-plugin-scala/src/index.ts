@@ -61,8 +61,13 @@ const printers = {
 
 // Options (scalafmt compatibility - Phase 1)
 const options: Record<string, SupportOption> = {
-  // Prettier standard options (scalafmt compatible)
-  // printWidth is handled by Prettier core - no need to define here
+  // Prettier standard options with Scala-specific defaults
+  semi: {
+    type: "boolean",
+    default: false, // Scala convention: omit semicolons
+    description: "Add semicolons at the end of statements",
+    category: "Global",
+  } as const,
 
   // Deprecated options (backward compatibility)
   scalaLineWidth: {
