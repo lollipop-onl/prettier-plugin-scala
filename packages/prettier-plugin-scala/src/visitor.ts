@@ -41,6 +41,23 @@ export class CstNodeVisitor {
     return 80;
   }
 
+  // Helper method to get effective tabWidth (supports scalafmt compatibility)
+  private getTabWidth(ctx: PrintContext): number {
+    // Use Prettier's tabWidth (scalafmt indent.main compatible)
+    if (ctx.options.tabWidth) {
+      return ctx.options.tabWidth;
+    }
+
+    // Default value
+    return 2;
+  }
+
+  // Helper method to get indentation string
+  private getIndentation(ctx: PrintContext, level: number = 1): string {
+    const tabWidth = this.getTabWidth(ctx);
+    return " ".repeat(tabWidth * level);
+  }
+
   private visitCore(node: any, ctx: PrintContext): string {
     // Handle token nodes
     if (node.image !== undefined) {
@@ -509,8 +526,9 @@ export class CstNodeVisitor {
     result += " {\n";
 
     if (node.children.enumCase) {
+      const indent = this.getIndentation(ctx);
       const cases = node.children.enumCase.map(
-        (c: any) => "  " + this.visit(c, ctx),
+        (c: any) => indent + this.visit(c, ctx),
       );
       result += cases.join("\n");
     }
@@ -692,7 +710,8 @@ export class CstNodeVisitor {
     }
 
     // Use multi-line format for longer parameter lists
-    return `(\n  ${paramStrings.join(",\n  ")}\n)`;
+    const indent = this.getIndentation(ctx);
+    return `(\n${indent}${paramStrings.join(`,\n${indent}`)}\n)`;
   }
 
   visitClassParameter(node: any, ctx: PrintContext): string {
@@ -801,8 +820,9 @@ export class CstNodeVisitor {
       return "{}";
     }
 
+    const indent = this.getIndentation(ctx);
     const memberStrings = members.map((m: any) => this.visit(m, ctx));
-    return `{\n  ${memberStrings.join("\n  ")}\n}`;
+    return `{\n${indent}${memberStrings.join(`\n${indent}`)}\n}`;
   }
 
   visitClassMember(node: any, ctx: PrintContext): string {
