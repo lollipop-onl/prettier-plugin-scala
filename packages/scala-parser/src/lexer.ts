@@ -54,6 +54,11 @@ export const Override = createToken({
 export const Given = createToken({ name: "Given", pattern: /given\b/ });
 export const Using = createToken({ name: "Using", pattern: /using\b/ });
 export const To = createToken({ name: "To", pattern: /to\b/ });
+export const Enum = createToken({ name: "Enum", pattern: /enum\b/ });
+export const Extension = createToken({
+  name: "Extension",
+  pattern: /extension\b/,
+});
 
 // Identifiers (must come after keywords)
 export const Identifier = createToken({
@@ -67,9 +72,15 @@ export const IntegerLiteral = createToken({
   pattern: /-?\d+[lL]?/,
 });
 
+// Scientific notation literal (must come before FloatingPointLiteral)
+export const ScientificNotationLiteral = createToken({
+  name: "ScientificNotationLiteral",
+  pattern: /-?\d+(\.\d+)?[eE][+-]?\d+[fFdD]?/,
+});
+
 export const FloatingPointLiteral = createToken({
   name: "FloatingPointLiteral",
-  pattern: /-?\d+\.\d+([eE][+-]?\d+)?[fFdD]?/,
+  pattern: /-?\d+\.\d+[fFdD]?|-?\.\d+[fFdD]?/,
 });
 
 export const StringLiteral = createToken({
@@ -229,8 +240,11 @@ export const allTokens = [
   Given,
   Using,
   To,
+  Enum,
+  Extension,
 
   // Literals
+  ScientificNotationLiteral, // Must come before FloatingPointLiteral
   FloatingPointLiteral, // Must come before IntegerLiteral
   IntegerLiteral,
   InterpolatedStringLiteral, // Must come before StringLiteral

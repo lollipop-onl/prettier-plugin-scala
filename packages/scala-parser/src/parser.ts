@@ -89,6 +89,8 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.classDefinition) },
       { ALT: () => this.SUBRULE(this.objectDefinition) },
       { ALT: () => this.SUBRULE(this.traitDefinition) },
+      { ALT: () => this.SUBRULE(this.enumDefinition) },
+      { ALT: () => this.SUBRULE(this.extensionDefinition) },
       { ALT: () => this.SUBRULE(this.valDefinition) },
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },
@@ -173,6 +175,45 @@ export class ScalaParser extends CstParser {
     this.OPTION(() => this.SUBRULE(this.typeParameters));
     this.OPTION2(() => this.SUBRULE(this.extendsClause));
     this.OPTION3(() => this.SUBRULE(this.classBody));
+  });
+
+  // Enum definition (Scala 3)
+  private enumDefinition = this.RULE("enumDefinition", () => {
+    this.CONSUME(tokens.Enum);
+    this.CONSUME(tokens.Identifier);
+    this.OPTION(() => this.SUBRULE(this.typeParameters));
+    this.OPTION2(() => this.SUBRULE(this.classParameters));
+    this.OPTION3(() => this.SUBRULE(this.extendsClause));
+    this.CONSUME(tokens.LeftBrace);
+    this.MANY(() => this.SUBRULE(this.enumCase));
+    this.CONSUME(tokens.RightBrace);
+  });
+
+  private enumCase = this.RULE("enumCase", () => {
+    this.CONSUME(tokens.Case);
+    this.CONSUME(tokens.Identifier);
+    this.OPTION(() => this.SUBRULE(this.classParameters));
+    this.OPTION2(() => this.SUBRULE(this.extendsClause));
+    this.OPTION3(() => this.CONSUME(tokens.Semicolon));
+  });
+
+  // Extension definition (Scala 3)
+  private extensionDefinition = this.RULE("extensionDefinition", () => {
+    this.CONSUME(tokens.Extension);
+    this.OPTION(() => this.SUBRULE(this.typeParameters));
+    this.CONSUME(tokens.LeftParen);
+    this.CONSUME(tokens.Identifier);
+    this.CONSUME(tokens.Colon);
+    this.SUBRULE(this.type);
+    this.CONSUME(tokens.RightParen);
+    this.CONSUME(tokens.LeftBrace);
+    this.MANY(() => this.SUBRULE(this.extensionMember));
+    this.CONSUME(tokens.RightBrace);
+  });
+
+  private extensionMember = this.RULE("extensionMember", () => {
+    this.MANY(() => this.SUBRULE(this.modifier));
+    this.SUBRULE(this.defDefinition);
   });
 
   // Val definition
@@ -356,9 +397,16 @@ export class ScalaParser extends CstParser {
   });
 
   private typeParameter = this.RULE("typeParameter", () => {
-    this.CONSUME(tokens.Identifier);
+    // Handle variance annotations +T, -T
     this.OPTION(() => {
       this.OR([
+        { ALT: () => this.CONSUME(tokens.Plus) },
+        { ALT: () => this.CONSUME(tokens.Minus) },
+      ]);
+    });
+    this.CONSUME(tokens.Identifier);
+    this.OPTION2(() => {
+      this.OR2([
         {
           ALT: () => {
             this.CONSUME(tokens.SubtypeOf);
@@ -412,6 +460,8 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.classDefinition) },
       { ALT: () => this.SUBRULE(this.objectDefinition) },
       { ALT: () => this.SUBRULE(this.traitDefinition) },
+      { ALT: () => this.SUBRULE(this.enumDefinition) },
+      { ALT: () => this.SUBRULE(this.extensionDefinition) },
     ]);
   });
 
@@ -812,8 +862,9 @@ export class ScalaParser extends CstParser {
   // Literals
   private literal = this.RULE("literal", () => {
     this.OR([
-      { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
+      { ALT: () => this.CONSUME(tokens.ScientificNotationLiteral) },
       { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
+      { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
       { ALT: () => this.CONSUME(tokens.InterpolatedStringLiteral) },
       { ALT: () => this.CONSUME(tokens.StringLiteral) },
       { ALT: () => this.CONSUME(tokens.CharLiteral) },
