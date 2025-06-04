@@ -31,9 +31,7 @@ describe("Prettier Plugin Scala", () => {
 def getName(): String = name
 val age: Int = 25
 }`;
-    const expected = `class Person(
-  name: String
-) {
+    const expected = `class Person(name: String) {
   def getName(): String = name
   val age: Int = 25
 }
@@ -96,9 +94,7 @@ protected def protectedMethod(): Unit = {}
     const input = `// This is a comment
 class Person /* inline comment */ (name: String)`;
     const expected = `// This is a comment
-class Person /* inline comment */ (
-  name: String
-)
+class Person /* inline comment */ (name: String)
 `;
     const result = await formatCode(input);
     assert.strictEqual(result, expected);

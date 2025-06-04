@@ -804,11 +804,15 @@ export class CstNodeVisitor {
     }
 
     const paramStrings = params.map((p: any) => this.visit(p, ctx));
+    const printWidth = this.getPrintWidth(ctx);
 
     // Check if single line is appropriate
     const singleLine = `(${paramStrings.join(", ")})`;
-    // Use single line only for very simple cases (like primitives: Int, etc.)
-    if (params.length === 1 && singleLine.length <= 10) {
+    // Use single line if it fits within printWidth and is reasonably short
+    if (
+      params.length === 1 &&
+      singleLine.length <= Math.min(printWidth * 0.6, 40)
+    ) {
       return singleLine;
     }
 
