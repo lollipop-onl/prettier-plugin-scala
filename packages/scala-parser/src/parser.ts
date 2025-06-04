@@ -533,7 +533,26 @@ export class ScalaParser extends CstParser {
 
   // Types
   private type = this.RULE("type", () => {
+    this.SUBRULE(this.matchType);
+  });
+
+  private matchType = this.RULE("matchType", () => {
     this.SUBRULE(this.unionType);
+    this.OPTION(() => {
+      this.CONSUME(tokens.Match);
+      this.CONSUME(tokens.LeftBrace);
+      this.MANY(() => {
+        this.SUBRULE(this.matchTypeCase);
+      });
+      this.CONSUME(tokens.RightBrace);
+    });
+  });
+
+  private matchTypeCase = this.RULE("matchTypeCase", () => {
+    this.CONSUME(tokens.Case);
+    this.SUBRULE(this.type);
+    this.CONSUME(tokens.Arrow);
+    this.SUBRULE2(this.type);
   });
 
   private unionType = this.RULE("unionType", () => {

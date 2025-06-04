@@ -784,7 +784,30 @@ export class CstNodeVisitor {
   }
 
   visitType(node: any, ctx: PrintContext): string {
-    return this.visit(node.children.unionType[0], ctx);
+    return this.visit(node.children.matchType[0], ctx);
+  }
+
+  visitMatchType(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.unionType[0], ctx);
+
+    if (node.children.Match) {
+      result += " match {";
+      if (node.children.matchTypeCase) {
+        for (const caseNode of node.children.matchTypeCase) {
+          result += "\n  " + this.visit(caseNode, ctx);
+        }
+        result += "\n";
+      }
+      result += "}";
+    }
+
+    return result;
+  }
+
+  visitMatchTypeCase(node: any, ctx: PrintContext): string {
+    const leftType = this.visit(node.children.type[0], ctx);
+    const rightType = this.visit(node.children.type[1], ctx);
+    return `case ${leftType} => ${rightType}`;
   }
 
   visitUnionType(node: any, ctx: PrintContext): string {
