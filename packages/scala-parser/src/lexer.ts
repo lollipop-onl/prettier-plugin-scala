@@ -59,6 +59,7 @@ export const Extension = createToken({
   name: "Extension",
   pattern: /extension\b/,
 });
+export const Export = createToken({ name: "Export", pattern: /export\b/ });
 
 // Identifiers (must come after keywords)
 export const Identifier = createToken({
@@ -242,6 +243,7 @@ export const allTokens = [
   To,
   Enum,
   Extension,
+  Export,
 
   // Literals
   ScientificNotationLiteral, // Must come before FloatingPointLiteral

@@ -145,6 +145,15 @@ export class CstNodeVisitor {
       }
     }
 
+    if (node.children.exportClause) {
+      for (const exportNode of node.children.exportClause) {
+        result += this.visit(exportNode, ctx) + "\n";
+      }
+      if (node.children.exportClause.length > 0) {
+        result += "\n";
+      }
+    }
+
     if (node.children.topLevelDefinition) {
       const defs = node.children.topLevelDefinition.map((def: any) =>
         this.visit(def, ctx),
@@ -216,6 +225,83 @@ export class CstNodeVisitor {
     // Handle wildcard import
     if (node.children.Underscore && !node.children.Identifier) {
       return "_";
+    }
+
+    let result = node.children.Identifier[0].image;
+
+    if (node.children.Arrow) {
+      result += " => ";
+      if (node.children.Underscore) {
+        result += "_";
+      } else if (node.children.Identifier[1]) {
+        result += node.children.Identifier[1].image;
+      }
+    }
+
+    return result;
+  }
+
+  visitExportClause(node: any, ctx: PrintContext): string {
+    return "export " + this.visit(node.children.exportExpression[0], ctx);
+  }
+
+  visitExportExpression(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Build the export path
+    const identifiers = node.children.Identifier || [];
+    const dots = node.children.Dot || [];
+
+    // Add first identifier
+    if (identifiers.length > 0) {
+      result = identifiers[0].image;
+    }
+
+    // Process remaining parts
+    let identifierIndex = 1;
+    for (let i = 0; i < dots.length; i++) {
+      result += ".";
+
+      // Check what follows this dot
+      if (node.children.Underscore && i === dots.length - 1) {
+        // Wildcard export
+        result += "_";
+      } else if (node.children.Given && i === dots.length - 1) {
+        // Given export
+        result += "given";
+      } else if (node.children.LeftBrace && i === dots.length - 1) {
+        // Multiple export selectors
+        result += "{";
+        if (node.children.exportSelector) {
+          const selectors = node.children.exportSelector.map((sel: any) =>
+            this.visit(sel, ctx),
+          );
+          result += selectors.join(", ");
+        }
+        result += "}";
+      } else if (identifierIndex < identifiers.length) {
+        // Next identifier in path
+        result += identifiers[identifierIndex].image;
+        identifierIndex++;
+      }
+    }
+
+    return result;
+  }
+
+  visitExportSelector(node: any, _ctx: PrintContext): string {
+    // Handle wildcard export
+    if (
+      node.children.Underscore &&
+      !node.children.Identifier &&
+      !node.children.Given
+    ) {
+      return "_";
+    }
+
+    // Handle given export
+    if (node.children.Given) {
+      return "given";
     }
 
     let result = node.children.Identifier[0].image;

@@ -13,6 +13,7 @@ export class ScalaParser extends CstParser {
       this.OR([
         { ALT: () => this.SUBRULE(this.packageClause) },
         { ALT: () => this.SUBRULE(this.importClause) },
+        { ALT: () => this.SUBRULE(this.exportClause) },
         { ALT: () => this.SUBRULE(this.topLevelDefinition) },
         {
           ALT: () => {
@@ -78,6 +79,59 @@ export class ScalaParser extends CstParser {
         },
       },
       { ALT: () => this.CONSUME2(tokens.Underscore) }, // Allow wildcard import in selectors
+    ]);
+  });
+
+  // Export declaration (Scala 3)
+  private exportClause = this.RULE("exportClause", () => {
+    this.CONSUME(tokens.Export);
+    this.SUBRULE(this.exportExpression);
+    this.OPTION(() => this.CONSUME(tokens.Semicolon));
+  });
+
+  private exportExpression = this.RULE("exportExpression", () => {
+    // Parse the base path (e.g., "mypackage")
+    this.CONSUME(tokens.Identifier);
+    this.MANY(() => {
+      this.CONSUME(tokens.Dot);
+      this.OR([
+        // Next identifier in path
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        // Given keyword for given exports
+        { ALT: () => this.CONSUME(tokens.Given) },
+        // Wildcard export
+        { ALT: () => this.CONSUME(tokens.Underscore) },
+        // Multiple export selectors
+        {
+          ALT: () => {
+            this.CONSUME(tokens.LeftBrace);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE(this.exportSelector),
+            });
+            this.CONSUME(tokens.RightBrace);
+          },
+        },
+      ]);
+    });
+  });
+
+  private exportSelector = this.RULE("exportSelector", () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.Arrow);
+            this.OR2([
+              { ALT: () => this.CONSUME2(tokens.Identifier) },
+              { ALT: () => this.CONSUME(tokens.Underscore) },
+            ]);
+          });
+        },
+      },
+      { ALT: () => this.CONSUME(tokens.Given) }, // export given instances
+      { ALT: () => this.CONSUME2(tokens.Underscore) }, // Allow wildcard export in selectors
     ]);
   });
 
