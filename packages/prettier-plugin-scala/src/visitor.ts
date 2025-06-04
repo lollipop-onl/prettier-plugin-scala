@@ -172,15 +172,60 @@ export class CstNodeVisitor {
   }
 
   visitImportExpression(node: any, ctx: PrintContext): string {
-    let result = this.visit(node.children.qualifiedIdentifier[0], ctx);
+    let result = "";
 
-    if (node.children.Dot) {
+    // Build the import path
+    const identifiers = node.children.Identifier || [];
+    const dots = node.children.Dot || [];
+
+    // Add first identifier
+    if (identifiers.length > 0) {
+      result = identifiers[0].image;
+    }
+
+    // Process remaining parts
+    let identifierIndex = 1;
+    for (let i = 0; i < dots.length; i++) {
       result += ".";
+
+      // Check what follows this dot
+      if (node.children.Underscore && i === dots.length - 1) {
+        // Wildcard import
+        result += "_";
+      } else if (node.children.LeftBrace && i === dots.length - 1) {
+        // Multiple import selectors
+        result += "{";
+        if (node.children.importSelector) {
+          const selectors = node.children.importSelector.map((sel: any) =>
+            this.visit(sel, ctx),
+          );
+          result += selectors.join(", ");
+        }
+        result += "}";
+      } else if (identifierIndex < identifiers.length) {
+        // Next identifier in path
+        result += identifiers[identifierIndex].image;
+        identifierIndex++;
+      }
+    }
+
+    return result;
+  }
+
+  visitImportSelector(node: any, _ctx: PrintContext): string {
+    // Handle wildcard import
+    if (node.children.Underscore && !node.children.Identifier) {
+      return "_";
+    }
+
+    let result = node.children.Identifier[0].image;
+
+    if (node.children.Arrow) {
+      result += " => ";
       if (node.children.Underscore) {
         result += "_";
-      } else if (node.children.LeftBrace) {
-        // TODO: Handle import selectors
-        result += "{...}";
+      } else if (node.children.Identifier[1]) {
+        result += node.children.Identifier[1].image;
       }
     }
 

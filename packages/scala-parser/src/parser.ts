@@ -39,14 +39,46 @@ export class ScalaParser extends CstParser {
   });
 
   private importExpression = this.RULE("importExpression", () => {
-    this.SUBRULE(this.qualifiedIdentifier);
-    this.OPTION(() => {
+    // Parse the base path (e.g., "scala.collection")
+    this.CONSUME(tokens.Identifier);
+    this.MANY(() => {
       this.CONSUME(tokens.Dot);
       this.OR([
+        // Next identifier in path
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        // Wildcard import
         { ALT: () => this.CONSUME(tokens.Underscore) },
-        { ALT: () => this.CONSUME(tokens.LeftBrace) },
+        // Multiple import selectors
+        {
+          ALT: () => {
+            this.CONSUME(tokens.LeftBrace);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE(this.importSelector),
+            });
+            this.CONSUME(tokens.RightBrace);
+          },
+        },
       ]);
     });
+  });
+
+  private importSelector = this.RULE("importSelector", () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.Arrow);
+            this.OR2([
+              { ALT: () => this.CONSUME2(tokens.Identifier) },
+              { ALT: () => this.CONSUME(tokens.Underscore) },
+            ]);
+          });
+        },
+      },
+      { ALT: () => this.CONSUME2(tokens.Underscore) }, // Allow wildcard import in selectors
+    ]);
   });
 
   // Top-level definitions
