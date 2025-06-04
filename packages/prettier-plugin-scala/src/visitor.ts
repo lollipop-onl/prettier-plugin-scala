@@ -233,10 +233,56 @@ export class CstNodeVisitor {
   }
 
   visitTopLevelDefinition(node: any, ctx: PrintContext): string {
+    const annotations = this.visitAnnotations(
+      node.children.annotation || [],
+      ctx,
+    );
     const modifiers = this.visitModifiers(node.children.modifier || [], ctx);
     const definition = this.visitDefinition(node, ctx);
 
-    return modifiers ? modifiers + " " + definition : definition;
+    let result = "";
+    if (annotations) result += annotations + "\n";
+    if (modifiers) result += modifiers + " ";
+    result += definition;
+
+    return result;
+  }
+
+  visitAnnotations(annotations: any[], ctx: PrintContext): string {
+    if (!annotations || annotations.length === 0) return "";
+
+    return annotations.map((ann) => this.visit(ann, ctx)).join("\n");
+  }
+
+  visitAnnotation(node: any, ctx: PrintContext): string {
+    let result = "@" + this.visit(node.children.qualifiedIdentifier[0], ctx);
+
+    if (node.children.LeftParen) {
+      result += "(";
+      if (node.children.annotationArgument) {
+        const args = node.children.annotationArgument.map((arg: any) =>
+          this.visit(arg, ctx),
+        );
+        result += args.join(", ");
+      }
+      result += ")";
+    }
+
+    return result;
+  }
+
+  visitAnnotationArgument(node: any, ctx: PrintContext): string {
+    if (node.children.Identifier && node.children.Equals) {
+      // Named argument: name = value
+      return (
+        node.children.Identifier[0].image +
+        " = " +
+        this.visit(node.children.expression[0], ctx)
+      );
+    } else {
+      // Positional argument: value
+      return this.visit(node.children.expression[0], ctx);
+    }
   }
 
   visitModifiers(modifiers: any[], ctx: PrintContext): string {

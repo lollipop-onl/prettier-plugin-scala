@@ -83,7 +83,8 @@ export class ScalaParser extends CstParser {
 
   // Top-level definitions
   private topLevelDefinition = this.RULE("topLevelDefinition", () => {
-    this.MANY(() => this.SUBRULE(this.modifier));
+    this.MANY(() => this.SUBRULE(this.annotation));
+    this.MANY2(() => this.SUBRULE(this.modifier));
     this.OR([
       { ALT: () => this.SUBRULE(this.classDefinition) },
       { ALT: () => this.SUBRULE(this.objectDefinition) },
@@ -92,6 +93,42 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },
       { ALT: () => this.SUBRULE(this.givenDefinition) },
+    ]);
+  });
+
+  // Annotations
+  private annotation = this.RULE("annotation", () => {
+    this.CONSUME(tokens.At);
+    this.SUBRULE(this.qualifiedIdentifier);
+    this.OPTION(() => {
+      this.CONSUME(tokens.LeftParen);
+      this.MANY_SEP({
+        SEP: tokens.Comma,
+        DEF: () => this.SUBRULE(this.annotationArgument),
+      });
+      this.CONSUME(tokens.RightParen);
+    });
+  });
+
+  private annotationArgument = this.RULE("annotationArgument", () => {
+    this.OR([
+      {
+        // Named argument: name = value
+        ALT: () => {
+          this.CONSUME(tokens.Identifier);
+          this.CONSUME(tokens.Equals);
+          this.SUBRULE(this.expression);
+        },
+        GATE: () => {
+          // Look ahead for identifier followed by equals
+          const next = this.LA(2);
+          return next && next.tokenType === tokens.Equals;
+        },
+      },
+      {
+        // Positional argument: value
+        ALT: () => this.SUBRULE2(this.expression),
+      },
     ]);
   });
 
