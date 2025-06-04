@@ -831,7 +831,17 @@ export class CstNodeVisitor {
   }
 
   visitContextFunctionType(node: any, ctx: PrintContext): string {
-    let result = this.visit(node.children.simpleType[0], ctx);
+    let result = "";
+
+    // Handle parenthesized types
+    if (node.children.LeftParen) {
+      result +=
+        "(" + this.visit(node.children.tupleTypeOrParenthesized[0], ctx) + ")";
+    } else {
+      // Handle simple types
+      result += this.visit(node.children.simpleType[0], ctx);
+    }
+
     result += " ?=> " + this.visit(node.children.type[0], ctx);
     return result;
   }

@@ -642,8 +642,52 @@ export class ScalaParser extends CstParser {
         },
         GATE: () => {
           // Look ahead to detect context function type pattern
-          // We need to recursively parse a type and then see ?=>
-          return this.LA(1)?.tokenType !== tokens.LeftParen;
+          // We need to find ?=> pattern after parsing a type
+          let i = 1;
+
+          // Handle parenthesized types: (A, B) ?=> C or (A | B) ?=> C
+          if (this.LA(i)?.tokenType === tokens.LeftParen) {
+            let parenCount = 1;
+            i++;
+            while (parenCount > 0 && this.LA(i)) {
+              if (this.LA(i).tokenType === tokens.LeftParen) parenCount++;
+              if (this.LA(i).tokenType === tokens.RightParen) parenCount--;
+              i++;
+            }
+
+            // Check if we have ?=> after closing paren
+            return this.LA(i)?.tokenType === tokens.ContextArrow;
+          }
+
+          // Handle simple types
+          if (this.LA(i)?.tokenType === tokens.Identifier) {
+            i++;
+
+            // Skip dots and more identifiers
+            while (
+              this.LA(i)?.tokenType === tokens.Dot &&
+              this.LA(i + 1)?.tokenType === tokens.Identifier
+            ) {
+              i += 2;
+            }
+
+            // Skip optional type parameters [...]
+            if (this.LA(i)?.tokenType === tokens.LeftBracket) {
+              let bracketCount = 1;
+              i++;
+              while (bracketCount > 0 && this.LA(i)) {
+                if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
+                if (this.LA(i).tokenType === tokens.RightBracket)
+                  bracketCount--;
+                i++;
+              }
+            }
+
+            // Check if we have ?=> after the type
+            return this.LA(i)?.tokenType === tokens.ContextArrow;
+          }
+
+          return false;
         },
       },
       // Dependent function type: (x: Int) => Vector[x.type]
@@ -821,7 +865,23 @@ export class ScalaParser extends CstParser {
   });
 
   private contextFunctionType = this.RULE("contextFunctionType", () => {
-    this.SUBRULE(this.simpleType);
+    // Handle both simple types and parenthesized complex types
+    this.OR([
+      {
+        ALT: () => {
+          // Parenthesized type: (A, B) or (A | B)
+          this.CONSUME(tokens.LeftParen);
+          this.SUBRULE(this.tupleTypeOrParenthesized);
+          this.CONSUME(tokens.RightParen);
+        },
+      },
+      {
+        ALT: () => {
+          // Simple type: String, List[Int], etc.
+          this.SUBRULE(this.simpleType);
+        },
+      },
+    ]);
     this.CONSUME(tokens.ContextArrow);
     this.SUBRULE(this.type);
   });
