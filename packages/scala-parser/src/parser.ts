@@ -149,6 +149,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.varDefinition) },
       { ALT: () => this.SUBRULE(this.defDefinition) },
       { ALT: () => this.SUBRULE(this.givenDefinition) },
+      { ALT: () => this.SUBRULE(this.typeDefinition) },
     ]);
   });
 
@@ -388,6 +389,17 @@ export class ScalaParser extends CstParser {
     this.OPTION4(() => this.CONSUME(tokens.Semicolon));
   });
 
+  // Type definitions
+  private typeDefinition = this.RULE("typeDefinition", () => {
+    this.OPTION(() => this.CONSUME(tokens.Opaque)); // Support opaque types
+    this.CONSUME(tokens.Type);
+    this.CONSUME(tokens.Identifier);
+    this.OPTION2(() => this.SUBRULE(this.typeParameters));
+    this.CONSUME(tokens.Equals);
+    this.SUBRULE(this.type);
+    this.OPTION3(() => this.CONSUME(tokens.Semicolon));
+  });
+
   // Class parameters
   private classParameters = this.RULE("classParameters", () => {
     this.CONSUME(tokens.LeftParen);
@@ -521,13 +533,59 @@ export class ScalaParser extends CstParser {
 
   // Types
   private type = this.RULE("type", () => {
-    this.SUBRULE(this.simpleType);
+    this.SUBRULE(this.unionType);
+  });
+
+  private unionType = this.RULE("unionType", () => {
+    this.SUBRULE(this.intersectionType);
     this.MANY(() => {
-      this.CONSUME(tokens.LeftBracket);
-      this.SUBRULE2(this.type);
-      this.CONSUME(tokens.RightBracket);
+      this.CONSUME(tokens.BitwiseOr); // | for union types
+      this.SUBRULE2(this.intersectionType);
     });
   });
+
+  private intersectionType = this.RULE("intersectionType", () => {
+    this.SUBRULE(this.baseType);
+    this.MANY(() => {
+      this.CONSUME(tokens.BitwiseAnd); // & for intersection types
+      this.SUBRULE2(this.baseType);
+    });
+  });
+
+  private baseType = this.RULE("baseType", () => {
+    this.OR([
+      // Tuple type or parenthesized type: (A, B) or (String | Int)
+      {
+        ALT: () => {
+          this.CONSUME(tokens.LeftParen);
+          this.SUBRULE(this.tupleTypeOrParenthesized);
+          this.CONSUME(tokens.RightParen);
+        },
+      },
+      // Array type: Array[T]
+      {
+        ALT: () => {
+          this.SUBRULE(this.simpleType);
+          this.MANY(() => {
+            this.CONSUME(tokens.LeftBracket);
+            this.SUBRULE2(this.type);
+            this.CONSUME(tokens.RightBracket);
+          });
+        },
+      },
+    ]);
+  });
+
+  private tupleTypeOrParenthesized = this.RULE(
+    "tupleTypeOrParenthesized",
+    () => {
+      this.SUBRULE(this.type);
+      this.MANY(() => {
+        this.CONSUME(tokens.Comma);
+        this.SUBRULE2(this.type);
+      });
+    },
+  );
 
   private simpleType = this.RULE("simpleType", () => {
     this.SUBRULE(this.qualifiedIdentifier);

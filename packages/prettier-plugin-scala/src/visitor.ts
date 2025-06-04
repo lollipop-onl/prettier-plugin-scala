@@ -398,6 +398,8 @@ export class CstNodeVisitor {
       return this.visit(node.children.auxiliaryConstructor[0], ctx);
     } else if (node.children.givenDefinition) {
       return this.visit(node.children.givenDefinition[0], ctx);
+    } else if (node.children.typeDefinition) {
+      return this.visit(node.children.typeDefinition[0], ctx);
     }
 
     return "";
@@ -618,6 +620,25 @@ export class CstNodeVisitor {
     return result;
   }
 
+  visitTypeDefinition(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Handle opaque types
+    if (node.children.Opaque) {
+      result += "opaque ";
+    }
+
+    result += "type " + node.children.Identifier[0].image;
+
+    if (node.children.typeParameters) {
+      result += this.visit(node.children.typeParameters[0], ctx);
+    }
+
+    result += " = " + this.visit(node.children.type[0], ctx);
+
+    return result;
+  }
+
   visitAuxiliaryConstructor(node: any, ctx: PrintContext): string {
     let result = "def this";
 
@@ -763,6 +784,38 @@ export class CstNodeVisitor {
   }
 
   visitType(node: any, ctx: PrintContext): string {
+    return this.visit(node.children.unionType[0], ctx);
+  }
+
+  visitUnionType(node: any, ctx: PrintContext): string {
+    const types = node.children.intersectionType || [];
+    if (types.length === 1) {
+      return this.visit(types[0], ctx);
+    }
+
+    const typeStrings = types.map((t: any) => this.visit(t, ctx));
+    return typeStrings.join(" | ");
+  }
+
+  visitIntersectionType(node: any, ctx: PrintContext): string {
+    const types = node.children.baseType || [];
+    if (types.length === 1) {
+      return this.visit(types[0], ctx);
+    }
+
+    const typeStrings = types.map((t: any) => this.visit(t, ctx));
+    return typeStrings.join(" & ");
+  }
+
+  visitBaseType(node: any, ctx: PrintContext): string {
+    // Handle parenthesized types or tuple types: (String | Int) or (A, B)
+    if (node.children.LeftParen && node.children.tupleTypeOrParenthesized) {
+      return (
+        "(" + this.visit(node.children.tupleTypeOrParenthesized[0], ctx) + ")"
+      );
+    }
+
+    // Handle simple types with array notation
     let result = this.visit(node.children.simpleType[0], ctx);
 
     // Handle array types like Array[String]
@@ -773,6 +826,16 @@ export class CstNodeVisitor {
     }
 
     return result;
+  }
+
+  visitTupleTypeOrParenthesized(node: any, ctx: PrintContext): string {
+    const types = node.children.type || [];
+    if (types.length === 1) {
+      return this.visit(types[0], ctx);
+    }
+
+    const typeStrings = types.map((t: any) => this.visit(t, ctx));
+    return typeStrings.join(", ");
   }
 
   visitSimpleType(node: any, ctx: PrintContext): string {

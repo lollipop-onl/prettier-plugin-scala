@@ -1,0 +1,1 @@
+type StringOrInt = String | Int
