@@ -573,6 +573,12 @@ export class ScalaParser extends CstParser {
 
   private baseType = this.RULE("baseType", () => {
     this.OR([
+      // Type lambda: [X] =>> F[X]
+      {
+        ALT: () => {
+          this.SUBRULE(this.typeLambda);
+        },
+      },
       // Tuple type or parenthesized type: (A, B) or (String | Int)
       {
         ALT: () => {
@@ -625,6 +631,44 @@ export class ScalaParser extends CstParser {
       // Regular type
       { ALT: () => this.SUBRULE(this.type) },
     ]);
+  });
+
+  private typeLambda = this.RULE("typeLambda", () => {
+    this.CONSUME(tokens.LeftBracket);
+    this.MANY_SEP({
+      SEP: tokens.Comma,
+      DEF: () => this.SUBRULE(this.typeLambdaParameter),
+    });
+    this.CONSUME(tokens.RightBracket);
+    this.CONSUME(tokens.TypeLambdaArrow);
+    this.SUBRULE(this.type);
+  });
+
+  private typeLambdaParameter = this.RULE("typeLambdaParameter", () => {
+    // Handle variance annotations +X, -X
+    this.OPTION(() => {
+      this.OR([
+        { ALT: () => this.CONSUME(tokens.Plus) },
+        { ALT: () => this.CONSUME(tokens.Minus) },
+      ]);
+    });
+    this.CONSUME(tokens.Identifier);
+    this.OPTION2(() => {
+      this.OR2([
+        {
+          ALT: () => {
+            this.CONSUME(tokens.SubtypeOf);
+            this.SUBRULE(this.type);
+          },
+        },
+        {
+          ALT: () => {
+            this.CONSUME(tokens.SupertypeOf);
+            this.SUBRULE2(this.type);
+          },
+        },
+      ]);
+    });
   });
 
   // Patterns

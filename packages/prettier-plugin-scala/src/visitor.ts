@@ -831,6 +831,11 @@ export class CstNodeVisitor {
   }
 
   visitBaseType(node: any, ctx: PrintContext): string {
+    // Handle type lambda: [X] =>> F[X]
+    if (node.children.typeLambda) {
+      return this.visit(node.children.typeLambda[0], ctx);
+    }
+
     // Handle parenthesized types or tuple types: (String | Int) or (A, B)
     if (node.children.LeftParen && node.children.tupleTypeOrParenthesized) {
       return (
@@ -886,6 +891,43 @@ export class CstNodeVisitor {
     }
 
     return "";
+  }
+
+  visitTypeLambda(node: any, ctx: PrintContext): string {
+    let result = "[";
+
+    if (node.children.typeLambdaParameter) {
+      const parameters = node.children.typeLambdaParameter.map((param: any) =>
+        this.visit(param, ctx),
+      );
+      result += parameters.join(", ");
+    }
+
+    result += "] =>> ";
+    result += this.visit(node.children.type[0], ctx);
+
+    return result;
+  }
+
+  visitTypeLambdaParameter(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Add variance annotation if present
+    if (node.children.Plus) {
+      result += "+";
+    } else if (node.children.Minus) {
+      result += "-";
+    }
+
+    result += node.children.Identifier[0].image;
+
+    if (node.children.SubtypeOf) {
+      result += " <: " + this.visit(node.children.type[0], ctx);
+    } else if (node.children.SupertypeOf) {
+      result += " >: " + this.visit(node.children.type[0], ctx);
+    }
+
+    return result;
   }
 
   visitPattern(node: any, ctx: PrintContext): string {

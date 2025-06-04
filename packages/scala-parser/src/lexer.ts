@@ -127,6 +127,10 @@ export const LogicalAnd = createToken({ name: "LogicalAnd", pattern: /&&/ });
 export const LogicalOr = createToken({ name: "LogicalOr", pattern: /\|\|/ });
 export const Exclamation = createToken({ name: "Exclamation", pattern: /!/ });
 export const Arrow = createToken({ name: "Arrow", pattern: /=>/ });
+export const TypeLambdaArrow = createToken({
+  name: "TypeLambdaArrow",
+  pattern: /=>>/,
+});
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const RightArrow = createToken({ name: "RightArrow", pattern: /->/ });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
@@ -256,6 +260,7 @@ export const allTokens = [
   CharLiteral,
 
   // Multi-character operators (must come before single-character)
+  TypeLambdaArrow, // Must come before Arrow to avoid ambiguity
   Arrow,
   LeftArrow,
   RightArrow,
