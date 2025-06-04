@@ -612,10 +612,19 @@ export class ScalaParser extends CstParser {
       this.CONSUME(tokens.LeftBracket);
       this.MANY_SEP({
         SEP: tokens.Comma,
-        DEF: () => this.SUBRULE(this.type),
+        DEF: () => this.SUBRULE(this.typeArgument),
       });
       this.CONSUME(tokens.RightBracket);
     });
+  });
+
+  private typeArgument = this.RULE("typeArgument", () => {
+    this.OR([
+      // Kind Projector notation: *
+      { ALT: () => this.CONSUME(tokens.Star) },
+      // Regular type
+      { ALT: () => this.SUBRULE(this.type) },
+    ]);
   });
 
   // Patterns

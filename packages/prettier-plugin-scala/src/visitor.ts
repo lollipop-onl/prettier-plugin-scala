@@ -864,14 +864,28 @@ export class CstNodeVisitor {
   visitSimpleType(node: any, ctx: PrintContext): string {
     let result = this.visit(node.children.qualifiedIdentifier[0], ctx);
 
-    // Handle type parameters like List[Int]
+    // Handle type parameters like List[Int] or Kind Projector like Map[String, *]
     if (node.children.LeftBracket) {
-      const types = node.children.type || [];
-      const typeStrings = types.map((t: any) => this.visit(t, ctx));
+      const typeArgs = node.children.typeArgument || [];
+      const typeStrings = typeArgs.map((t: any) => this.visit(t, ctx));
       result += "[" + typeStrings.join(", ") + "]";
     }
 
     return result;
+  }
+
+  visitTypeArgument(node: any, ctx: PrintContext): string {
+    // Handle Kind Projector notation: *
+    if (node.children.Star) {
+      return "*";
+    }
+
+    // Handle regular type
+    if (node.children.type) {
+      return this.visit(node.children.type[0], ctx);
+    }
+
+    return "";
   }
 
   visitPattern(node: any, ctx: PrintContext): string {
