@@ -52,6 +52,82 @@ export class CstNodeVisitor {
     return 2;
   }
 
+  // Helper method to handle semicolon formatting (supports Prettier semi option)
+  private formatStatement(statement: string, ctx: PrintContext): string {
+    // Use Prettier's semi option
+    // For Scala, default to false (no semicolons) unless explicitly set to true
+    const useSemi = ctx.options.semi === true;
+
+    // Remove existing trailing semicolon
+    const cleanStatement = statement.replace(/;\s*$/, "");
+
+    // Add semicolon if requested
+    if (useSemi) {
+      return cleanStatement + ";";
+    }
+
+    return cleanStatement;
+  }
+
+  // Helper method to handle string quote formatting (supports Prettier singleQuote option)
+  private formatStringLiteral(content: string, ctx: PrintContext): string {
+    // Use Prettier's singleQuote option
+    const useSingleQuote = ctx.options.singleQuote === true;
+
+    // Skip string interpolation (starts with s", f", raw", etc.)
+    if (content.match(/^[a-zA-Z]"/)) {
+      return content; // Don't modify interpolated strings
+    }
+
+    // Extract the content
+    let innerContent = content;
+
+    if (content.startsWith('"') && content.endsWith('"')) {
+      innerContent = content.slice(1, -1);
+    } else if (content.startsWith("'") && content.endsWith("'")) {
+      innerContent = content.slice(1, -1);
+    } else {
+      return content; // Not a string literal
+    }
+
+    // Choose target quote based on option
+    const targetQuote = useSingleQuote ? "'" : '"';
+
+    // Handle escaping if necessary
+    if (targetQuote === "'") {
+      // Converting to single quotes: escape single quotes, unescape double quotes
+      innerContent = innerContent.replace(/\\"/g, '"').replace(/'/g, "\\'");
+    } else {
+      // Converting to double quotes: escape double quotes, unescape single quotes
+      innerContent = innerContent.replace(/\\'/g, "'").replace(/"/g, '\\"');
+    }
+
+    return targetQuote + innerContent + targetQuote;
+  }
+
+  // Helper method to handle trailing comma formatting (supports Prettier trailingComma option)
+  private formatCommaSeparatedList(
+    items: string[],
+    ctx: PrintContext,
+    isMultiLine: boolean,
+  ): string {
+    if (items.length === 0) return "";
+
+    // Use Prettier's trailingComma option
+    const trailingComma = ctx.options.trailingComma || "none";
+
+    if (!isMultiLine || trailingComma === "none") {
+      return items.join(", ");
+    }
+
+    // Add trailing comma for multi-line lists when trailingComma is "all" or "es5"
+    if (trailingComma === "all" || trailingComma === "es5") {
+      return items.join(",\n") + ",";
+    }
+
+    return items.join(",\n");
+  }
+
   // Helper method to get indentation string (supports scalafmt compatibility)
   private getIndentation(ctx: PrintContext, level: number = 1): string {
     // Use Prettier's useTabs option (takes precedence)
@@ -614,7 +690,7 @@ export class CstNodeVisitor {
 
     result += " = " + this.visit(node.children.expression[0], ctx);
 
-    return result;
+    return this.formatStatement(result, ctx);
   }
 
   visitVarDefinition(node: any, ctx: PrintContext): string {
@@ -626,7 +702,7 @@ export class CstNodeVisitor {
 
     result += " = " + this.visit(node.children.expression[0], ctx);
 
-    return result;
+    return this.formatStatement(result, ctx);
   }
 
   visitDefDefinition(node: any, ctx: PrintContext): string {
@@ -651,6 +727,7 @@ export class CstNodeVisitor {
 
     if (node.children.Equals) {
       result += " = " + this.visit(node.children.expression[0], ctx);
+      return this.formatStatement(result, ctx);
     }
 
     return result;
@@ -735,7 +812,21 @@ export class CstNodeVisitor {
 
     // Use multi-line format for longer parameter lists
     const indent = this.getIndentation(ctx);
-    return `(\n${indent}${paramStrings.join(`,\n${indent}`)}\n)`;
+    const formattedParams = this.formatCommaSeparatedList(
+      paramStrings,
+      ctx,
+      true,
+    );
+
+    // Handle multi-line formatting with proper indentation
+    if (formattedParams.includes(",\n")) {
+      const indentedParams = formattedParams
+        .split(",\n")
+        .map((param) => (param === "" ? "" : indent + param.trim()));
+      return `(\n${indentedParams.join(",\n")}\n)`;
+    } else {
+      return `(\n${indent}${formattedParams.replace(/,\n/g, `,\n${indent}`)}\n)`;
+    }
   }
 
   visitClassParameter(node: any, ctx: PrintContext): string {
@@ -1367,10 +1458,17 @@ export class CstNodeVisitor {
     return token.image;
   }
 
-  visitLiteral(node: any, _ctx: PrintContext): string {
+  visitLiteral(node: any, ctx: PrintContext): string {
     const children = node.children as Record<string, any[]>;
     const token = Object.values(children)[0][0];
-    return token.image;
+    const tokenImage = token.image;
+
+    // Apply singleQuote formatting to string literals
+    if (tokenImage.startsWith('"') || tokenImage.startsWith("'")) {
+      return this.formatStringLiteral(tokenImage, ctx);
+    }
+
+    return tokenImage;
   }
 
   visitQualifiedIdentifier(node: any, _ctx: PrintContext): string {
