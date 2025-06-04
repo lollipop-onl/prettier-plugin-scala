@@ -579,6 +579,56 @@ export class ScalaParser extends CstParser {
           this.SUBRULE(this.typeLambda);
         },
       },
+      // Dependent function type: (x: Int) => Vector[x.type]
+      {
+        ALT: () => {
+          this.SUBRULE(this.dependentFunctionType);
+        },
+        GATE: () => {
+          // Look ahead to detect dependent function type pattern
+          // Pattern: ( [identifier : type [, ...]] ) =>
+          if (this.LA(1).tokenType !== tokens.LeftParen) return false;
+
+          // Handle empty parameter list: () =>
+          if (this.LA(2)?.tokenType === tokens.RightParen) {
+            return this.LA(3)?.tokenType === tokens.Arrow;
+          }
+
+          let i = 2; // Start after LeftParen
+
+          // Skip identifier
+          if (this.LA(i)?.tokenType === tokens.Identifier) {
+            i++;
+
+            // Check for colon
+            if (this.LA(i)?.tokenType === tokens.Colon) {
+              i++;
+
+              // Skip type - simplified check for now
+              // We need to find ) => pattern
+              let parenCount = 0;
+              while (
+                this.LA(i) &&
+                (parenCount > 0 || this.LA(i).tokenType !== tokens.RightParen)
+              ) {
+                if (this.LA(i).tokenType === tokens.LeftParen) parenCount++;
+                if (this.LA(i).tokenType === tokens.RightParen) parenCount--;
+                i++;
+              }
+
+              // Check for ) =>
+              if (
+                this.LA(i)?.tokenType === tokens.RightParen &&
+                this.LA(i + 1)?.tokenType === tokens.Arrow
+              ) {
+                return true;
+              }
+            }
+          }
+
+          return false;
+        },
+      },
       // Tuple type or parenthesized type: (A, B) or (String | Int)
       {
         ALT: () => {
@@ -669,6 +719,25 @@ export class ScalaParser extends CstParser {
         },
       ]);
     });
+  });
+
+  private dependentFunctionType = this.RULE("dependentFunctionType", () => {
+    this.CONSUME(tokens.LeftParen);
+    this.OPTION(() => {
+      this.MANY_SEP({
+        SEP: tokens.Comma,
+        DEF: () => this.SUBRULE(this.dependentParameter),
+      });
+    });
+    this.CONSUME(tokens.RightParen);
+    this.CONSUME(tokens.Arrow);
+    this.SUBRULE(this.type);
+  });
+
+  private dependentParameter = this.RULE("dependentParameter", () => {
+    this.CONSUME(tokens.Identifier);
+    this.CONSUME(tokens.Colon);
+    this.SUBRULE(this.type);
   });
 
   // Patterns
@@ -1063,7 +1132,10 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.Identifier);
     this.MANY(() => {
       this.CONSUME(tokens.Dot);
-      this.CONSUME2(tokens.Identifier);
+      this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Type) }, // Allow .type for singleton types
+      ]);
     });
   });
 }

@@ -836,6 +836,11 @@ export class CstNodeVisitor {
       return this.visit(node.children.typeLambda[0], ctx);
     }
 
+    // Handle dependent function type: (x: Int) => Vector[x.type]
+    if (node.children.dependentFunctionType) {
+      return this.visit(node.children.dependentFunctionType[0], ctx);
+    }
+
     // Handle parenthesized types or tuple types: (String | Int) or (A, B)
     if (node.children.LeftParen && node.children.tupleTypeOrParenthesized) {
       return (
@@ -927,6 +932,29 @@ export class CstNodeVisitor {
       result += " >: " + this.visit(node.children.type[0], ctx);
     }
 
+    return result;
+  }
+
+  visitDependentFunctionType(node: any, ctx: PrintContext): string {
+    let result = "(";
+
+    if (node.children.dependentParameter) {
+      const parameters = node.children.dependentParameter.map((param: any) =>
+        this.visit(param, ctx),
+      );
+      result += parameters.join(", ");
+    }
+
+    result += ") => ";
+    result += this.visit(node.children.type[0], ctx);
+
+    return result;
+  }
+
+  visitDependentParameter(node: any, ctx: PrintContext): string {
+    let result = node.children.Identifier[0].image;
+    result += ": ";
+    result += this.visit(node.children.type[0], ctx);
     return result;
   }
 
@@ -1241,8 +1269,21 @@ export class CstNodeVisitor {
     let result = node.children.Identifier[0].image;
 
     if (node.children.Dot) {
-      for (let i = 1; i < node.children.Identifier.length; i++) {
-        result += "." + node.children.Identifier[i].image;
+      // Handle mixed identifiers and type keywords
+      const dots = node.children.Dot.length;
+      const identifiers = node.children.Identifier || [];
+      const types = node.children.Type || [];
+
+      for (let i = 0; i < dots; i++) {
+        result += ".";
+
+        // Determine which token comes next (identifier or type keyword)
+        if (i + 1 < identifiers.length) {
+          result += identifiers[i + 1].image;
+        } else if (types.length > 0) {
+          // Use the type keyword (e.g., "type" for .type syntax)
+          result += types[0].image;
+        }
       }
     }
 
