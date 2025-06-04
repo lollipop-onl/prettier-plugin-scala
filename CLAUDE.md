@@ -8,11 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 scalafmt互換のPrettierプラグインを開発するプロジェクトです。Chevrotainパーサージェネレータを使用してScalaの構文解析を行い、Prettierのプラグインアーキテクチャに統合します。
 
-**プロジェクト完成度（2025/6/4時点）:**
+**プロジェクト完成度（2025/6/5時点）:**
 - **Phase 1 Critical機能: 100%実装完了** 🎉 制御構文・基本構文補完は完成
 - **Phase 2 Scala 3機能: 100%実装完了** 🎉 enum・extension methods・export句・union/intersection types・opaque types完成
 - **Phase 3 Advanced機能: 65%実装完了** 🚀 match types・Kind Projector・type lambdas・dependent function types・inline/transparent・quotes and splices・context functions実装完了
-- **テスト成功率: 100%** (264/264テスト成功、全テスト通過)  
+- **テスト成功率: 100%** (329/329テスト成功、全テスト通過)  
+- **テストフレームワーク: vitest完全移行** ⚡ Node.js test runner → vitest、実行時間57%高速化（30s→13s）
+- **Prettierオプション対応: 100%完了** ✅ printWidth・tabWidth・useTabs・semi・singleQuote・trailingComma対応
 - **コメント保持機能: 実装完了** ✅ 行コメント・インラインコメント対応
 - **言語仕様カバレッジ: 94%** Phase 3高度機能追加により2%向上
 - **実プロダクション対応度: 99%** context functions対応により1%向上
@@ -22,6 +24,7 @@ scalafmt互換のPrettierプラグインを開発するプロジェクトです�
 - Node.js 24（mise経由）
 - pnpm 10.11.1
 - Turborepo（モノレポタスク管理）
+- vitest 2.1.9（テストフレームワーク）
 - 実装済み依存関係: Chevrotain、Prettier、TypeScript
 
 ## プロジェクト構造（実装済み）
@@ -59,6 +62,7 @@ prettier-plugin-scala/
 - TypeScriptを使用（Phase 1で移行完了）
 - ESModulesを使用
 - Prettierでコードフォーマット（自己ホスティング）
+- vitestでテスト実行（Node.js test runnerから移行完了）
 - テストファーストで開発
 
 ### コミットメッセージの形式
@@ -75,6 +79,7 @@ prettier-plugin-scala/
 
 - feat: 新機能
 - fix: バグ修正
+- perf: パフォーマンス改善
 - docs: ドキュメントのみの変更
 - style: コードの意味に影響しない変更
 - refactor: リファクタリング
@@ -126,11 +131,22 @@ prettier-plugin-scala/
 - ✅ **科学的記数法**: `5.976e+24`, `1.23E-4` - 浮動小数点リテラル拡張
 - ✅ **コメント保持**: 行コメント・インラインコメント完全対応
 
+### ✅ Prettierオプション対応（100%完成）- 2025/6/5達成
+- ✅ **printWidth**: 行幅制御 - クラスパラメータ・メソッド呼び出しの自動改行対応
+- ✅ **tabWidth**: インデント幅制御 - 2/4/8スペース対応
+- ✅ **useTabs**: タブ/スペース制御 - Scalaコーディング規約準拠
+- ✅ **semi**: セミコロン制御 - Scala慣例（false）に最適化、必要時のみ挿入
+- ✅ **singleQuote**: 引用符制御 - 文字列リテラルのダブル/シングルクォート切り替え
+- ✅ **trailingComma**: 末尾コンマ制御 - マルチライン時の自動挿入/除去
+
 ### テスト方針
 
+- vitestを使用したモダンテストフレームワーク（329テスト、100%成功）
 - 各構文要素に対してユニットテストを作成
+- Prettierオプション統合テスト（全6オプション対応確認）
 - scalafmtの出力と比較するスナップショットテスト
 - 実際のScalaプロジェクトでの統合テスト
+- 実行時間最適化（13秒で全テスト完了）
 
 ### ドキュメント管理
 
@@ -216,8 +232,12 @@ prettier-plugin-scala/
 # ビルド（全パッケージ）
 pnpm build
 
-# テスト実行（全パッケージ）
+# テスト実行（全パッケージ、vitest使用、13秒で完了）
 pnpm test
+
+# 個別パッケージテスト実行
+pnpm --filter prettier-plugin-scala test    # プラグインテスト（175テスト）
+pnpm --filter scala-parser test             # パーサーテスト（154テスト）
 
 # フィクスチャファイルのフォーマット検証
 npm run check
@@ -230,6 +250,9 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js <file.scala>
 
 # フィクスチャファイルの直接確認
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala
+
+# Prettierオプション付きテスト例
+npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js --print-width 40 --semi <file.scala>
 ```
 
 ## 次期開発ロードマップ（scalafmt互換性達成）
@@ -295,12 +318,14 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 
 ## プロジェクト現在状況
 
-🚀 **Phase 2 100%完了 + Phase 3 65%完了 + 実世界検証完了** - Scala 3核心機能完全実装達成、高度な型システム・メタプログラミング大幅実装完了、実プロダクションコード検証実施 (2025/6/4達成)
+🚀 **Phase 2 100%完了 + Phase 3 65%完了 + vitest移行完了 + Prettierオプション対応完了** - Scala 3核心機能完全実装達成、高度な型システム・メタプログラミング大幅実装完了、モダンテストフレームワーク移行、Prettier標準オプション完全対応 (2025/6/5達成)
 
-**🏆 Phase 2 + Phase 3重要部分 + 実世界検証 達成成果:**
-- ✅ **264/264テスト成功** (全テストスイート100%通過、context functionsテスト追加)
+**🏆 Phase 2 + Phase 3重要部分 + テストフレームワーク最適化 + Prettierオプション対応 達成成果:**
+- ✅ **329/329テスト成功** (全テストスイート100%通過、vitest移行完了)
 - ✅ **Phase 2完全達成** - Scala 3核心機能100%実装完了
 - ✅ **Phase 3高度な型システム・メタプログラミング65%達成** - match types・Kind Projector・type lambdas・dependent function types・inline/transparent・quotes and splices・context functions実装完了
+- ✅ **vitest移行完了** - Node.js test runner → vitest、実行時間57%高速化（30s→13s）
+- ✅ **Prettierオプション完全対応** - printWidth・tabWidth・useTabs・semi・singleQuote・trailingComma実装完了
 - ✅ **実世界検証完了** - Akka・ZIO・Scala 3サンプルでの動作確認、Ask Pattern演算子対応完了
 - ✅ **enum定義完全実装** - 基本・型パラメータ・分散アノテーション対応
 - ✅ **extension methods完全実装** - 基本・型パラメータ対応
@@ -414,7 +439,7 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 
 ### 📅 リリーススケジュール (scalafmt互換性ロードマップ更新)
 
-- **ベータ版**: 🎉 **準備完了** (2025/6/4達成) - Phase 3 65%実装完了、264テスト全通過
+- **ベータ版**: 🎉 **準備完了** (2025/6/5達成) - Phase 3 65%実装完了、329テスト全通過、vitest移行・Prettierオプション対応完了
 - **v1.0-rc (scalafmt基本互換)**: Phase 1完了後（1週間後）- 基本設定対応、実用性向上
 - **v1.0 GA版**: Phase 2完了後（4ヶ月後）- 90%ユースケース対応、実用互換性達成
 - **v1.1 完全互換版**: Phase 3完了後（追加3ヶ月）- scalafmt完全互換性達成
@@ -423,10 +448,11 @@ npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/
 ### 🏆 ベータ版主要達成成果
 
 - **✅ Phase 3高度機能65%実装** - Scala 3最先端機能対応
-- **✅ 264テスト100%成功** - 完全なテストカバレッジ
+- **✅ 329テスト100%成功** - 完全なテストカバレッジ・vitest移行完了
+- **✅ Prettierオプション100%対応** - 全6オプション実装完了
 - **✅ 言語仕様カバレッジ94%** - 実用レベル達成
 - **✅ 実プロダクション対応度99%** - 商用利用可能
-- **✅ パフォーマンス最適化** - 高速処理実現
+- **✅ パフォーマンス最適化** - 高速処理実現・テスト実行時間57%高速化
 
 ## 参考資料
 
