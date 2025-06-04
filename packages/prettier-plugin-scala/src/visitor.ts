@@ -830,10 +830,26 @@ export class CstNodeVisitor {
     return typeStrings.join(" & ");
   }
 
+  visitContextFunctionType(node: any, ctx: PrintContext): string {
+    let result = this.visit(node.children.simpleType[0], ctx);
+    result += " ?=> " + this.visit(node.children.type[0], ctx);
+    return result;
+  }
+
   visitBaseType(node: any, ctx: PrintContext): string {
     // Handle type lambda: [X] =>> F[X]
     if (node.children.typeLambda) {
       return this.visit(node.children.typeLambda[0], ctx);
+    }
+
+    // Handle polymorphic function type: [T] => T => T
+    if (node.children.polymorphicFunctionType) {
+      return this.visit(node.children.polymorphicFunctionType[0], ctx);
+    }
+
+    // Handle context function type: String ?=> Int
+    if (node.children.contextFunctionType) {
+      return this.visit(node.children.contextFunctionType[0], ctx);
     }
 
     // Handle dependent function type: (x: Int) => Vector[x.type]
@@ -1021,6 +1037,11 @@ export class CstNodeVisitor {
       }
 
       return result;
+    }
+
+    // Handle polymorphic function literal: [T] => (x: T) => x
+    if (node.children.polymorphicFunctionLiteral) {
+      return this.visit(node.children.polymorphicFunctionLiteral[0], ctx);
     }
 
     // Handle simple lambda expressions: x => x * 2
@@ -1453,5 +1474,68 @@ export class CstNodeVisitor {
 
   visitSpliceExpression(node: any, ctx: PrintContext): string {
     return "${ " + this.visit(node.children.expression[0], ctx) + " }";
+  }
+
+  visitPolymorphicFunctionLiteral(node: any, ctx: PrintContext): string {
+    let result = "[";
+
+    if (node.children.polymorphicTypeParameter) {
+      const parameters = node.children.polymorphicTypeParameter.map(
+        (param: any) => this.visit(param, ctx),
+      );
+      result += parameters.join(", ");
+    }
+
+    result += "] => ";
+    result += this.visit(node.children.expression[0], ctx);
+
+    return result;
+  }
+
+  visitPolymorphicFunctionType(node: any, ctx: PrintContext): string {
+    let result = "[";
+
+    if (node.children.polymorphicTypeParameter) {
+      const parameters = node.children.polymorphicTypeParameter.map(
+        (param: any) => this.visit(param, ctx),
+      );
+      result += parameters.join(", ");
+    }
+
+    result += "] => ";
+    result += this.visit(node.children.type[0], ctx);
+
+    return result;
+  }
+
+  visitPolymorphicTypeParameter(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Add variance annotation if present
+    if (node.children.Plus) {
+      result += "+";
+    } else if (node.children.Minus) {
+      result += "-";
+    }
+
+    result += node.children.Identifier[0].image;
+
+    // Handle type bounds
+    if (node.children.SubtypeOf) {
+      result += " <: " + this.visit(node.children.type[0], ctx);
+    } else if (node.children.SupertypeOf) {
+      result += " >: " + this.visit(node.children.type[0], ctx);
+    }
+
+    // Handle context bounds: T: Ordering
+    if (node.children.Colon && node.children.type) {
+      const typeIndex =
+        node.children.SubtypeOf || node.children.SupertypeOf ? 1 : 0;
+      if (node.children.type[typeIndex]) {
+        result += ": " + this.visit(node.children.type[typeIndex], ctx);
+      }
+    }
+
+    return result;
   }
 }

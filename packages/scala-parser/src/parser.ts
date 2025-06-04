@@ -580,6 +580,71 @@ export class ScalaParser extends CstParser {
         ALT: () => {
           this.SUBRULE(this.typeLambda);
         },
+        GATE: () => {
+          // Look ahead to detect type lambda pattern
+          // Pattern: [ [typeParam [, ...]] ] =>>
+          if (this.LA(1).tokenType !== tokens.LeftBracket) return false;
+
+          // Skip to find ] =>> pattern
+          let i = 2; // Start after LeftBracket
+          let bracketCount = 0;
+
+          while (
+            this.LA(i) &&
+            (bracketCount > 0 || this.LA(i).tokenType !== tokens.RightBracket)
+          ) {
+            if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
+            if (this.LA(i).tokenType === tokens.RightBracket) bracketCount--;
+            i++;
+          }
+
+          // Check for ] =>>
+          return (
+            this.LA(i)?.tokenType === tokens.RightBracket &&
+            this.LA(i + 1)?.tokenType === tokens.TypeLambdaArrow
+          );
+        },
+      },
+      // Polymorphic function type: [T] => T => T
+      {
+        ALT: () => {
+          this.SUBRULE(this.polymorphicFunctionType);
+        },
+        GATE: () => {
+          // Look ahead to detect polymorphic function type pattern
+          // Pattern: [ [typeParam [, ...]] ] =>
+          if (this.LA(1).tokenType !== tokens.LeftBracket) return false;
+
+          // Skip to find ] => pattern
+          let i = 2; // Start after LeftBracket
+          let bracketCount = 0;
+
+          while (
+            this.LA(i) &&
+            (bracketCount > 0 || this.LA(i).tokenType !== tokens.RightBracket)
+          ) {
+            if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
+            if (this.LA(i).tokenType === tokens.RightBracket) bracketCount--;
+            i++;
+          }
+
+          // Check for ] =>
+          return (
+            this.LA(i)?.tokenType === tokens.RightBracket &&
+            this.LA(i + 1)?.tokenType === tokens.Arrow
+          );
+        },
+      },
+      // Context function type: Type ?=> Type
+      {
+        ALT: () => {
+          this.SUBRULE(this.contextFunctionType);
+        },
+        GATE: () => {
+          // Look ahead to detect context function type pattern
+          // We need to recursively parse a type and then see ?=>
+          return this.LA(1)?.tokenType !== tokens.LeftParen;
+        },
       },
       // Dependent function type: (x: Int) => Vector[x.type]
       {
@@ -742,6 +807,25 @@ export class ScalaParser extends CstParser {
     this.SUBRULE(this.type);
   });
 
+  private polymorphicFunctionType = this.RULE("polymorphicFunctionType", () => {
+    // Type parameters: [T] or [A, B]
+    this.CONSUME(tokens.LeftBracket);
+    this.MANY_SEP({
+      SEP: tokens.Comma,
+      DEF: () => this.SUBRULE(this.polymorphicTypeParameter),
+    });
+    this.CONSUME(tokens.RightBracket);
+    this.CONSUME(tokens.Arrow);
+    // The rest of the type (function type)
+    this.SUBRULE(this.type);
+  });
+
+  private contextFunctionType = this.RULE("contextFunctionType", () => {
+    this.SUBRULE(this.simpleType);
+    this.CONSUME(tokens.ContextArrow);
+    this.SUBRULE(this.type);
+  });
+
   // Patterns
   private pattern = this.RULE("pattern", () => {
     this.OR([
@@ -755,6 +839,21 @@ export class ScalaParser extends CstParser {
   private expression = this.RULE("expression", () => {
     // Try lambda expression with backtracking
     this.OR([
+      {
+        ALT: () => {
+          // Polymorphic function literal: [T] => (x: T) => x
+          this.SUBRULE(this.polymorphicFunctionLiteral);
+        },
+        GATE: () => {
+          // Only try if we see [ followed by identifier (type parameter)
+          const la1 = this.LA(1);
+          const la2 = this.LA(2);
+          return (
+            la1?.tokenType === tokens.LeftBracket &&
+            la2?.tokenType === tokens.Identifier
+          );
+        },
+      },
       {
         ALT: () => {
           // Lambda with parameter list: (x: Int, y: Int) => x + y
@@ -1049,6 +1148,61 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.RightBrace); // }
   });
 
+  private polymorphicFunctionLiteral = this.RULE(
+    "polymorphicFunctionLiteral",
+    () => {
+      // Type parameters: [T] or [A, B]
+      this.CONSUME(tokens.LeftBracket);
+      this.MANY_SEP({
+        SEP: tokens.Comma,
+        DEF: () => this.SUBRULE(this.polymorphicTypeParameter),
+      });
+      this.CONSUME(tokens.RightBracket);
+      this.CONSUME(tokens.Arrow);
+      // The rest of the expression (usually another lambda)
+      this.SUBRULE(this.expression);
+    },
+  );
+
+  private polymorphicTypeParameter = this.RULE(
+    "polymorphicTypeParameter",
+    () => {
+      // Optional variance annotation
+      this.OPTION(() => {
+        this.OR([
+          { ALT: () => this.CONSUME(tokens.Plus) },
+          { ALT: () => this.CONSUME(tokens.Minus) },
+        ]);
+      });
+
+      this.CONSUME(tokens.Identifier);
+
+      // Optional type bounds
+      this.OPTION2(() => {
+        this.OR2([
+          {
+            ALT: () => {
+              this.CONSUME(tokens.SubtypeOf);
+              this.SUBRULE(this.type);
+            },
+          },
+          {
+            ALT: () => {
+              this.CONSUME(tokens.SupertypeOf);
+              this.SUBRULE2(this.type);
+            },
+          },
+        ]);
+      });
+
+      // Optional context bound: T: Ordering
+      this.OPTION3(() => {
+        this.CONSUME(tokens.Colon);
+        this.SUBRULE3(this.type);
+      });
+    },
+  );
+
   private blockStatement = this.RULE("blockStatement", () => {
     this.OR([
       { ALT: () => this.SUBRULE(this.valDefinition) },
@@ -1140,6 +1294,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.True) },
       { ALT: () => this.CONSUME(tokens.False) },
       { ALT: () => this.CONSUME(tokens.Null) },
+      { ALT: () => this.CONSUME(tokens.NotImplemented) },
     ]);
   });
 

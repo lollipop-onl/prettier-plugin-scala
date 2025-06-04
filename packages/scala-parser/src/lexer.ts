@@ -29,6 +29,10 @@ export const Throw = createToken({ name: "Throw", pattern: /throw\b/ });
 export const Null = createToken({ name: "Null", pattern: /null\b/ });
 export const True = createToken({ name: "True", pattern: /true\b/ });
 export const False = createToken({ name: "False", pattern: /false\b/ });
+export const NotImplemented = createToken({
+  name: "NotImplemented",
+  pattern: /\?\?\?/,
+});
 export const Type = createToken({ name: "Type", pattern: /type\b/ });
 export const Private = createToken({ name: "Private", pattern: /private\b/ });
 export const Protected = createToken({
@@ -138,6 +142,10 @@ export const TypeLambdaArrow = createToken({
 });
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const RightArrow = createToken({ name: "RightArrow", pattern: /->/ });
+export const ContextArrow = createToken({
+  name: "ContextArrow",
+  pattern: /\?=>/,
+});
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
 export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
 export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
@@ -245,6 +253,7 @@ export const allTokens = [
   Null,
   True,
   False,
+  NotImplemented,
   Type,
   Private,
   Protected,
@@ -275,6 +284,7 @@ export const allTokens = [
 
   // Multi-character operators (must come before single-character)
   TypeLambdaArrow, // Must come before Arrow to avoid ambiguity
+  ContextArrow, // Must come before Arrow to avoid ambiguity
   Arrow,
   LeftArrow,
   RightArrow,
