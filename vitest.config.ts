@@ -2,23 +2,28 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    // TypeScript support
     globals: true,
     environment: "node",
-    // Test file patterns
     include: ["test/**/*.test.{ts,js}", "packages/*/test/**/*.test.{ts,js}"],
-    // TypeScript configuration
+    exclude: ["**/node_modules/**", "**/lib/**", "**/dist/**"],
     typecheck: {
-      enabled: false, // We handle TypeScript checking separately
+      enabled: false,
     },
-    // Coverage settings (optional)
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      exclude: ["**/node_modules/**", "**/lib/**", "**/test/**"],
+    // Optimize file watching and collection
+    isolate: false, // Faster test execution by sharing context
+    poolOptions: {
+      threads: {
+        singleThread: true, // Use single thread for faster startup
+      },
     },
-    // Timeout settings
-    timeout: 30000, // 30 seconds per test
-    testTimeout: 30000,
+    // Reduced timeouts for faster feedback
+    timeout: 10000, // 10 seconds per test
+    testTimeout: 10000,
+    // Faster file watching
+    watchExclude: ["**/node_modules/**", "**/lib/**", "**/dist/**"],
+  },
+  // Optimize esbuild for faster transforms
+  esbuild: {
+    target: "node18",
   },
 });

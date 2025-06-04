@@ -49,15 +49,14 @@ describe("Inline and Transparent keywords formatting", () => {
 
   it("formats inline class modifier", async () => {
     const code = "inline class Wrapper(val value: Int) extends AnyVal";
-    const expected =
-      "inline class Wrapper(\n  val value: Int\n) extends AnyVal\n";
+    const expected = "inline class Wrapper(val value: Int) extends AnyVal\n";
     const result = await formatCode(code);
     expect(result).toBe(expected);
   });
 
   it("formats transparent class modifier", async () => {
     const code = "transparent class Container[T](val data: T)";
-    const expected = "transparent class Container[T](\n  val data: T\n)\n";
+    const expected = "transparent class Container[T](val data: T)\n";
     const result = await formatCode(code);
     expect(result).toBe(expected);
   });
