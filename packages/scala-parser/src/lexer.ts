@@ -61,6 +61,11 @@ export const Extension = createToken({
 });
 export const Export = createToken({ name: "Export", pattern: /export\b/ });
 export const Opaque = createToken({ name: "Opaque", pattern: /opaque\b/ });
+export const Inline = createToken({ name: "Inline", pattern: /inline\b/ });
+export const Transparent = createToken({
+  name: "Transparent",
+  pattern: /transparent\b/,
+});
 
 // Identifiers (must come after keywords)
 export const Identifier = createToken({
@@ -250,6 +255,8 @@ export const allTokens = [
   Extension,
   Export,
   Opaque,
+  Inline,
+  Transparent,
 
   // Literals
   ScientificNotationLiteral, // Must come before FloatingPointLiteral

@@ -202,6 +202,8 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.Lazy) },
       { ALT: () => this.CONSUME(tokens.Override) },
       { ALT: () => this.CONSUME(tokens.Case) },
+      { ALT: () => this.CONSUME(tokens.Inline) },
+      { ALT: () => this.CONSUME(tokens.Transparent) },
     ]);
   });
 
