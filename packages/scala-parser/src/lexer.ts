@@ -170,6 +170,13 @@ export const Dot = createToken({ name: "Dot", pattern: /\./ });
 export const Underscore = createToken({ name: "Underscore", pattern: /_/ });
 export const At = createToken({ name: "At", pattern: /@/ });
 
+// Quote and Splice tokens for Scala 3 macros
+export const QuoteStart = createToken({ name: "QuoteStart", pattern: /'\{/ });
+export const SpliceStart = createToken({
+  name: "SpliceStart",
+  pattern: /\$\{/,
+});
+
 // Delimiters
 export const LeftParen = createToken({ name: "LeftParen", pattern: /\(/ });
 export const RightParen = createToken({ name: "RightParen", pattern: /\)/ });
@@ -282,6 +289,9 @@ export const allTokens = [
   AppendOp,
   PrependOp,
   ConcatOp,
+  // Quote and splice tokens (must come before single-character)
+  QuoteStart, // '{ must come before single '
+  SpliceStart, // ${ must come before single $
   // Compound assignment operators
   PlusEquals,
   MinusEquals,

@@ -932,6 +932,8 @@ export class ScalaParser extends CstParser {
         },
       },
       { ALT: () => this.SUBRULE(this.blockExpression) },
+      { ALT: () => this.SUBRULE(this.quoteExpression) },
+      { ALT: () => this.SUBRULE(this.spliceExpression) },
     ]);
   });
 
@@ -1033,6 +1035,18 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.LeftBrace);
     this.MANY(() => this.SUBRULE(this.blockStatement));
     this.CONSUME(tokens.RightBrace);
+  });
+
+  private quoteExpression = this.RULE("quoteExpression", () => {
+    this.CONSUME(tokens.QuoteStart); // '{
+    this.SUBRULE(this.expression);
+    this.CONSUME(tokens.RightBrace); // }
+  });
+
+  private spliceExpression = this.RULE("spliceExpression", () => {
+    this.CONSUME(tokens.SpliceStart); // ${
+    this.SUBRULE(this.expression);
+    this.CONSUME(tokens.RightBrace); // }
   });
 
   private blockStatement = this.RULE("blockStatement", () => {

@@ -1196,6 +1196,10 @@ export class CstNodeVisitor {
       return "(" + this.visit(node.children.expression[0], ctx) + ")";
     } else if (node.children.blockExpression) {
       return this.visit(node.children.blockExpression[0], ctx);
+    } else if (node.children.quoteExpression) {
+      return this.visit(node.children.quoteExpression[0], ctx);
+    } else if (node.children.spliceExpression) {
+      return this.visit(node.children.spliceExpression[0], ctx);
     }
 
     return "";
@@ -1441,5 +1445,13 @@ export class CstNodeVisitor {
       return this.visit(node.children.expression[0], ctx);
     }
     return "";
+  }
+
+  visitQuoteExpression(node: any, ctx: PrintContext): string {
+    return "'{ " + this.visit(node.children.expression[0], ctx) + " }";
+  }
+
+  visitSpliceExpression(node: any, ctx: PrintContext): string {
+    return "${ " + this.visit(node.children.expression[0], ctx) + " }";
   }
 }
