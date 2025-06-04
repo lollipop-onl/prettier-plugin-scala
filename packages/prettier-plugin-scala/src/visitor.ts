@@ -52,8 +52,25 @@ export class CstNodeVisitor {
     return 2;
   }
 
-  // Helper method to get indentation string
+  // Helper method to get indentation string (supports scalafmt compatibility)
   private getIndentation(ctx: PrintContext, level: number = 1): string {
+    // Use Prettier's useTabs option
+    if (ctx.options.useTabs) {
+      return "\t".repeat(level);
+    }
+
+    // Fallback to deprecated scalaIndentStyle for backward compatibility
+    if (ctx.options.scalaIndentStyle === "tabs") {
+      // Show deprecation warning in development
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          "scalaIndentStyle is deprecated. Use useTabs instead for scalafmt compatibility.",
+        );
+      }
+      return "\t".repeat(level);
+    }
+
+    // Default to spaces with tabWidth
     const tabWidth = this.getTabWidth(ctx);
     return " ".repeat(tabWidth * level);
   }
