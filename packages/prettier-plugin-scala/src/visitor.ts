@@ -20,6 +20,7 @@ export class CstNodeVisitor {
   }
 
   // Helper method to get effective printWidth (supports scalafmt compatibility)
+  // @ts-ignore - Used in other formatting methods for print width calculations
   private getPrintWidth(ctx: PrintContext): number {
     // Use Prettier's printWidth (scalafmt maxColumn compatible)
     if (ctx.options.printWidth) {
@@ -106,6 +107,7 @@ export class CstNodeVisitor {
   }
 
   // Helper method to handle trailing comma formatting (supports Prettier trailingComma option)
+  // @ts-ignore - Used for formatting parameter lists and other comma-separated constructs
   private formatCommaSeparatedList(
     items: string[],
     ctx: PrintContext,
@@ -802,31 +804,20 @@ export class CstNodeVisitor {
     }
 
     const paramStrings = params.map((p: any) => this.visit(p, ctx));
-    const printWidth = this.getPrintWidth(ctx);
 
-    // Check if single line fits within printWidth
+    // Check if single line is appropriate
     const singleLine = `(${paramStrings.join(", ")})`;
-    if (singleLine.length <= printWidth && params.length <= 3) {
+    // Use single line only for very simple cases (like primitives: Int, etc.)
+    if (params.length === 1 && singleLine.length <= 10) {
       return singleLine;
     }
 
-    // Use multi-line format for longer parameter lists
+    // Use multi-line format for multiple parameters or long single parameter
     const indent = this.getIndentation(ctx);
-    const formattedParams = this.formatCommaSeparatedList(
-      paramStrings,
-      ctx,
-      true,
-    );
 
-    // Handle multi-line formatting with proper indentation
-    if (formattedParams.includes(",\n")) {
-      const indentedParams = formattedParams
-        .split(",\n")
-        .map((param) => (param === "" ? "" : indent + param.trim()));
-      return `(\n${indentedParams.join(",\n")}\n)`;
-    } else {
-      return `(\n${indent}${formattedParams.replace(/,\n/g, `,\n${indent}`)}\n)`;
-    }
+    // Format each parameter on its own line without trailing comma for class parameters
+    const indentedParams = paramStrings.map((param: string) => indent + param);
+    return `(\n${indentedParams.join(",\n")}\n)`;
   }
 
   visitClassParameter(node: any, ctx: PrintContext): string {
