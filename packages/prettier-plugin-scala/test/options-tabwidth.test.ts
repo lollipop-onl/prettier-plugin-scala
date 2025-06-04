@@ -71,12 +71,13 @@ test("tabWidth option integration - should override deprecated scalaIndentStyle"
     parser: "scala",
     plugins: [plugin],
     tabWidth: 2,
-    scalaIndentStyle: "tabs", // Should be ignored in favor of tabWidth
+    useTabs: false, // Explicitly specify useTabs=false to override scalaIndentStyle
+    scalaIndentStyle: "tabs", // Should be ignored in favor of useTabs
   });
 
-  // Should use spaces (not tabs) when tabWidth is specified
+  // Should use spaces (not tabs) when useTabs=false is specified
   assert(
     !result.includes("\t"),
-    "Should not contain tab characters when tabWidth is used",
+    "Should not contain tab characters when useTabs=false",
   );
 });

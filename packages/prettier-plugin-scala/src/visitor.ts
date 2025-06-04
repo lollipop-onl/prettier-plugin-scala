@@ -54,12 +54,19 @@ export class CstNodeVisitor {
 
   // Helper method to get indentation string (supports scalafmt compatibility)
   private getIndentation(ctx: PrintContext, level: number = 1): string {
-    // Use Prettier's useTabs option
-    if (ctx.options.useTabs) {
+    // Use Prettier's useTabs option (takes precedence)
+    if (ctx.options.useTabs === true) {
       return "\t".repeat(level);
     }
 
+    // If useTabs is explicitly false, always use spaces
+    if (ctx.options.useTabs === false) {
+      const tabWidth = this.getTabWidth(ctx);
+      return " ".repeat(tabWidth * level);
+    }
+
     // Fallback to deprecated scalaIndentStyle for backward compatibility
+    // Only when useTabs is not specified at all
     if (ctx.options.scalaIndentStyle === "tabs") {
       // Show deprecation warning in development
       if (process.env.NODE_ENV !== "production") {
