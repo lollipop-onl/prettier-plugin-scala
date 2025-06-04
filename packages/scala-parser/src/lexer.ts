@@ -177,6 +177,7 @@ export const Comma = createToken({ name: "Comma", pattern: /,/ });
 export const Dot = createToken({ name: "Dot", pattern: /\./ });
 export const Underscore = createToken({ name: "Underscore", pattern: /_/ });
 export const At = createToken({ name: "At", pattern: /@/ });
+export const Question = createToken({ name: "Question", pattern: /\?/ });
 
 // Quote and Splice tokens for Scala 3 macros
 export const QuoteStart = createToken({ name: "QuoteStart", pattern: /'\{/ });
@@ -333,6 +334,7 @@ export const allTokens = [
   Dot,
   Underscore,
   At,
+  Question,
 
   // Delimiters
   LeftParen,

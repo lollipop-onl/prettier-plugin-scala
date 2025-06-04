@@ -19,6 +19,28 @@ export class CstNodeVisitor {
     return this.visitCore(node, ctx);
   }
 
+  // Helper method to get effective printWidth (supports scalafmt compatibility)
+  private getPrintWidth(ctx: PrintContext): number {
+    // Use Prettier's printWidth (scalafmt maxColumn compatible)
+    if (ctx.options.printWidth) {
+      return ctx.options.printWidth;
+    }
+
+    // Fallback to deprecated scalaLineWidth for backward compatibility
+    if (ctx.options.scalaLineWidth) {
+      // Show deprecation warning in development
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(
+          "scalaLineWidth is deprecated. Use printWidth instead for scalafmt compatibility.",
+        );
+      }
+      return ctx.options.scalaLineWidth;
+    }
+
+    // Default value
+    return 80;
+  }
+
   private visitCore(node: any, ctx: PrintContext): string {
     // Handle token nodes
     if (node.image !== undefined) {
@@ -661,8 +683,15 @@ export class CstNodeVisitor {
     }
 
     const paramStrings = params.map((p: any) => this.visit(p, ctx));
+    const printWidth = this.getPrintWidth(ctx);
 
-    // Always use multi-line format for class parameters to match expected output
+    // Check if single line fits within printWidth
+    const singleLine = `(${paramStrings.join(", ")})`;
+    if (singleLine.length <= printWidth && params.length <= 3) {
+      return singleLine;
+    }
+
+    // Use multi-line format for longer parameter lists
     return `(\n  ${paramStrings.join(",\n  ")}\n)`;
   }
 

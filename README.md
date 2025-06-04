@@ -1,41 +1,69 @@
 # prettier-plugin-scala
 
-A [Prettier](https://prettier.io) plugin for formatting Scala code with modern language support.
+A [Prettier](https://prettier.io) plugin for formatting Scala code with comprehensive language support.
 
 [![npm version](https://badge.fury.io/js/prettier-plugin-scala.svg)](https://www.npmjs.com/package/prettier-plugin-scala)
 [![Node.js CI](https://github.com/simochee/prettier-plugin-scala/workflows/Node.js%20CI/badge.svg)](https://github.com/simochee/prettier-plugin-scala/actions)
 
 ## Features
 
-🎯 **Comprehensive Scala Support** - Format modern Scala code with confidence:
+**🎯 Complete Scala Language Support**
+- **Scala 2 & 3** - Full support for modern Scala features including enums, extension methods, union types
+- **Object-Oriented** - Classes, objects, traits, case classes, inheritance
+- **Functional Programming** - Pattern matching, for comprehensions, lambda expressions
+- **Advanced Types** - Generics, type lambdas, dependent function types, opaque types
+- **Operators** - Infix notation, logical/bitwise operators, Ask pattern (`?`)
 
-- **Object-Oriented Programming** - Classes, objects, traits, case classes, inheritance
-- **Functional Programming** - Pattern matching, for comprehensions, lambda expressions  
-- **Modern Language Features** - Generics, string interpolation, given definitions (Scala 3)
-- **Operators & Expressions** - Logical, bitwise, and infix operators
-- **Project Structure** - Package declarations, imports, top-level definitions
-- **Comment Preservation** - Maintains line and inline comments during formatting
+**✨ Seamless Integration**
+- **Zero Configuration** - Works out of the box with Prettier
+- **Editor Support** - VS Code, IntelliJ, and other Prettier-enabled editors
+- **CLI & API** - Command line and programmatic formatting
+- **Comment Preservation** - Maintains your code comments
+- **CI/CD Ready** - Automated formatting in your pipeline
 
-✨ **Prettier Integration** - Seamless integration with your development workflow:
+## Requirements
 
-- **Editor Support** - Works with VS Code, IntelliJ, and other Prettier-enabled editors
-- **CLI & API** - Format files via command line or programmatically  
-- **Configuration** - Customize formatting with standard Prettier options
-- **CI/CD Ready** - Integrate automated formatting checks into your pipeline
+- **Node.js** 18.0 or higher
+- **Prettier** 3.0 or higher
 
 ## Installation
 
 ```bash
+# npm
 npm install --save-dev prettier prettier-plugin-scala
-```
 
-Or with yarn:
-
-```bash
+# yarn
 yarn add --dev prettier prettier-plugin-scala
+
+# pnpm
+pnpm add -D prettier prettier-plugin-scala
 ```
 
 ## Usage
+
+The plugin works automatically with Prettier when `.scala` files are detected.
+
+### Configuration
+
+Add the plugin to your Prettier configuration:
+
+**`.prettierrc`**
+```json
+{
+  "plugins": ["prettier-plugin-scala"],
+  "printWidth": 80,
+  "tabWidth": 2
+}
+```
+
+**`package.json`**
+```json
+{
+  "prettier": {
+    "plugins": ["prettier-plugin-scala"]
+  }
+}
+```
 
 ### CLI
 
@@ -43,11 +71,14 @@ yarn add --dev prettier prettier-plugin-scala
 # Format a single file
 npx prettier --write MyClass.scala
 
-# Format all Scala files
+# Format all Scala files  
 npx prettier --write "src/**/*.scala"
+
+# Check formatting
+npx prettier --check "src/**/*.scala"
 ```
 
-### API
+### Programmatic API
 
 ```javascript
 import prettier from "prettier";
@@ -69,11 +100,9 @@ console.log(formatted);
 
 ### Editor Integration
 
-#### VS Code
-
+**VS Code**
 1. Install the [Prettier extension](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 2. Add to your `settings.json`:
-
 ```json
 {
   "[scala]": {
@@ -83,28 +112,28 @@ console.log(formatted);
 }
 ```
 
-## Configuration
+**IntelliJ IDEA**
+1. Install the Prettier plugin
+2. Configure Prettier in Settings → Languages & Frameworks → JavaScript → Prettier
+3. Add `*.scala` to file patterns
 
-prettier-plugin-scala supports Prettier's standard configuration options. Add the plugin to your Prettier configuration:
+## Configuration Options
 
-### .prettierrc
+prettier-plugin-scala uses Prettier's standard configuration options:
 
-```json
-{
-  "plugins": ["prettier-plugin-scala"],
-  "printWidth": 80,
-  "tabWidth": 2
-}
-```
+| Option | Default | Description |
+|--------|---------|-------------|
+| `printWidth` | 80 | Maximum line length |
+| `tabWidth` | 2 | Number of spaces per indentation level |
+| `useTabs` | false | Use tabs instead of spaces |
+| `semi` | true | Add semicolons where applicable |
+| `singleQuote` | false | Use single quotes instead of double quotes |
 
-### Editor Configuration
-
-The plugin automatically detects `.scala` files and applies formatting using Prettier's standard options like `printWidth`, `tabWidth`, `useTabs`, etc.
+The plugin automatically detects `.scala` files and applies these formatting rules.
 
 ## Examples
 
-### Input
-
+**Before Formatting:**
 ```scala
 class UserService(database:Database){
 // TODO: Add caching strategy
@@ -115,8 +144,7 @@ cache.put(user.id,user)
 user}}
 ```
 
-### Output
-
+**After Formatting:**
 ```scala
 class UserService(
   database: Database
@@ -134,88 +162,77 @@ class UserService(
 }
 ```
 
+## Supported Features
 
-## Supported Scala Features
+**✅ Core Language**
+- Classes, objects, traits, case classes
+- Methods, functions, lambdas
+- Pattern matching, for comprehensions
+- Generics and type bounds
 
-✅ **Classes and Objects**
-```scala
-class Person(name: String, age: Int)
-object UserService { def create(): User = ??? }
-trait Drawable { def draw(): Unit }
-case class User(name: String, email: String)
-```
+**✅ Modern Scala 3**
+- Enums, extension methods
+- Union and intersection types
+- Opaque types, type definitions
+- Given/using instances
 
-✅ **Methods and Functions**
-```scala
-def calculate(x: Int, y: Int): Int = x + y
-val double = (x: Int) => x * 2
-list.map(_.toString).filter(_.nonEmpty)
-```
+**✅ Advanced Features**
+- Type lambdas, match types
+- Dependent function types
+- Context functions
+- String interpolation
 
-✅ **Pattern Matching**
-```scala
-result match {
-  case Success(value) => value
-  case Failure(error) => throw error
-}
-```
+**✅ Comments & Formatting**
+- Line and block comments preserved
+- Consistent indentation and spacing
+- Configurable line width and tab size
 
-✅ **For Comprehensions**
-```scala
-for {
-  user <- users
-  if user.isActive
-  email <- user.email
-} yield email
-```
+## Known Limitations
 
-✅ **Generics and Type Bounds**
-```scala
-class Container[T](value: T)
-def process[T <: AnyRef](items: List[T]): List[T]
-```
+While prettier-plugin-scala supports the vast majority of Scala language features, there are some current limitations:
 
-✅ **Modern Scala 3**
-```scala
-given stringValue: String = "default"
-enum Color { case Red, Green, Blue }
-```
+- **Complex import statements** - Some advanced import syntax may not be fully supported
+- **Compound assignment operators** (`+=`, `-=`, etc.) - Currently not supported  
+- **Large files** (>10KB) - May experience slower formatting performance
 
-✅ **Comment Preservation**
-```scala
-// This comment is preserved
-class Person /* inline comment */ (
-  name: String
-)
-```
+For a complete list of supported and planned features, see our [development documentation](./CLAUDE.md).
 
-## Limitations
+## Performance
 
-- **Compound assignment operators** (`+=`, `-=`, etc.) - Use regular assignment instead
-- **Control flow statements** (`if`/`else`, `while`, `try`/`catch`) - Not yet supported
-- **Large files** (>10KB) may have performance issues
-
-## Requirements
-
-- **Node.js**: >= 18.0.0  
-- **Prettier**: >= 3.0.0
+- **Small files** (<1KB): < 10ms
+- **Medium files** (1-10KB): < 100ms  
+- **Large files** (>10KB): < 1s
 
 ## Contributing
 
-We welcome contributions! This plugin uses:
+We welcome contributions! This plugin is built with:
 
-- **[Chevrotain](https://chevrotain.io/)** for Scala parsing
-- **TypeScript** for type-safe implementation  
-- **Prettier Plugin API** for formatting integration
+- **[Chevrotain](https://chevrotain.io/)** - Parser building toolkit
+- **TypeScript** - Type-safe implementation
+- **Prettier Plugin API** - Formatting integration
 
-See our [contribution guidelines](./CONTRIBUTING.md) for more details.
+### Development Setup
+
+```bash
+git clone https://github.com/your-repo/prettier-plugin-scala
+cd prettier-plugin-scala
+pnpm install
+pnpm build
+pnpm test
+```
 
 ## License
 
-MIT
+MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Related Projects
 
-- [Prettier](https://prettier.io/) - Opinionated code formatter
-- [scalafmt](https://scalameta.org/scalafmt/) - Code formatter for Scala
-- [Chevrotain](https://chevrotain.io/) - Parser building toolkit for JavaScript
+- **[Prettier](https://prettier.io/)** - Opinionated code formatter
+- **[scalafmt](https://scalameta.org/scalafmt/)** - Native Scala code formatter  
+- **[Chevrotain](https://chevrotain.io/)** - Parser building toolkit
+
+## Support
+
+- 🐛 **Bug reports**: [GitHub Issues](https://github.com/your-repo/prettier-plugin-scala/issues)
+- 💡 **Feature requests**: [GitHub Discussions](https://github.com/your-repo/prettier-plugin-scala/discussions)
+- 📖 **Documentation**: [Development Guide](./CLAUDE.md)

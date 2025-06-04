@@ -17,8 +17,29 @@ export class ScalaParser extends CstParser {
         { ALT: () => this.SUBRULE(this.topLevelDefinition) },
         {
           ALT: () => {
-            this.SUBRULE(this.expression);
+            // Try assignment statement at top level
+            this.SUBRULE(this.assignmentStatement);
             this.OPTION(() => this.CONSUME(tokens.Semicolon));
+          },
+          GATE: () => {
+            // Check if this looks like an assignment
+            const first = this.LA(1);
+            const second = this.LA(2);
+            return (
+              first.tokenType === tokens.Identifier &&
+              (second.tokenType === tokens.PlusEquals ||
+                second.tokenType === tokens.MinusEquals ||
+                second.tokenType === tokens.StarEquals ||
+                second.tokenType === tokens.SlashEquals ||
+                second.tokenType === tokens.PercentEquals ||
+                second.tokenType === tokens.Equals)
+            );
+          },
+        },
+        {
+          ALT: () => {
+            this.SUBRULE(this.expression);
+            this.OPTION2(() => this.CONSUME2(tokens.Semicolon));
           },
         },
       ]);
@@ -530,6 +551,33 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.SUBRULE(this.traitDefinition) },
       { ALT: () => this.SUBRULE(this.enumDefinition) },
       { ALT: () => this.SUBRULE(this.extensionDefinition) },
+      {
+        ALT: () => {
+          // Try assignment statement
+          this.SUBRULE(this.assignmentStatement);
+          this.OPTION(() => this.CONSUME(tokens.Semicolon));
+        },
+        GATE: () => {
+          // Check if this looks like an assignment
+          const first = this.LA(1);
+          const second = this.LA(2);
+          return (
+            first.tokenType === tokens.Identifier &&
+            (second.tokenType === tokens.PlusEquals ||
+              second.tokenType === tokens.MinusEquals ||
+              second.tokenType === tokens.StarEquals ||
+              second.tokenType === tokens.SlashEquals ||
+              second.tokenType === tokens.PercentEquals ||
+              second.tokenType === tokens.Equals)
+          );
+        },
+      },
+      {
+        ALT: () => {
+          this.SUBRULE(this.expression);
+          this.OPTION2(() => this.CONSUME2(tokens.Semicolon));
+        },
+      },
     ]);
   });
 
@@ -1338,6 +1386,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.RightArrow) },
       { ALT: () => this.CONSUME(tokens.Dot) },
       { ALT: () => this.CONSUME(tokens.To) },
+      { ALT: () => this.CONSUME(tokens.Question) }, // Ask pattern operator
       { ALT: () => this.CONSUME(tokens.Identifier) }, // For general infix methods
     ]);
   });

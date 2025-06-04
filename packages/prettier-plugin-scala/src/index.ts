@@ -59,8 +59,18 @@ const printers = {
   "scala-cst": createScalaPrinter(),
 };
 
-// Options (to be expanded for scalafmt compatibility)
+// Options (scalafmt compatibility - Phase 1)
 const options: Record<string, SupportOption> = {
+  // Prettier standard options (scalafmt compatible)
+  // printWidth is handled by Prettier core - no need to define here
+
+  // Deprecated options (backward compatibility)
+  scalaLineWidth: {
+    type: "int",
+    default: 80,
+    description: "Maximum line width (DEPRECATED: use printWidth instead)",
+    category: "Scala",
+  } as const,
   scalaIndentStyle: {
     type: "choice",
     default: "spaces",
@@ -68,13 +78,7 @@ const options: Record<string, SupportOption> = {
       { value: "spaces", description: "Use spaces for indentation" },
       { value: "tabs", description: "Use tabs for indentation" },
     ],
-    description: "Indentation style",
-    category: "Scala",
-  } as const,
-  scalaLineWidth: {
-    type: "int",
-    default: 80,
-    description: "Maximum line width",
+    description: "Indentation style (DEPRECATED: use useTabs instead)",
     category: "Scala",
   } as const,
 };
