@@ -1,0 +1,1 @@
+val result = if (x > 0) "positive" else "non-positive"

@@ -748,9 +748,18 @@ export class CstNodeVisitor {
       return this.visit(node.children.newExpression[0], ctx);
     } else if (node.children.forExpression) {
       return this.visit(node.children.forExpression[0], ctx);
+    } else if (node.children.ifExpression) {
+      return this.visit(node.children.ifExpression[0], ctx);
+    } else if (node.children.whileExpression) {
+      return this.visit(node.children.whileExpression[0], ctx);
+    } else if (node.children.tryExpression) {
+      return this.visit(node.children.tryExpression[0], ctx);
     } else if (node.children.Exclamation) {
       // Handle negation operator
       return "!" + this.visit(node.children.postfixExpression[0], ctx);
+    } else if (node.children.BitwiseTilde) {
+      // Handle bitwise complement operator
+      return "~" + this.visit(node.children.postfixExpression[0], ctx);
     } else if (node.children.LeftParen) {
       return "(" + this.visit(node.children.expression[0], ctx) + ")";
     } else if (node.children.blockExpression) {
@@ -848,6 +857,55 @@ export class CstNodeVisitor {
         result += args.join(", ");
       }
       result += ")";
+    }
+
+    return result;
+  }
+
+  visitIfExpression(node: any, ctx: PrintContext): string {
+    let result = "if (";
+    result += this.visit(node.children.expression[0], ctx);
+    result += ") ";
+    result += this.visit(node.children.expression[1], ctx);
+
+    if (node.children.Else) {
+      result += " else ";
+      result += this.visit(node.children.expression[2], ctx);
+    }
+
+    return result;
+  }
+
+  visitWhileExpression(node: any, ctx: PrintContext): string {
+    let result = "while (";
+    result += this.visit(node.children.expression[0], ctx);
+    result += ") ";
+    result += this.visit(node.children.expression[1], ctx);
+
+    return result;
+  }
+
+  visitTryExpression(node: any, ctx: PrintContext): string {
+    let result = "try ";
+    result += this.visit(node.children.expression[0], ctx);
+
+    if (node.children.Catch) {
+      result += " catch {\n";
+      if (node.children.caseClause) {
+        const cases = node.children.caseClause.map(
+          (c: any) => "  " + this.visit(c, ctx),
+        );
+        result += cases.join("\n");
+      }
+      result += "\n}";
+    }
+
+    if (node.children.Finally) {
+      result += " finally ";
+      // If there's a catch block, expression[1] is the finally expression
+      // Otherwise, expression[1] would be the finally expression (no catch)
+      const finallyExprIndex = node.children.Catch ? 1 : 1;
+      result += this.visit(node.children.expression[finallyExprIndex], ctx);
     }
 
     return result;

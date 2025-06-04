@@ -533,6 +533,9 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.This) },
       { ALT: () => this.SUBRULE(this.newExpression) },
       { ALT: () => this.SUBRULE(this.forExpression) },
+      { ALT: () => this.SUBRULE(this.ifExpression) },
+      { ALT: () => this.SUBRULE(this.whileExpression) },
+      { ALT: () => this.SUBRULE(this.tryExpression) },
       {
         ALT: () => {
           // Unary negation: !expression
@@ -580,6 +583,41 @@ export class ScalaParser extends CstParser {
     });
     this.CONSUME(tokens.Arrow);
     this.SUBRULE2(this.expression);
+  });
+
+  private ifExpression = this.RULE("ifExpression", () => {
+    this.CONSUME(tokens.If);
+    this.CONSUME(tokens.LeftParen);
+    this.SUBRULE(this.expression);
+    this.CONSUME(tokens.RightParen);
+    this.SUBRULE2(this.expression);
+    this.OPTION(() => {
+      this.CONSUME(tokens.Else);
+      this.SUBRULE3(this.expression);
+    });
+  });
+
+  private whileExpression = this.RULE("whileExpression", () => {
+    this.CONSUME(tokens.While);
+    this.CONSUME(tokens.LeftParen);
+    this.SUBRULE(this.expression);
+    this.CONSUME(tokens.RightParen);
+    this.SUBRULE2(this.expression);
+  });
+
+  private tryExpression = this.RULE("tryExpression", () => {
+    this.CONSUME(tokens.Try);
+    this.SUBRULE(this.expression);
+    this.OPTION(() => {
+      this.CONSUME(tokens.Catch);
+      this.CONSUME(tokens.LeftBrace);
+      this.MANY(() => this.SUBRULE(this.caseClause));
+      this.CONSUME(tokens.RightBrace);
+    });
+    this.OPTION2(() => {
+      this.CONSUME(tokens.Finally);
+      this.SUBRULE2(this.expression);
+    });
   });
 
   private forExpression = this.RULE("forExpression", () => {
