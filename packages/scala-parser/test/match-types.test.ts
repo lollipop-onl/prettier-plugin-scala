@@ -1,4 +1,4 @@
-import { parse } from "../lib/index.js";
+import { parse } from "../dist/index.js";
 import { describe, it, expect } from "vitest";
 
 describe("Match types parsing", () => {

@@ -1,4 +1,4 @@
-import plugin from "../lib/index.js";
+import plugin from "../dist/index.js";
 import { format } from "prettier";
 import { test, expect } from "vitest";
 
