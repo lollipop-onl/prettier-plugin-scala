@@ -179,8 +179,8 @@ export class ScalaParser extends CstParser {
   private annotation = this.RULE("annotation", () => {
     this.CONSUME(tokens.At);
     this.SUBRULE(this.qualifiedIdentifier);
-    // Support multiple parameter lists: @Inject()()
-    this.MANY(() => {
+    // Support single parameter list: @Inject() or @Entity(name = "value")
+    this.OPTION(() => {
       this.CONSUME(tokens.LeftParen);
       this.MANY_SEP({
         SEP: tokens.Comma,
@@ -235,9 +235,9 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.Class);
     this.CONSUME(tokens.Identifier);
     this.OPTION(() => this.SUBRULE(this.typeParameters));
-    // Constructor annotations and parameters
+    // Class-level annotations and constructor parameters
     this.MANY(() => this.SUBRULE(this.annotation));
-    this.OPTION2(() => this.SUBRULE(this.classParameters));
+    this.OPTION2(() => this.SUBRULE(this.annotatedClassParameters));
     this.OPTION3(() => this.SUBRULE(this.extendsClause));
     this.OPTION4(() => this.SUBRULE(this.classBody));
   });
@@ -458,6 +458,16 @@ export class ScalaParser extends CstParser {
     this.OPTION3(() => this.CONSUME(tokens.Semicolon));
   });
 
+  // Annotated class parameters (for DI patterns like @Inject()(val params...))
+  private annotatedClassParameters = this.RULE(
+    "annotatedClassParameters",
+    () => {
+      // Constructor annotations: @Inject() @Singleton etc.
+      this.MANY(() => this.SUBRULE(this.annotation));
+      this.SUBRULE(this.classParameters);
+    },
+  );
+
   // Class parameters
   private classParameters = this.RULE("classParameters", () => {
     this.CONSUME(tokens.LeftParen);
@@ -570,7 +580,8 @@ export class ScalaParser extends CstParser {
   });
 
   private classMember = this.RULE("classMember", () => {
-    this.MANY(() => this.SUBRULE(this.modifier));
+    this.MANY(() => this.SUBRULE(this.annotation));
+    this.MANY2(() => this.SUBRULE(this.modifier));
     this.OR([
       {
         ALT: () => this.SUBRULE(this.auxiliaryConstructor),
