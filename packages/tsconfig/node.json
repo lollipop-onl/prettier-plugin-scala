@@ -4,5 +4,14 @@
     "@tsconfig/node24/tsconfig.json",
     "@tsconfig/node-ts/tsconfig.json"
   ],
-  "exclude": ["node_modules", "lib"]
+  "compilerOptions": {
+    // Fix target for esbuild compatibility
+    "target": "es2022",
+
+    // Disable problematic TS 5.7 features
+    "rewriteRelativeImportExtensions": false,
+    "verbatimModuleSyntax": false,
+    "erasableSyntaxOnly": false
+  },
+  "exclude": ["node_modules", "dist"]
 }
