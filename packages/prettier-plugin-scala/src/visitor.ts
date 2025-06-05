@@ -570,6 +570,10 @@ export class CstNodeVisitor {
       return this.visit(node.children.givenDefinition[0], ctx);
     } else if (node.children.typeDefinition) {
       return this.visit(node.children.typeDefinition[0], ctx);
+    } else if (node.children.expression) {
+      return this.visit(node.children.expression[0], ctx);
+    } else if (node.children.assignmentStatement) {
+      return this.visit(node.children.assignmentStatement[0], ctx);
     }
 
     return "";
@@ -578,7 +582,7 @@ export class CstNodeVisitor {
   visitClassDefinition(node: any, ctx: PrintContext): string {
     let result = "";
 
-    // Add class keyword
+    // Add class keyword (don't duplicate if already handled by modifiers)
     if (node.children.Class) {
       result += node.children.Class[0].image + " ";
     }
@@ -1373,6 +1377,42 @@ export class CstNodeVisitor {
           }
         }
       }
+    }
+
+    // Handle block lambda expressions (new feature)
+    if (node.children.LeftBrace && node.children.Arrow) {
+      result += " { ";
+      if (node.children.Identifier) {
+        // Find the lambda parameter identifier (should be the one before Arrow)
+        const identifiers = node.children.Identifier || [];
+        if (identifiers.length > 0) {
+          // The last identifier before Arrow is the lambda parameter
+          result += identifiers[identifiers.length - 1].image;
+        }
+      }
+      result += " =>";
+
+      // Handle block statements
+      if (node.children.blockStatement) {
+        result += "\n";
+        const statements = node.children.blockStatement.map(
+          (s: any) => "  " + this.visit(s, ctx),
+        );
+        result += statements.join("\n");
+        result += "\n";
+      }
+
+      // Handle optional final expression
+      if (node.children.expression) {
+        const expressions = node.children.expression || [];
+        if (expressions.length > 0) {
+          // The last expression in block lambda
+          const lastExpr = expressions[expressions.length - 1];
+          result += "\n  " + this.visit(lastExpr, ctx) + "\n";
+        }
+      }
+
+      result += "}";
     }
 
     // Handle match expressions

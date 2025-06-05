@@ -1059,16 +1059,37 @@ export class ScalaParser extends CstParser {
           ALT: () => {
             this.CONSUME(tokens.Dot);
             this.CONSUME(tokens.Identifier);
-            this.OPTION(() => {
-              this.CONSUME(tokens.LeftParen);
-              this.OPTION2(() => {
-                this.MANY_SEP({
-                  SEP: tokens.Comma,
-                  DEF: () => this.SUBRULE4(this.expression),
-                });
-              });
-              this.CONSUME(tokens.RightParen);
-            });
+            this.OR2([
+              {
+                ALT: () => {
+                  // Regular method call with parentheses
+                  this.CONSUME(tokens.LeftParen);
+                  this.OPTION2(() => {
+                    this.MANY_SEP({
+                      SEP: tokens.Comma,
+                      DEF: () => this.SUBRULE4(this.expression),
+                    });
+                  });
+                  this.CONSUME(tokens.RightParen);
+                },
+              },
+              {
+                ALT: () => {
+                  // Method call with block lambda
+                  this.CONSUME3(tokens.LeftBrace);
+                  this.CONSUME3(tokens.Identifier);
+                  this.CONSUME2(tokens.Arrow);
+                  this.MANY3(() => this.SUBRULE(this.blockStatement));
+                  this.OPTION4(() => this.SUBRULE5(this.expression));
+                  this.CONSUME2(tokens.RightBrace);
+                },
+              },
+              {
+                ALT: () => {
+                  // No arguments (method call without parentheses)
+                },
+              },
+            ]);
           },
         },
         {
