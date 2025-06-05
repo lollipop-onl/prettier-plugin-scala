@@ -25,14 +25,17 @@ export class ScalaParser extends CstParser {
             const first = this.LA(1);
             const second = this.LA(2);
             return (
-              first?.tokenType === tokens.Identifier &&
-              (second?.tokenType === tokens.PlusEquals ||
-                second?.tokenType === tokens.MinusEquals ||
-                second?.tokenType === tokens.StarEquals ||
-                second?.tokenType === tokens.SlashEquals ||
-                second?.tokenType === tokens.PercentEquals ||
-                second?.tokenType === tokens.SbtAssign ||
-                second?.tokenType === tokens.Equals)
+              first &&
+              first.tokenType === tokens.Identifier &&
+              second &&
+              (second.tokenType === tokens.PlusEquals ||
+                second.tokenType === tokens.MinusEquals ||
+                second.tokenType === tokens.StarEquals ||
+                second.tokenType === tokens.SlashEquals ||
+                second.tokenType === tokens.PercentEquals ||
+                second.tokenType === tokens.AppendEquals ||
+                second.tokenType === tokens.SbtAssign ||
+                second.tokenType === tokens.Equals)
             );
           },
         },
@@ -1513,9 +1516,59 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.StarEquals) },
       { ALT: () => this.CONSUME(tokens.SlashEquals) },
       { ALT: () => this.CONSUME(tokens.PercentEquals) },
+      { ALT: () => this.CONSUME(tokens.AppendEquals) },
       { ALT: () => this.CONSUME(tokens.SbtAssign) },
     ]);
-    this.SUBRULE(this.expression);
+    this.SUBRULE(this.sbtValue);
+  });
+
+  private sbtValue = this.RULE("sbtValue", () => {
+    this.OR([
+      { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
+      { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
+      { ALT: () => this.CONSUME(tokens.True) },
+      { ALT: () => this.CONSUME(tokens.False) },
+      { ALT: () => this.SUBRULE(this.sbtExpression) },
+    ]);
+  });
+
+  private sbtExpression = this.RULE("sbtExpression", () => {
+    this.SUBRULE(this.sbtPrimary);
+    this.MANY(() => {
+      this.OR([
+        {
+          ALT: () => {
+            this.CONSUME(tokens.DoublePercent);
+            this.SUBRULE2(this.sbtPrimary);
+          },
+        },
+        {
+          ALT: () => {
+            this.CONSUME(tokens.Percent);
+            this.SUBRULE3(this.sbtPrimary);
+          },
+        },
+      ]);
+    });
+  });
+
+  private sbtPrimary = this.RULE("sbtPrimary", () => {
+    this.OR([
+      { ALT: () => this.CONSUME(tokens.StringLiteral) },
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.LeftParen);
+            this.MANY(() => {
+              this.SUBRULE(this.sbtValue);
+              this.OPTION2(() => this.CONSUME(tokens.Comma));
+            });
+            this.CONSUME(tokens.RightParen);
+          });
+        },
+      },
+    ]);
   });
 
   private infixOperator = this.RULE("infixOperator", () => {

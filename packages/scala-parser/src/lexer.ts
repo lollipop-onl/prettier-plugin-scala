@@ -158,6 +158,10 @@ export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
 export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
 export const PrependOp = createToken({ name: "PrependOp", pattern: /::/ });
 export const ConcatOp = createToken({ name: "ConcatOp", pattern: /\+\+/ });
+export const AppendEquals = createToken({
+  name: "AppendEquals",
+  pattern: /\+\+=/,
+});
 // Compound assignment operators
 export const PlusEquals = createToken({ name: "PlusEquals", pattern: /\+=/ });
 export const MinusEquals = createToken({ name: "MinusEquals", pattern: /-=/ });
@@ -316,6 +320,7 @@ export const allTokens = [
   LogicalOr,
   AppendOp,
   PrependOp,
+  AppendEquals, // ++= must come before ++
   ConcatOp,
   // Quote and splice tokens (must come before single-character)
   QuoteStart, // '{ must come before single '
@@ -327,7 +332,6 @@ export const allTokens = [
   SlashEquals,
   PercentEquals,
   SbtAssign,
-  DoublePercent, // %% must come before single %
   // Bitwise shift operators (must come before single-character)
   UnsignedRightShift, // >>> must come before >>
   LeftShift,
@@ -339,6 +343,7 @@ export const allTokens = [
   Minus,
   Star,
   Slash,
+  DoublePercent, // %% must come before single %
   Percent,
   LessThan,
   GreaterThan,
