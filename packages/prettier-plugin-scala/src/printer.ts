@@ -5,8 +5,15 @@ export function createScalaPrinter(): Printer {
   return {
     print(path: AstPath, _options: any, print: any): Doc {
       const node = path.getValue();
+      console.log(
+        "Printer called with node:",
+        node.name || node.image || "unknown",
+      );
+
       const visitor = new CstNodeVisitor();
       const result = visitor.visit(node, { path, options: _options, print });
+
+      console.log("Visitor result:", JSON.stringify(result));
 
       // 文字列結果をPrettierのDocに変換
       return result;

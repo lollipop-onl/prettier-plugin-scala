@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { describe, test, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const pluginPath = path.join(__dirname, "..", "lib", "index.js");
+const pluginPath = path.join(__dirname, "..", "dist", "index.js");
 
 async function format(code) {
   const result = await prettier.format(code, {

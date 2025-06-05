@@ -178,6 +178,46 @@ export class StatementVisitorMethods {
       return this.visitor.visit(node.children.definition[0], ctx);
     }
 
+    // Handle class definitions
+    if (node.children.classDefinition) {
+      return this.visitor.visit(node.children.classDefinition[0], ctx);
+    }
+
+    // Handle object definitions
+    if (node.children.objectDefinition) {
+      return this.visitor.visit(node.children.objectDefinition[0], ctx);
+    }
+
+    // Handle trait definitions
+    if (node.children.traitDefinition) {
+      return this.visitor.visit(node.children.traitDefinition[0], ctx);
+    }
+
+    // Handle val definitions
+    if (node.children.valDefinition) {
+      return this.visitor.visit(node.children.valDefinition[0], ctx);
+    }
+
+    // Handle var definitions
+    if (node.children.varDefinition) {
+      return this.visitor.visit(node.children.varDefinition[0], ctx);
+    }
+
+    // Handle def definitions
+    if (node.children.defDefinition) {
+      return this.visitor.visit(node.children.defDefinition[0], ctx);
+    }
+
+    // Handle assignment statements
+    if (node.children.assignmentStatement) {
+      return this.visitor.visit(node.children.assignmentStatement[0], ctx);
+    }
+
+    // Handle expressions
+    if (node.children.expression) {
+      return this.visitor.visit(node.children.expression[0], ctx);
+    }
+
     return "";
   }
 
