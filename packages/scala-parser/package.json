@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "tsconfig": "workspace:*",
     "typescript": "^5.7.2"
   },
   "engines": {

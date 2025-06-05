@@ -39,6 +39,9 @@ importers:
       prettier:
         specifier: ^3.4.2
         version: 3.5.3
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
       typescript:
         specifier: ^5.7.2
         version: 5.8.3
@@ -52,9 +55,21 @@ importers:
       '@types/node':
         specifier: ^22.10.2
         version: 22.15.29
+      tsconfig:
+        specifier: workspace:*
+        version: link:../tsconfig
       typescript:
         specifier: ^5.7.2
         version: 5.8.3
+
+  packages/tsconfig:
+    devDependencies:
+      '@tsconfig/node-ts':
+        specifier: ^23.6.1
+        version: 23.6.1
+      '@tsconfig/node24':
+        specifier: ^24.0.1
+        version: 24.0.1
 
 packages:
 
@@ -393,6 +408,12 @@ packages:
         optional: true
       svelte:
         optional: true
+
+  '@tsconfig/node-ts@23.6.1':
+    resolution: {integrity: sha512-1E5cUp+S65pLKKI9VrGMQPWDHxOEq3dAGM2onG3fLeSRwWbylYFwhIjnzJikjSN7w2nCgwxmv8ifvUKDFkK38Q==}
+
+  '@tsconfig/node24@24.0.1':
+    resolution: {integrity: sha512-3+IXshza3bIrT0tbHBr9CixQDVf4iBf0HTR0hCYowhpLqkzJjswu3UY8aZWjRXZep31kYB+o2SQeD8KwIoUHYw==}
 
   '@types/chai@5.2.2':
     resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
@@ -1035,6 +1056,10 @@ snapshots:
       prettier: 3.5.3
     transitivePeerDependencies:
       - supports-color
+
+  '@tsconfig/node-ts@23.6.1': {}
+
+  '@tsconfig/node24@24.0.1': {}
 
   '@types/chai@5.2.2':
     dependencies:
