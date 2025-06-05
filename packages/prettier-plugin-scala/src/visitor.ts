@@ -870,6 +870,8 @@ export class CstNodeVisitor {
 
     if (node.children.Using) {
       result += "using ";
+    } else if (node.children.Implicit) {
+      result += "implicit ";
     }
 
     result += node.children.Identifier[0].image;
@@ -1415,8 +1417,9 @@ export class CstNodeVisitor {
   visitAssignmentOrInfixExpression(node: any, ctx: PrintContext): string {
     let result = this.visit(node.children.postfixExpression[0], ctx);
 
-    // Handle compound assignment operators
+    // Handle assignment operators (including named arguments)
     if (
+      node.children.Equals ||
       node.children.PlusEquals ||
       node.children.MinusEquals ||
       node.children.StarEquals ||
@@ -1424,6 +1427,7 @@ export class CstNodeVisitor {
       node.children.PercentEquals
     ) {
       const operator =
+        node.children.Equals?.[0] ||
         node.children.PlusEquals?.[0] ||
         node.children.MinusEquals?.[0] ||
         node.children.StarEquals?.[0] ||

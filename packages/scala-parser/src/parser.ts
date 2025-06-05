@@ -465,7 +465,12 @@ export class ScalaParser extends CstParser {
   });
 
   private parameter = this.RULE("parameter", () => {
-    this.OPTION(() => this.CONSUME(tokens.Using));
+    this.OPTION(() => {
+      this.OR([
+        { ALT: () => this.CONSUME(tokens.Using) },
+        { ALT: () => this.CONSUME(tokens.Implicit) },
+      ]);
+    });
     this.CONSUME(tokens.Identifier);
     this.CONSUME(tokens.Colon);
     this.SUBRULE(this.type);
@@ -1026,9 +1031,10 @@ export class ScalaParser extends CstParser {
     "assignmentOrInfixExpression",
     () => {
       this.SUBRULE(this.postfixExpression);
-      // First check for compound assignment
+      // First check for assignment (including named arguments)
       this.OPTION(() => {
         this.OR([
+          { ALT: () => this.CONSUME(tokens.Equals) },
           { ALT: () => this.CONSUME(tokens.PlusEquals) },
           { ALT: () => this.CONSUME(tokens.MinusEquals) },
           { ALT: () => this.CONSUME(tokens.StarEquals) },
