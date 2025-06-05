@@ -75,11 +75,13 @@ export const Transparent = createToken({
 });
 
 // Identifiers (must come after keywords)
-// Support Unicode letters including Greek letters (λ, α, β, etc.)
+// Enhanced Unicode identifier support following Scala Language Specification
+// Backward compatible with existing implementation, enhanced mathematical symbol support
+// Supports: Latin, Greek, Cyrillic, CJK, Arabic, Hebrew, Mathematical symbols
 export const Identifier = createToken({
   name: "Identifier",
   pattern:
-    /[a-zA-Z_\u0370-\u03FF\u1F00-\u1FFF][a-zA-Z0-9_\u0370-\u03FF\u1F00-\u1FFF]*/,
+    /[a-zA-Z_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u1F600-\u1F64F\u1F680-\u1F6FF][a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u1F600-\u1F64F\u1F680-\u1F6FF]*/,
 });
 
 // Literals
@@ -101,18 +103,18 @@ export const FloatingPointLiteral = createToken({
 
 export const StringLiteral = createToken({
   name: "StringLiteral",
-  pattern: /"""[\s\S]*?"""|"([^"\\]|\\.)*"/,
+  pattern: /"""[\s\S]*?"""|"([^"\\]|\\.|\\u[0-9A-Fa-f]{4})*"/,
 });
 
 export const InterpolatedStringLiteral = createToken({
   name: "InterpolatedStringLiteral",
   pattern:
-    /[a-zA-Z_][a-zA-Z0-9_]*"""[\s\S]*?"""|[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\$[a-zA-Z_][a-zA-Z0-9_]*|\$\{[^}]*\})*"/,
+    /[a-zA-Z_][a-zA-Z0-9_]*"""[\s\S]*?"""|[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\\u[0-9A-Fa-f]{4}|\$[a-zA-Z_][a-zA-Z0-9_]*|\$\{[^}]*\})*"/,
 });
 
 export const CharLiteral = createToken({
   name: "CharLiteral",
-  pattern: /'([^'\\]|\\.)'/,
+  pattern: /'([^'\\]|\\.|\\u[0-9A-Fa-f]{4})'/,
 });
 
 // Operators
