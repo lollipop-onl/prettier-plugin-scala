@@ -49,8 +49,8 @@ export function isIdentifierStart(char: string): boolean {
     return true;
   }
 
-  // Use Unicode property test for other characters
-  const testRegex = /\p{L}|\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}/u;
+  // Use Unicode property test for other characters (excluding digits for start characters)
+  const testRegex = /\p{L}|\p{Mn}|\p{Mc}|\p{Pc}/u;
   return testRegex.test(char);
 }
 
