@@ -14,7 +14,6 @@ export class ScalaParser extends CstParser {
         { ALT: () => this.SUBRULE(this.packageClause) },
         { ALT: () => this.SUBRULE(this.importClause) },
         { ALT: () => this.SUBRULE(this.exportClause) },
-        { ALT: () => this.SUBRULE(this.topLevelDefinition) },
         {
           ALT: () => {
             // Try assignment statement at top level
@@ -26,17 +25,18 @@ export class ScalaParser extends CstParser {
             const first = this.LA(1);
             const second = this.LA(2);
             return (
-              first.tokenType === tokens.Identifier &&
-              (second.tokenType === tokens.PlusEquals ||
-                second.tokenType === tokens.MinusEquals ||
-                second.tokenType === tokens.StarEquals ||
-                second.tokenType === tokens.SlashEquals ||
-                second.tokenType === tokens.PercentEquals ||
-                second.tokenType === tokens.SbtAssign ||
-                second.tokenType === tokens.Equals)
+              first?.tokenType === tokens.Identifier &&
+              (second?.tokenType === tokens.PlusEquals ||
+                second?.tokenType === tokens.MinusEquals ||
+                second?.tokenType === tokens.StarEquals ||
+                second?.tokenType === tokens.SlashEquals ||
+                second?.tokenType === tokens.PercentEquals ||
+                second?.tokenType === tokens.SbtAssign ||
+                second?.tokenType === tokens.Equals)
             );
           },
         },
+        { ALT: () => this.SUBRULE(this.topLevelDefinition) },
         {
           ALT: () => {
             this.SUBRULE(this.expression);
@@ -1469,6 +1469,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.Minus) },
       { ALT: () => this.CONSUME(tokens.Star) },
       { ALT: () => this.CONSUME(tokens.Slash) },
+      { ALT: () => this.CONSUME(tokens.DoublePercent) },
       { ALT: () => this.CONSUME(tokens.Percent) },
       { ALT: () => this.CONSUME(tokens.LessThan) },
       { ALT: () => this.CONSUME(tokens.GreaterThan) },

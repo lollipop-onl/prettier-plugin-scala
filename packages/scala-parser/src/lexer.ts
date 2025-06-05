@@ -167,8 +167,12 @@ export const PercentEquals = createToken({
   name: "PercentEquals",
   pattern: /%=/,
 });
-// sbt DSL operator
+// sbt DSL operators
 export const SbtAssign = createToken({ name: "SbtAssign", pattern: /:=/ });
+export const DoublePercent = createToken({
+  name: "DoublePercent",
+  pattern: /%%/,
+});
 // Bitwise operators
 export const BitwiseAnd = createToken({ name: "BitwiseAnd", pattern: /&/ });
 export const BitwiseOr = createToken({ name: "BitwiseOr", pattern: /\|/ });
@@ -319,6 +323,7 @@ export const allTokens = [
   SlashEquals,
   PercentEquals,
   SbtAssign,
+  DoublePercent, // %% must come before single %
   // Bitwise shift operators (must come before single-character)
   UnsignedRightShift, // >>> must come before >>
   LeftShift,
