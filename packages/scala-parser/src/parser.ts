@@ -949,12 +949,49 @@ export class ScalaParser extends CstParser {
     this.OR([
       {
         ALT: () => {
-          // Typed pattern: identifier : Type
-          this.CONSUME(tokens.Identifier);
-          this.OPTION(() => {
-            this.CONSUME(tokens.Colon);
-            this.SUBRULE(this.type);
+          // Tuple pattern: (a, b, c)
+          this.CONSUME(tokens.LeftParen);
+          this.MANY_SEP({
+            SEP: tokens.Comma,
+            DEF: () => this.SUBRULE(this.pattern),
           });
+          this.CONSUME(tokens.RightParen);
+        },
+      },
+      {
+        ALT: () => {
+          // Variable pattern with type: x: String
+          this.CONSUME(tokens.Identifier);
+          this.CONSUME(tokens.Colon);
+          this.SUBRULE(this.type);
+        },
+        GATE: () => {
+          // Only try if we see Identifier followed by Colon
+          const nextToken = this.LA(2);
+          return nextToken && nextToken.tokenType === tokens.Colon;
+        },
+      },
+      {
+        ALT: () => {
+          // Constructor pattern: SomeClass(args)
+          this.CONSUME2(tokens.Identifier);
+          this.CONSUME2(tokens.LeftParen);
+          this.MANY_SEP2({
+            SEP: tokens.Comma,
+            DEF: () => this.SUBRULE2(this.pattern),
+          });
+          this.CONSUME2(tokens.RightParen);
+        },
+        GATE: () => {
+          // Only try if we see Identifier followed by LeftParen
+          const nextToken = this.LA(2);
+          return nextToken && nextToken.tokenType === tokens.LeftParen;
+        },
+      },
+      {
+        ALT: () => {
+          // Simple variable pattern
+          this.CONSUME3(tokens.Identifier);
         },
       },
       { ALT: () => this.CONSUME(tokens.Underscore) },
