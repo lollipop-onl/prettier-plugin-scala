@@ -1,4 +1,4 @@
-import { ScalaLexer } from "../lib/lexer.js";
+import { ScalaLexer } from "../dist/index.js";
 import { describe, it, expect } from "vitest";
 
 describe("ScalaLexer", () => {
