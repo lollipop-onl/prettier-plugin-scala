@@ -75,7 +75,7 @@ export class ScalaParser extends CstParser {
         {
           ALT: () => {
             this.CONSUME(tokens.LeftBrace);
-            this.MANY_SEP({
+            this.AT_LEAST_ONE_SEP({
               SEP: tokens.Comma,
               DEF: () => this.SUBRULE(this.importSelector),
             });
@@ -127,7 +127,7 @@ export class ScalaParser extends CstParser {
         {
           ALT: () => {
             this.CONSUME(tokens.LeftBrace);
-            this.MANY_SEP({
+            this.AT_LEAST_ONE_SEP({
               SEP: tokens.Comma,
               DEF: () => this.SUBRULE(this.exportSelector),
             });
