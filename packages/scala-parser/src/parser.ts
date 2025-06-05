@@ -310,23 +310,35 @@ export class ScalaParser extends CstParser {
             this.CONSUME(tokens.Colon);
             this.SUBRULE(this.type);
           });
+          this.CONSUME(tokens.Equals);
+          this.SUBRULE(this.expression);
         },
         GATE: () => {
           // This alternative is for simple identifier patterns only
-          // Check if next token is NOT a left paren (which would indicate a constructor pattern)
-          const la2 = this.LA(2);
-          return !la2 || la2.tokenType !== tokens.LeftParen;
+          // Must handle: val x = ..., val x: Type = ...
+          // Must NOT handle: val (x, y) = ..., val SomeClass(...) = ...
+          const first = this.LA(1);
+          const second = this.LA(2);
+
+          // If first token is not identifier, this is not a simple val
+          if (!first || first.tokenType !== tokens.Identifier) return false;
+
+          // If second token is left paren, this is a constructor pattern
+          if (second && second.tokenType === tokens.LeftParen) return false;
+
+          // Otherwise, this is a simple identifier (with or without type)
+          return true;
         },
       },
       {
         // Pattern matching: val (x, y) = expr or val SomeClass(...) = expr
         ALT: () => {
           this.SUBRULE(this.pattern);
+          this.CONSUME2(tokens.Equals);
+          this.SUBRULE2(this.expression);
         },
       },
     ]);
-    this.CONSUME(tokens.Equals);
-    this.SUBRULE(this.expression);
     this.OPTION2(() => this.CONSUME(tokens.Semicolon));
   });
 
