@@ -6,16 +6,11 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.{ts,js}"],
     exclude: ["**/node_modules/**", "**/lib/**"],
-    isolate: false,
-    poolOptions: {
-      threads: {
-        singleThread: true,
-      },
-    },
-    timeout: 10000,
-    testTimeout: 10000,
+    isolate: true,
+    timeout: 5000,
+    testTimeout: 5000,
   },
   esbuild: {
-    target: "node18",
+    target: "es2022",
   },
 });
