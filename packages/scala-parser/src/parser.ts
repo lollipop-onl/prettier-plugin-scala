@@ -235,11 +235,12 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.Class);
     this.CONSUME(tokens.Identifier);
     this.OPTION(() => this.SUBRULE(this.typeParameters));
-    // Class-level annotations and constructor parameters
+    // Constructor annotations (for DI patterns like @Inject())
     this.MANY(() => this.SUBRULE(this.annotation));
-    this.OPTION2(() => this.SUBRULE(this.annotatedClassParameters));
-    this.OPTION3(() => this.SUBRULE(this.extendsClause));
-    this.OPTION4(() => this.SUBRULE(this.classBody));
+    // Constructor parameters (multiple parameter lists supported)
+    this.MANY2(() => this.SUBRULE(this.classParameters));
+    this.OPTION2(() => this.SUBRULE(this.extendsClause));
+    this.OPTION3(() => this.SUBRULE(this.classBody));
   });
 
   // Object definition
@@ -303,19 +304,21 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.Val);
     this.OR([
       {
-        // Simple variable with optional type: val x: Type = expr
+        // Simple variable with optional type: val x: Type = expr or val x: Type (abstract)
         ALT: () => {
           this.CONSUME(tokens.Identifier);
           this.OPTION(() => {
             this.CONSUME(tokens.Colon);
             this.SUBRULE(this.type);
           });
-          this.CONSUME(tokens.Equals);
-          this.SUBRULE(this.expression);
+          this.OPTION3(() => {
+            this.CONSUME(tokens.Equals);
+            this.SUBRULE(this.expression);
+          });
         },
         GATE: () => {
           // This alternative is for simple identifier patterns only
-          // Must handle: val x = ..., val x: Type = ...
+          // Must handle: val x = ..., val x: Type = ..., val x: Type (abstract)
           // Must NOT handle: val (x, y) = ..., val SomeClass(...) = ...
           const first = this.LA(1);
           const second = this.LA(2);
@@ -326,7 +329,7 @@ export class ScalaParser extends CstParser {
           // If second token is left paren, this is a constructor pattern
           if (second && second.tokenType === tokens.LeftParen) return false;
 
-          // Otherwise, this is a simple identifier (with or without type)
+          // Otherwise, this is a simple identifier (with or without type, with or without assignment)
           return true;
         },
       },
@@ -339,7 +342,7 @@ export class ScalaParser extends CstParser {
         },
       },
     ]);
-    this.OPTION2(() => this.CONSUME(tokens.Semicolon));
+    this.OPTION4(() => this.CONSUME(tokens.Semicolon));
   });
 
   // Var definition
@@ -462,9 +465,8 @@ export class ScalaParser extends CstParser {
   private annotatedClassParameters = this.RULE(
     "annotatedClassParameters",
     () => {
-      // Constructor annotations: @Inject() @Singleton etc.
-      this.MANY(() => this.SUBRULE(this.annotation));
-      this.SUBRULE(this.classParameters);
+      // Multiple parameter lists supported (annotations handled at topLevel)
+      this.AT_LEAST_ONE(() => this.SUBRULE(this.classParameters));
     },
   );
 

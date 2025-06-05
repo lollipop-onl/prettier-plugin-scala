@@ -369,3 +369,6 @@ export const allTokens = [
 
 // Create the lexer
 export const ScalaLexer = new Lexer(allTokens);
+
+// Export lexer instance for backward compatibility with tests
+export const lexerInstance = ScalaLexer;

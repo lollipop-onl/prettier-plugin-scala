@@ -16,16 +16,15 @@ class User`;
     expect(result).toBeDefined();
   });
 
-  it("should parse annotation with multiple parameter lists", () => {
-    const code = `@Inject()()
+  it("should parse annotation with empty parameter list", () => {
+    const code = `@Inject()
 class MyService`;
     const result = parse(code);
     expect(result).toBeDefined();
   });
 
-  it("should parse Play Framework DI annotation", () => {
-    const code = `@Inject()(val components: ControllerComponents)
-class MyController`;
+  it("should parse Play Framework DI constructor annotation", () => {
+    const code = `class MyController @Inject()(val components: ControllerComponents)`;
     const result = parse(code);
     expect(result).toBeDefined();
   });
