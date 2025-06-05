@@ -646,9 +646,11 @@ export class ScalaParser extends CstParser {
           // Skip to find ] =>> pattern
           let i = 2; // Start after LeftBracket
           let bracketCount = 0;
+          const MAX_LOOKAHEAD = 50; // Prevent infinite loops
 
           while (
             this.LA(i) &&
+            i < MAX_LOOKAHEAD &&
             (bracketCount > 0 || this.LA(i).tokenType !== tokens.RightBracket)
           ) {
             if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
@@ -656,8 +658,9 @@ export class ScalaParser extends CstParser {
             i++;
           }
 
-          // Check for ] =>>
+          // Check for ] =>> (ensure we didn't hit the lookahead limit)
           return (
+            i < MAX_LOOKAHEAD &&
             this.LA(i)?.tokenType === tokens.RightBracket &&
             this.LA(i + 1)?.tokenType === tokens.TypeLambdaArrow
           );
@@ -676,9 +679,11 @@ export class ScalaParser extends CstParser {
           // Skip to find ] => pattern
           let i = 2; // Start after LeftBracket
           let bracketCount = 0;
+          const MAX_LOOKAHEAD = 50; // Prevent infinite loops
 
           while (
             this.LA(i) &&
+            i < MAX_LOOKAHEAD &&
             (bracketCount > 0 || this.LA(i).tokenType !== tokens.RightBracket)
           ) {
             if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
@@ -686,8 +691,9 @@ export class ScalaParser extends CstParser {
             i++;
           }
 
-          // Check for ] =>
+          // Check for ] => (ensure we didn't hit the lookahead limit)
           return (
+            i < MAX_LOOKAHEAD &&
             this.LA(i)?.tokenType === tokens.RightBracket &&
             this.LA(i + 1)?.tokenType === tokens.Arrow
           );
