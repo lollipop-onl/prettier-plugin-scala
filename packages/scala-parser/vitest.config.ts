@@ -5,24 +5,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["test/**/*.test.{ts,js}"],
-    exclude: [
-      "**/node_modules/**",
-      "**/lib/**",
-      // タイムアウト問題の原因となるテストファイルを一時的に除外
-      "**/sbt-dsl.test.ts",
-      "**/complex-annotations.test.ts",
-      "**/context-functions.test.ts",
-      "**/kind-projector.test.ts",
-      "**/inline-transparent.test.ts",
-      "**/parser.test.ts", // パーシングエラーが多いため一時除外
-      "**/unicode-comprehensive.test.ts", // メモリ使用量が多いため一時除外
-      "**/dependent-function-types.test.ts", // 高度な型システム機能未実装
-      "**/opaque-types.test.ts", // 型パラメータ実装問題
-      "**/export.test.ts", // export構文の実装問題
-      "**/union-intersection-types.test.ts", // 型構文の実装問題
-      "**/match-types.test.ts", // 型マッチング実装問題
-      "**/quotes-splices.test.ts", // 一部のマクロ機能実装問題
-    ],
+    exclude: ["**/node_modules/**", "**/lib/**"],
     isolate: true,
     timeout: 15000,
     testTimeout: 15000,
