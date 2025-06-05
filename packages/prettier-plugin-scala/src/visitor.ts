@@ -513,15 +513,20 @@ export class CstNodeVisitor {
   visitAnnotation(node: any, ctx: PrintContext): string {
     let result = "@" + this.visit(node.children.qualifiedIdentifier[0], ctx);
 
-    if (node.children.LeftParen) {
-      result += "(";
-      if (node.children.annotationArgument) {
-        const args = node.children.annotationArgument.map((arg: any) =>
-          this.visit(arg, ctx),
-        );
-        result += args.join(", ");
+    // Support multiple parameter lists: @Inject()()
+    if (node.children.LeftParen && node.children.RightParen) {
+      const parenCount = node.children.LeftParen.length;
+      for (let i = 0; i < parenCount; i++) {
+        result += "(";
+        // For now, we handle arguments only in the first parameter list
+        if (i === 0 && node.children.annotationArgument) {
+          const args = node.children.annotationArgument.map((arg: any) =>
+            this.visit(arg, ctx),
+          );
+          result += args.join(", ");
+        }
+        result += ")";
       }
-      result += ")";
     }
 
     return result;
@@ -594,6 +599,15 @@ export class CstNodeVisitor {
 
     if (node.children.typeParameters) {
       result += this.visit(node.children.typeParameters[0], ctx);
+    }
+
+    // Add constructor annotations
+    if (node.children.annotation) {
+      result +=
+        " " +
+        node.children.annotation
+          .map((ann: any) => this.visit(ann, ctx))
+          .join(" ");
     }
 
     if (node.children.classParameters) {
@@ -1180,7 +1194,11 @@ export class CstNodeVisitor {
 
   visitPattern(node: any, ctx: PrintContext): string {
     if (node.children.Identifier) {
-      return node.children.Identifier[0].image;
+      let result = node.children.Identifier[0].image;
+      if (node.children.Colon && node.children.type) {
+        result += ": " + this.visit(node.children.type[0], ctx);
+      }
+      return result;
     } else if (node.children.Underscore) {
       return "_";
     } else if (node.children.literal) {
@@ -1190,7 +1208,28 @@ export class CstNodeVisitor {
     return "";
   }
 
+  visitPartialFunctionLiteral(node: any, ctx: PrintContext): string {
+    const useTabs = ctx.options.useTabs;
+    const tabWidth = ctx.options.tabWidth || 2;
+    const caseSpacing = useTabs ? "\t" : " ".repeat(tabWidth);
+    let result = "{\n";
+
+    if (node.children.caseClause) {
+      for (const caseNode of node.children.caseClause) {
+        result += caseSpacing + this.visit(caseNode, ctx) + "\n";
+      }
+    }
+
+    result += "}";
+    return result;
+  }
+
   visitExpression(node: any, ctx: PrintContext): string {
+    // Handle PartialFunction literals: { case ... }
+    if (node.children.partialFunctionLiteral) {
+      return this.visit(node.children.partialFunctionLiteral[0], ctx);
+    }
+
     // Handle lambda expressions with parameter list: (x: Int, y: Int) => x + y
     if (node.children.parameterList && node.children.Arrow) {
       return (
@@ -1437,6 +1476,8 @@ export class CstNodeVisitor {
       return node.children.Identifier[0].image;
     } else if (node.children.This) {
       return "this";
+    } else if (node.children.partialFunctionLiteral) {
+      return this.visit(node.children.partialFunctionLiteral[0], ctx);
     } else if (node.children.newExpression) {
       return this.visit(node.children.newExpression[0], ctx);
     } else if (node.children.forExpression) {
@@ -1475,7 +1516,8 @@ export class CstNodeVisitor {
       node.children.MinusEquals?.[0] ||
       node.children.StarEquals?.[0] ||
       node.children.SlashEquals?.[0] ||
-      node.children.PercentEquals?.[0];
+      node.children.PercentEquals?.[0] ||
+      node.children.SbtAssign?.[0];
 
     result += " " + operator.image + " ";
     result += this.visit(node.children.expression[0], ctx);
@@ -1493,7 +1535,8 @@ export class CstNodeVisitor {
       node.children.MinusEquals ||
       node.children.StarEquals ||
       node.children.SlashEquals ||
-      node.children.PercentEquals
+      node.children.PercentEquals ||
+      node.children.SbtAssign
     ) {
       const operator =
         node.children.Equals?.[0] ||
@@ -1501,7 +1544,8 @@ export class CstNodeVisitor {
         node.children.MinusEquals?.[0] ||
         node.children.StarEquals?.[0] ||
         node.children.SlashEquals?.[0] ||
-        node.children.PercentEquals?.[0];
+        node.children.PercentEquals?.[0] ||
+        node.children.SbtAssign?.[0];
       result += " " + operator.image + " ";
       result += this.visit(node.children.expression[0], ctx);
     }

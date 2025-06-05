@@ -32,6 +32,7 @@ export class ScalaParser extends CstParser {
                 second.tokenType === tokens.StarEquals ||
                 second.tokenType === tokens.SlashEquals ||
                 second.tokenType === tokens.PercentEquals ||
+                second.tokenType === tokens.SbtAssign ||
                 second.tokenType === tokens.Equals)
             );
           },
@@ -178,7 +179,8 @@ export class ScalaParser extends CstParser {
   private annotation = this.RULE("annotation", () => {
     this.CONSUME(tokens.At);
     this.SUBRULE(this.qualifiedIdentifier);
-    this.OPTION(() => {
+    // Support multiple parameter lists: @Inject()()
+    this.MANY(() => {
       this.CONSUME(tokens.LeftParen);
       this.MANY_SEP({
         SEP: tokens.Comma,
@@ -233,6 +235,8 @@ export class ScalaParser extends CstParser {
     this.CONSUME(tokens.Class);
     this.CONSUME(tokens.Identifier);
     this.OPTION(() => this.SUBRULE(this.typeParameters));
+    // Constructor annotations and parameters
+    this.MANY(() => this.SUBRULE(this.annotation));
     this.OPTION2(() => this.SUBRULE(this.classParameters));
     this.OPTION3(() => this.SUBRULE(this.extendsClause));
     this.OPTION4(() => this.SUBRULE(this.classBody));
@@ -573,6 +577,7 @@ export class ScalaParser extends CstParser {
               second.tokenType === tokens.StarEquals ||
               second.tokenType === tokens.SlashEquals ||
               second.tokenType === tokens.PercentEquals ||
+              second.tokenType === tokens.SbtAssign ||
               second.tokenType === tokens.Equals)
           );
         },
@@ -942,7 +947,16 @@ export class ScalaParser extends CstParser {
   // Patterns
   private pattern = this.RULE("pattern", () => {
     this.OR([
-      { ALT: () => this.CONSUME(tokens.Identifier) },
+      {
+        ALT: () => {
+          // Typed pattern: identifier : Type
+          this.CONSUME(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.Colon);
+            this.SUBRULE(this.type);
+          });
+        },
+      },
       { ALT: () => this.CONSUME(tokens.Underscore) },
       { ALT: () => this.SUBRULE(this.literal) },
     ]);
@@ -1040,6 +1054,7 @@ export class ScalaParser extends CstParser {
           { ALT: () => this.CONSUME(tokens.StarEquals) },
           { ALT: () => this.CONSUME(tokens.SlashEquals) },
           { ALT: () => this.CONSUME(tokens.PercentEquals) },
+          { ALT: () => this.CONSUME(tokens.SbtAssign) },
         ]);
         this.SUBRULE3(this.expression);
       });
@@ -1165,6 +1180,17 @@ export class ScalaParser extends CstParser {
           this.CONSUME(tokens.RightParen);
         },
       },
+      {
+        ALT: () => {
+          // PartialFunction literal: { case ... }
+          this.SUBRULE(this.partialFunctionLiteral);
+        },
+        GATE: () => {
+          // Only try if we see { followed by case
+          const la2 = this.LA(2);
+          return la2 && la2.tokenType === tokens.Case;
+        },
+      },
       { ALT: () => this.SUBRULE(this.blockExpression) },
       { ALT: () => this.SUBRULE(this.quoteExpression) },
       { ALT: () => this.SUBRULE(this.spliceExpression) },
@@ -1265,6 +1291,12 @@ export class ScalaParser extends CstParser {
     });
   });
 
+  private partialFunctionLiteral = this.RULE("partialFunctionLiteral", () => {
+    this.CONSUME(tokens.LeftBrace);
+    this.AT_LEAST_ONE(() => this.SUBRULE(this.caseClause));
+    this.CONSUME(tokens.RightBrace);
+  });
+
   private blockExpression = this.RULE("blockExpression", () => {
     this.CONSUME(tokens.LeftBrace);
     this.MANY(() => this.SUBRULE(this.blockStatement));
@@ -1360,6 +1392,7 @@ export class ScalaParser extends CstParser {
               second.tokenType === tokens.StarEquals ||
               second.tokenType === tokens.SlashEquals ||
               second.tokenType === tokens.PercentEquals ||
+              second.tokenType === tokens.SbtAssign ||
               second.tokenType === tokens.Equals)
           );
         },
@@ -1382,6 +1415,7 @@ export class ScalaParser extends CstParser {
       { ALT: () => this.CONSUME(tokens.StarEquals) },
       { ALT: () => this.CONSUME(tokens.SlashEquals) },
       { ALT: () => this.CONSUME(tokens.PercentEquals) },
+      { ALT: () => this.CONSUME(tokens.SbtAssign) },
     ]);
     this.SUBRULE(this.expression);
   });
