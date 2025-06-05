@@ -1019,17 +1019,19 @@ export class ScalaParser extends CstParser {
   // Patterns
   private pattern = this.RULE("pattern", () => {
     this.OR([
-      {
-        ALT: () => {
-          // Tuple pattern: (a, b, c)
-          this.CONSUME(tokens.LeftParen);
-          this.MANY_SEP({
-            SEP: tokens.Comma,
-            DEF: () => this.SUBRULE(this.pattern),
-          });
-          this.CONSUME(tokens.RightParen);
-        },
-      },
+      // TODO: Tuple pattern support disabled temporarily due to parsing conflicts
+      // {
+      //   ALT: () => {
+      //     // Tuple pattern: (a, b, c)
+      //     this.CONSUME(tokens.LeftParen);
+      //     this.SUBRULE(this.pattern);
+      //     this.MANY(() => {
+      //       this.CONSUME(tokens.Comma);
+      //       this.SUBRULE3(this.pattern);
+      //     });
+      //     this.CONSUME(tokens.RightParen);
+      //   },
+      // },
       {
         ALT: () => {
           // Constructor pattern: SomeClass(args)
