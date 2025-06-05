@@ -39,14 +39,24 @@ prettier-plugin-scala/
 │   │   │   └── visitor.ts      # CSTビジター実装
 │   │   ├── test/               # テストスイート
 │   │   └── lib/                # ビルド出力
-│   └── scala-parser/           # Chevrotainベースのパーサー
-│       ├── src/
-│       │   ├── index.ts        # パーサーエントリポイント
-│       │   ├── lexer.ts        # 字句解析器
-│       │   └── parser.ts       # 構文解析器
-│       ├── test/               # パーサーテスト
-│       └── lib/                # ビルド出力
+│   ├── scala-parser/           # Chevrotainベースのパーサー
+│   │   ├── src/
+│   │   │   ├── index.ts        # パーサーエントリポイント
+│   │   │   ├── lexer.ts        # 字句解析器
+│   │   │   └── parser.ts       # 構文解析器
+│   │   ├── test/               # パーサーテスト
+│   │   └── lib/                # ビルド出力
+│   └── tsconfig/               # 共有TypeScript設定
 ├── docs/                       # 技術ドキュメント
+├── test-fixtures/              # テストサンプル・検証用コード
+│   ├── examples/               # 実世界サンプル
+│   │   ├── frameworks/         # フレームワーク別（Akka, Cats, Play, ZIO）
+│   │   └── features/           # 機能デモンストレーション
+│   ├── integration/            # 統合テスト・実プロダクション検証
+│   └── unit/                   # 言語機能別単体テスト
+│       ├── basic/              # 基本構文（Phase 1）
+│       ├── scala3/             # Scala 3機能（Phase 2）
+│       └── advanced/           # 高度機能（Phase 3）
 └── README.md                   # ユーザー向けドキュメント
 ```
 
@@ -239,7 +249,7 @@ pnpm test
 pnpm --filter prettier-plugin-scala test    # プラグインテスト（175テスト）
 pnpm --filter scala-parser test             # パーサーテスト（154テスト）
 
-# フィクスチャファイルのフォーマット検証
+# テストフィクスチャのフォーマット検証
 npm run check
 
 # クリーンアップ
@@ -248,8 +258,8 @@ pnpm clean
 # 実際のScalaファイルでテスト
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js <file.scala>
 
-# フィクスチャファイルの直接確認
-npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala
+# テストフィクスチャの直接確認
+npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js test-fixtures/**/*.scala
 
 # Prettierオプション付きテスト例
 npx prettier --plugin ./packages/prettier-plugin-scala/lib/index.js --print-width 40 --semi <file.scala>

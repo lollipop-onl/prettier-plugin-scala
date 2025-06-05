@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check": "prettier --check --plugin ./packages/prettier-plugin-scala/lib/index.js fixtures/**/*.scala",
+    "check": "prettier --check --plugin ./packages/prettier-plugin-scala/lib/index.js test-fixtures/**/*.scala",
     "clean": "turbo run clean",
     "postinstall": "lefthook install",
     "test": "turbo run test"
