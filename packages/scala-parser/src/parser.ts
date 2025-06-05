@@ -301,11 +301,30 @@ export class ScalaParser extends CstParser {
   // Val definition
   private valDefinition = this.RULE("valDefinition", () => {
     this.CONSUME(tokens.Val);
-    this.SUBRULE(this.pattern);
-    this.OPTION(() => {
-      this.CONSUME(tokens.Colon);
-      this.SUBRULE(this.type);
-    });
+    this.OR([
+      {
+        // Simple variable with optional type: val x: Type = expr
+        ALT: () => {
+          this.CONSUME(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.Colon);
+            this.SUBRULE(this.type);
+          });
+        },
+        GATE: () => {
+          // This alternative is for simple identifier patterns only
+          // Check if next token is NOT a left paren (which would indicate a constructor pattern)
+          const la2 = this.LA(2);
+          return !la2 || la2.tokenType !== tokens.LeftParen;
+        },
+      },
+      {
+        // Pattern matching: val (x, y) = expr or val SomeClass(...) = expr
+        ALT: () => {
+          this.SUBRULE(this.pattern);
+        },
+      },
+    ]);
     this.CONSUME(tokens.Equals);
     this.SUBRULE(this.expression);
     this.OPTION2(() => this.CONSUME(tokens.Semicolon));
@@ -641,29 +660,51 @@ export class ScalaParser extends CstParser {
         GATE: () => {
           // Look ahead to detect type lambda pattern
           // Pattern: [ [typeParam [, ...]] ] =>>
-          if (this.LA(1).tokenType !== tokens.LeftBracket) return false;
+          if (this.LA(1)?.tokenType !== tokens.LeftBracket) return false;
 
-          // Skip to find ] =>> pattern
+          // Simple check: look for =>> after some tokens
           let i = 2; // Start after LeftBracket
-          let bracketCount = 0;
-          const MAX_LOOKAHEAD = 50; // Prevent infinite loops
+          const MAX_LOOKAHEAD = 20; // Reduced for safety
 
-          while (
-            this.LA(i) &&
-            i < MAX_LOOKAHEAD &&
-            (bracketCount > 0 || this.LA(i).tokenType !== tokens.RightBracket)
+          // Handle simple case: [X] =>>
+          if (
+            this.LA(2)?.tokenType === tokens.Identifier &&
+            this.LA(3)?.tokenType === tokens.RightBracket
           ) {
-            if (this.LA(i).tokenType === tokens.LeftBracket) bracketCount++;
-            if (this.LA(i).tokenType === tokens.RightBracket) bracketCount--;
+            return this.LA(4)?.tokenType === tokens.TypeLambdaArrow;
+          }
+
+          // Handle variance: [+X] =>> or [-X] =>>
+          if (
+            (this.LA(2)?.tokenType === tokens.Plus ||
+              this.LA(2)?.tokenType === tokens.Minus) &&
+            this.LA(3)?.tokenType === tokens.Identifier &&
+            this.LA(4)?.tokenType === tokens.RightBracket
+          ) {
+            return this.LA(5)?.tokenType === tokens.TypeLambdaArrow;
+          }
+
+          // Handle empty: [] =>>
+          if (this.LA(2)?.tokenType === tokens.RightBracket) {
+            return this.LA(3)?.tokenType === tokens.TypeLambdaArrow;
+          }
+
+          // More complex cases with bounds - scan forward
+          let bracketCount = 1;
+          while (i < MAX_LOOKAHEAD && this.LA(i)) {
+            const token = this.LA(i);
+            if (token.tokenType === tokens.LeftBracket) bracketCount++;
+            if (token.tokenType === tokens.RightBracket) {
+              bracketCount--;
+              if (bracketCount === 0) {
+                // Found closing bracket, check for =>>
+                return this.LA(i + 1)?.tokenType === tokens.TypeLambdaArrow;
+              }
+            }
             i++;
           }
 
-          // Check for ] =>> (ensure we didn't hit the lookahead limit)
-          return (
-            i < MAX_LOOKAHEAD &&
-            this.LA(i)?.tokenType === tokens.RightBracket &&
-            this.LA(i + 1)?.tokenType === tokens.TypeLambdaArrow
-          );
+          return false;
         },
       },
       // Polymorphic function type: [T] => T => T
@@ -962,19 +1003,6 @@ export class ScalaParser extends CstParser {
             DEF: () => this.SUBRULE(this.pattern),
           });
           this.CONSUME(tokens.RightParen);
-        },
-      },
-      {
-        ALT: () => {
-          // Variable pattern with type: x: String
-          this.CONSUME(tokens.Identifier);
-          this.CONSUME(tokens.Colon);
-          this.SUBRULE(this.type);
-        },
-        GATE: () => {
-          // Only try if we see Identifier followed by Colon
-          const nextToken = this.LA(2);
-          return nextToken && nextToken.tokenType === tokens.Colon;
         },
       },
       {

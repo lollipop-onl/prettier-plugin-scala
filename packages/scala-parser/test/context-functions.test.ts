@@ -1,4 +1,4 @@
-import { parse } from "../dist/index.js";
+import { parse } from "../src/index.js";
 import { describe, it, expect } from "vitest";
 
 describe("Context functions parsing", () => {
