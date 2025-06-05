@@ -173,52 +173,93 @@ export class StatementVisitorMethods {
   }
 
   visitTopLevelDefinition(node: any, ctx: PrintContext): string {
+    let result = "";
+
+    // Handle modifiers (including 'case')
+    if (node.children.modifier) {
+      const modifiers = this.visitModifiers(node.children.modifier, ctx);
+      result += modifiers + " ";
+    }
+
     // Handle definitions at top level
     if (node.children.definition) {
-      return this.visitor.visit(node.children.definition[0], ctx);
+      result += this.visitor.visit(node.children.definition[0], ctx);
+      return result;
     }
 
     // Handle class definitions
     if (node.children.classDefinition) {
-      return this.visitor.visit(node.children.classDefinition[0], ctx);
+      result += this.visitor.visit(node.children.classDefinition[0], ctx);
+      return result;
     }
 
     // Handle object definitions
     if (node.children.objectDefinition) {
-      return this.visitor.visit(node.children.objectDefinition[0], ctx);
+      result += this.visitor.visit(node.children.objectDefinition[0], ctx);
+      return result;
     }
 
     // Handle trait definitions
     if (node.children.traitDefinition) {
-      return this.visitor.visit(node.children.traitDefinition[0], ctx);
+      result += this.visitor.visit(node.children.traitDefinition[0], ctx);
+      return result;
     }
 
     // Handle val definitions
     if (node.children.valDefinition) {
-      return this.visitor.visit(node.children.valDefinition[0], ctx);
+      result += this.visitor.visit(node.children.valDefinition[0], ctx);
+      return result;
     }
 
     // Handle var definitions
     if (node.children.varDefinition) {
-      return this.visitor.visit(node.children.varDefinition[0], ctx);
+      result += this.visitor.visit(node.children.varDefinition[0], ctx);
+      return result;
     }
 
     // Handle def definitions
     if (node.children.defDefinition) {
-      return this.visitor.visit(node.children.defDefinition[0], ctx);
+      result += this.visitor.visit(node.children.defDefinition[0], ctx);
+      return result;
+    }
+
+    // Handle enum definitions (Scala 3)
+    if (node.children.enumDefinition) {
+      result += this.visitor.visit(node.children.enumDefinition[0], ctx);
+      return result;
+    }
+
+    // Handle extension definitions (Scala 3)
+    if (node.children.extensionDefinition) {
+      result += this.visitor.visit(node.children.extensionDefinition[0], ctx);
+      return result;
+    }
+
+    // Handle given definitions (Scala 3)
+    if (node.children.givenDefinition) {
+      result += this.visitor.visit(node.children.givenDefinition[0], ctx);
+      return result;
+    }
+
+    // Handle type definitions (including opaque types)
+    if (node.children.typeDefinition) {
+      result += this.visitor.visit(node.children.typeDefinition[0], ctx);
+      return result;
     }
 
     // Handle assignment statements
     if (node.children.assignmentStatement) {
-      return this.visitor.visit(node.children.assignmentStatement[0], ctx);
+      result += this.visitor.visit(node.children.assignmentStatement[0], ctx);
+      return result;
     }
 
     // Handle expressions
     if (node.children.expression) {
-      return this.visitor.visit(node.children.expression[0], ctx);
+      result += this.visitor.visit(node.children.expression[0], ctx);
+      return result;
     }
 
-    return "";
+    return result;
   }
 
   visitBlockStatement(node: any, ctx: PrintContext): string {

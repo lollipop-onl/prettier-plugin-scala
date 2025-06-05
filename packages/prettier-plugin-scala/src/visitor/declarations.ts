@@ -182,13 +182,26 @@ export class DeclarationVisitorMethods {
   }
 
   visitValDefinition(node: any, ctx: PrintContext): string {
-    let result = "val " + this.visitor.visit(node.children.pattern[0], ctx);
+    let result = "val ";
+
+    // Handle pattern or identifier
+    if (node.children.pattern && node.children.pattern[0]) {
+      result += this.visitor.visit(node.children.pattern[0], ctx);
+    } else if (node.children.Identifier && node.children.Identifier[0]) {
+      result += node.children.Identifier[0].image;
+    }
 
     if (node.children.Colon) {
       result += ": " + this.visitor.visit(node.children.type[0], ctx);
     }
 
-    result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    if (
+      node.children.Equals &&
+      node.children.expression &&
+      node.children.expression[0]
+    ) {
+      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    }
 
     return formatStatement(result, ctx);
   }
