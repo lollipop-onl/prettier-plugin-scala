@@ -75,9 +75,11 @@ export const Transparent = createToken({
 });
 
 // Identifiers (must come after keywords)
+// Support Unicode letters including Greek letters (λ, α, β, etc.)
 export const Identifier = createToken({
   name: "Identifier",
-  pattern: /[a-zA-Z_][a-zA-Z0-9_]*/,
+  pattern:
+    /[a-zA-Z_\u0370-\u03FF\u1F00-\u1FFF][a-zA-Z0-9_\u0370-\u03FF\u1F00-\u1FFF]*/,
 });
 
 // Literals

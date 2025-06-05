@@ -271,46 +271,75 @@ export class CstNodeVisitor {
   }
 
   visitCompilationUnit(node: any, ctx: PrintContext): string {
-    let result = "";
+    const parts: string[] = [];
 
+    // Process package declaration
     if (node.children.packageClause) {
-      result += this.visit(node.children.packageClause[0], ctx) + "\n\n";
+      parts.push(this.visit(node.children.packageClause[0], ctx));
+      // Add blank line after package if there are more elements
+      if (
+        node.children.importClause ||
+        node.children.exportClause ||
+        node.children.topLevelDefinition ||
+        node.children.expression
+      ) {
+        parts.push("");
+      }
     }
 
+    // Process imports
     if (node.children.importClause) {
       for (const importNode of node.children.importClause) {
-        result += this.visit(importNode, ctx) + "\n";
+        parts.push(this.visit(importNode, ctx));
       }
-      if (node.children.importClause.length > 0) {
-        result += "\n";
+      // Add blank line after imports if there are more elements
+      if (
+        node.children.topLevelDefinition ||
+        node.children.exportClause ||
+        node.children.expression
+      ) {
+        parts.push("");
       }
     }
 
+    // Process exports
     if (node.children.exportClause) {
       for (const exportNode of node.children.exportClause) {
-        result += this.visit(exportNode, ctx) + "\n";
+        parts.push(this.visit(exportNode, ctx));
       }
-      if (node.children.exportClause.length > 0) {
-        result += "\n";
+      // Only add blank line after exports if there are more elements after
+      if (
+        node.children.exportClause.length > 0 &&
+        (node.children.topLevelDefinition || node.children.expression)
+      ) {
+        parts.push(""); // Add blank line after exports
       }
     }
 
+    // Process top-level definitions
     if (node.children.topLevelDefinition) {
-      const defs = node.children.topLevelDefinition.map((def: any) =>
-        this.visit(def, ctx),
-      );
-      result += defs.join("\n");
+      for (const def of node.children.topLevelDefinition) {
+        parts.push(this.visit(def, ctx));
+      }
     }
 
+    // Process assignment statements
+    if (node.children.assignmentStatement) {
+      for (const stmt of node.children.assignmentStatement) {
+        parts.push(this.visit(stmt, ctx));
+      }
+    }
+
+    // Process expressions
     if (node.children.expression) {
-      const exprs = node.children.expression.map((expr: any) =>
-        this.visit(expr, ctx),
-      );
-      if (result) result += "\n";
-      result += exprs.join("\n");
+      for (const expr of node.children.expression) {
+        parts.push(this.visit(expr, ctx));
+      }
     }
 
-    return result + "\n";
+    // Join all parts with single newlines, then add final newline
+    // Keep empty parts to maintain blank lines
+    return parts.join("\n") + "\n";
   }
 
   visitPackageClause(node: any, ctx: PrintContext): string {
