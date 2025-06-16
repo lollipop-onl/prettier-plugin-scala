@@ -60,7 +60,9 @@ export class ExpressionVisitorMethods {
       const blockStatements = getChildNodes(node, "blockStatement");
       if (blockStatements.length > 0) {
         statements.push(
-          ...blockStatements.map((stmt: any) => this.visitor.visit(stmt, ctx)),
+          ...blockStatements.map((stmt: CSTNode) =>
+            this.visitor.visit(stmt, ctx),
+          ),
         );
       }
 
@@ -177,7 +179,7 @@ export class ExpressionVisitorMethods {
           );
 
           if (relevantExpressions.length > 0) {
-            const args = relevantExpressions.map((e: any) =>
+            const args = relevantExpressions.map((e: CSTNode) =>
               this.visitor.visit(e, ctx),
             );
             result += args.join(", ");
@@ -194,7 +196,9 @@ export class ExpressionVisitorMethods {
       result += "[";
       const types = getChildNodes(node, "type");
       if (types.length > 0) {
-        const typeStrings = types.map((t: any) => this.visitor.visit(t, ctx));
+        const typeStrings = types.map((t: CSTNode) =>
+          this.visitor.visit(t, ctx),
+        );
         result += typeStrings.join(", ");
       }
       result += "]";
@@ -207,7 +211,7 @@ export class ExpressionVisitorMethods {
       const caseClauses = getChildNodes(node, "caseClause");
       if (caseClauses.length > 0) {
         const cases = caseClauses.map(
-          (c: any) => "  " + this.visitor.visit(c, ctx),
+          (c: CSTNode) => "  " + this.visitor.visit(c, ctx),
         );
         result += cases.join("\n");
         result += "\n";
@@ -222,7 +226,7 @@ export class ExpressionVisitorMethods {
       result += "(";
       const methodExpressions = getChildNodes(node, "expression");
       if (methodExpressions.length > 0) {
-        const args = methodExpressions.map((e: any) =>
+        const args = methodExpressions.map((e: CSTNode) =>
           this.visitor.visit(e, ctx),
         );
         result += args.join(", ");
@@ -329,38 +333,46 @@ export class ExpressionVisitorMethods {
   }
 
   visitAssignmentOrInfixExpression(node: CSTNode, ctx: PrintContext): string {
-    let result = this.visitor.visit(node.children.postfixExpression[0], ctx);
+    const postfixExpressions = getChildNodes(node, "postfixExpression");
+    let result =
+      postfixExpressions.length > 0
+        ? this.visitor.visit(postfixExpressions[0], ctx)
+        : "";
 
     // Handle assignment operators (including named arguments)
-    if (
-      node.children.Equals ||
-      node.children.PlusEquals ||
-      node.children.MinusEquals ||
-      node.children.StarEquals ||
-      node.children.SlashEquals ||
-      node.children.PercentEquals ||
-      node.children.SbtAssign
-    ) {
-      const operator =
-        node.children.Equals?.[0] ||
-        node.children.PlusEquals?.[0] ||
-        node.children.MinusEquals?.[0] ||
-        node.children.StarEquals?.[0] ||
-        node.children.SlashEquals?.[0] ||
-        node.children.PercentEquals?.[0] ||
-        node.children.SbtAssign?.[0];
+    const equals = getChildNodes(node, "Equals");
+    const plusEquals = getChildNodes(node, "PlusEquals");
+    const minusEquals = getChildNodes(node, "MinusEquals");
+    const starEquals = getChildNodes(node, "StarEquals");
+    const slashEquals = getChildNodes(node, "SlashEquals");
+    const percentEquals = getChildNodes(node, "PercentEquals");
+    const sbtAssign = getChildNodes(node, "SbtAssign");
+
+    const operator =
+      equals[0] ||
+      plusEquals[0] ||
+      minusEquals[0] ||
+      starEquals[0] ||
+      slashEquals[0] ||
+      percentEquals[0] ||
+      sbtAssign[0];
+
+    if (operator) {
       result += " " + operator.image + " ";
-      result += this.visitor.visit(node.children.expression[0], ctx);
+      const expressions = getChildNodes(node, "expression");
+      if (expressions.length > 0) {
+        result += this.visitor.visit(expressions[0], ctx);
+      }
     }
 
     // Handle infix operators
-    if (node.children.infixOperator) {
-      for (let i = 0; i < node.children.infixOperator.length; i++) {
-        result +=
-          " " +
-          this.visitor.visit(node.children.infixOperator[i], ctx) +
-          " " +
-          this.visitor.visit(node.children.postfixExpression[i + 1], ctx);
+    const infixOperators = getChildNodes(node, "infixOperator");
+    if (infixOperators.length > 0) {
+      for (let i = 0; i < infixOperators.length; i++) {
+        result += " " + this.visitor.visit(infixOperators[i], ctx) + " ";
+        if (postfixExpressions.length > i + 1) {
+          result += this.visitor.visit(postfixExpressions[i + 1], ctx);
+        }
       }
     }
 
@@ -368,34 +380,91 @@ export class ExpressionVisitorMethods {
   }
 
   visitInfixOperator(node: CSTNode, _ctx: PrintContext): string {
-    const children = node.children as Record<string, any[]>;
-    const token = Object.values(children)[0][0];
-    return token.image;
-  }
+    // Handle all possible infix operators
+    const operators = [
+      "Plus",
+      "Minus",
+      "Star",
+      "Slash",
+      "Percent",
+      "DoubleStar",
+      "LeftShift",
+      "RightShift",
+      "UnsignedRightShift",
+      "BitwiseAnd",
+      "BitwiseOr",
+      "BitwiseXor",
+      "EqualsEquals",
+      "NotEquals",
+      "LessThan",
+      "LessThanOrEqual",
+      "GreaterThan",
+      "GreaterThanOrEqual",
+      "LogicalAnd",
+      "LogicalOr",
+      "DoublePercent",
+      "Ask",
+    ];
 
-  visitLiteral(node: any, ctx: PrintContext): string {
-    const children = node.children as Record<string, any[]>;
-    const token = Object.values(children)[0][0];
-    const tokenImage = token.image;
-
-    // Apply singleQuote formatting to string literals
-    if (tokenImage.startsWith('"') || tokenImage.startsWith("'")) {
-      return formatStringLiteral(tokenImage, ctx);
+    for (const op of operators) {
+      const tokens = getChildNodes(node, op);
+      if (tokens.length > 0) {
+        return tokens[0].image;
+      }
     }
 
-    return tokenImage;
+    // Fallback to identifier for custom operators
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      return identifiers[0].image;
+    }
+
+    return "";
   }
 
-  visitQualifiedIdentifier(node: any, _ctx: PrintContext): string {
-    let result = node.children.Identifier[0].image;
+  visitLiteral(node: CSTNode, ctx: PrintContext): string {
+    // Handle all possible literal types
+    const literalTypes = [
+      "StringLiteral",
+      "NumberLiteral",
+      "FloatLiteral",
+      "BooleanLiteral",
+      "CharLiteral",
+      "NullLiteral",
+      "ScientificNumber",
+    ];
 
-    if (node.children.Dot) {
+    for (const literalType of literalTypes) {
+      const tokens = getChildNodes(node, literalType);
+      if (tokens.length > 0) {
+        const tokenImage = tokens[0].image;
+
+        // Apply singleQuote formatting to string literals
+        if (tokenImage.startsWith('"') || tokenImage.startsWith("'")) {
+          return formatStringLiteral(tokenImage, ctx);
+        }
+
+        return tokenImage;
+      }
+    }
+
+    return "";
+  }
+
+  visitQualifiedIdentifier(node: CSTNode, _ctx: PrintContext): string {
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length === 0) {
+      return "";
+    }
+
+    let result = identifiers[0].image;
+
+    const dots = getChildNodes(node, "Dot");
+    if (dots.length > 0) {
       // Handle mixed identifiers and type keywords
-      const dots = node.children.Dot.length;
-      const identifiers = node.children.Identifier || [];
-      const types = node.children.Type || [];
+      const types = getChildNodes(node, "Type");
 
-      for (let i = 0; i < dots; i++) {
+      for (let i = 0; i < dots.length; i++) {
         result += ".";
 
         // Determine which token comes next (identifier or type keyword)
@@ -411,13 +480,16 @@ export class ExpressionVisitorMethods {
     return result;
   }
 
-  visitNewExpression(node: any, ctx: PrintContext): string {
-    let result = "new " + this.visitor.visit(node.children.type[0], ctx);
+  visitNewExpression(node: CSTNode, ctx: PrintContext): string {
+    const typeNode = getFirstChild(node, "type");
+    let result = "new " + (typeNode ? this.visitor.visit(typeNode, ctx) : "");
 
-    if (node.children.LeftParen) {
+    const leftParens = getChildNodes(node, "LeftParen");
+    if (leftParens.length > 0) {
       result += "(";
-      if (node.children.expression) {
-        const args = node.children.expression.map((e: any) =>
+      const expressions = getChildNodes(node, "expression");
+      if (expressions.length > 0) {
+        const args = expressions.map((e: CSTNode) =>
           this.visitor.visit(e, ctx),
         );
         result += args.join(", ");
@@ -428,141 +500,183 @@ export class ExpressionVisitorMethods {
     return result;
   }
 
-  visitIfExpression(node: any, ctx: PrintContext): string {
-    let result = "if (";
-    result += this.visitor.visit(node.children.expression[0], ctx);
-    result += ") ";
-    result += this.visitor.visit(node.children.expression[1], ctx);
+  visitIfExpression(node: CSTNode, ctx: PrintContext): string {
+    const expressions = getChildNodes(node, "expression");
+    if (expressions.length < 2) {
+      return "if";
+    }
 
-    if (node.children.Else) {
+    let result = "if (";
+    result += this.visitor.visit(expressions[0], ctx);
+    result += ") ";
+    result += this.visitor.visit(expressions[1], ctx);
+
+    const elseTokens = getChildNodes(node, "Else");
+    if (elseTokens.length > 0 && expressions.length > 2) {
       result += " else ";
-      result += this.visitor.visit(node.children.expression[2], ctx);
+      result += this.visitor.visit(expressions[2], ctx);
     }
 
     return result;
   }
 
-  visitWhileExpression(node: any, ctx: PrintContext): string {
+  visitWhileExpression(node: CSTNode, ctx: PrintContext): string {
+    const expressions = getChildNodes(node, "expression");
+    if (expressions.length < 2) {
+      return "while";
+    }
+
     let result = "while (";
-    result += this.visitor.visit(node.children.expression[0], ctx);
+    result += this.visitor.visit(expressions[0], ctx);
     result += ") ";
-    result += this.visitor.visit(node.children.expression[1], ctx);
+    result += this.visitor.visit(expressions[1], ctx);
 
     return result;
   }
 
-  visitTryExpression(node: any, ctx: PrintContext): string {
-    let result = "try ";
-    result += this.visitor.visit(node.children.expression[0], ctx);
+  visitTryExpression(node: CSTNode, ctx: PrintContext): string {
+    const expressions = getChildNodes(node, "expression");
+    if (expressions.length === 0) {
+      return "try";
+    }
 
-    if (node.children.Catch) {
+    let result = "try ";
+    result += this.visitor.visit(expressions[0], ctx);
+
+    const catchTokens = getChildNodes(node, "Catch");
+    if (catchTokens.length > 0) {
       result += " catch {\n";
-      if (node.children.caseClause) {
-        const cases = node.children.caseClause.map(
-          (c: any) => "  " + this.visitor.visit(c, ctx),
+      const caseClauses = getChildNodes(node, "caseClause");
+      if (caseClauses.length > 0) {
+        const cases = caseClauses.map(
+          (c: CSTNode) => "  " + this.visitor.visit(c, ctx),
         );
         result += cases.join("\n");
       }
       result += "\n}";
     }
 
-    if (node.children.Finally) {
+    const finallyTokens = getChildNodes(node, "Finally");
+    if (finallyTokens.length > 0) {
       result += " finally ";
       // If there's a catch block, expression[1] is the finally expression
       // Otherwise, expression[1] would be the finally expression (no catch)
-      const finallyExprIndex = node.children.Catch ? 1 : 1;
-      result += this.visitor.visit(
-        node.children.expression[finallyExprIndex],
-        ctx,
-      );
+      const finallyExprIndex = catchTokens.length > 0 ? 1 : 1;
+      if (expressions.length > finallyExprIndex) {
+        result += this.visitor.visit(expressions[finallyExprIndex], ctx);
+      }
     }
 
     return result;
   }
 
-  visitForExpression(node: any, ctx: PrintContext): string {
+  visitForExpression(node: CSTNode, ctx: PrintContext): string {
     let result = "for ";
 
-    if (node.children.LeftParen) {
+    const leftParens = getChildNodes(node, "LeftParen");
+    const leftBraces = getChildNodes(node, "LeftBrace");
+    const generators = getChildNodes(node, "generator");
+
+    if (leftParens.length > 0) {
       result += "(";
-      if (node.children.generator) {
-        const gens = node.children.generator.map((g: any) =>
-          this.visitor.visit(g, ctx),
-        );
+      if (generators.length > 0) {
+        const gens = generators.map((g: CSTNode) => this.visitor.visit(g, ctx));
         result += gens.join("; ");
       }
       result += ")";
-    } else if (node.children.LeftBrace) {
+    } else if (leftBraces.length > 0) {
       result += "{\n";
-      if (node.children.generator) {
-        const gens = node.children.generator.map(
-          (g: any) => "  " + this.visitor.visit(g, ctx),
+      if (generators.length > 0) {
+        const gens = generators.map(
+          (g: CSTNode) => "  " + this.visitor.visit(g, ctx),
         );
         result += gens.join("\n");
       }
       result += "\n}";
     }
 
-    if (node.children.Yield) {
+    const yieldTokens = getChildNodes(node, "Yield");
+    if (yieldTokens.length > 0) {
       result += " yield ";
     } else {
       result += " ";
     }
 
-    result += this.visitor.visit(node.children.expression[0], ctx);
+    const expressions = getChildNodes(node, "expression");
+    if (expressions.length > 0) {
+      result += this.visitor.visit(expressions[0], ctx);
+    }
 
     return result;
   }
 
-  visitGenerator(node: any, ctx: PrintContext): string {
-    let result = this.visitor.visit(node.children.pattern[0], ctx);
-    result += " <- " + this.visitor.visit(node.children.expression[0], ctx);
+  visitGenerator(node: CSTNode, ctx: PrintContext): string {
+    const patterns = getChildNodes(node, "pattern");
+    const expressions = getChildNodes(node, "expression");
 
-    if (node.children.If) {
-      for (let i = 0; i < node.children.If.length; i++) {
-        result +=
-          " if " + this.visitor.visit(node.children.expression[i + 1], ctx);
+    if (patterns.length === 0 || expressions.length === 0) {
+      return "";
+    }
+
+    let result = this.visitor.visit(patterns[0], ctx);
+    result += " <- " + this.visitor.visit(expressions[0], ctx);
+
+    const ifTokens = getChildNodes(node, "If");
+    if (ifTokens.length > 0) {
+      for (let i = 0; i < ifTokens.length; i++) {
+        if (expressions.length > i + 1) {
+          result += " if " + this.visitor.visit(expressions[i + 1], ctx);
+        }
       }
     }
 
     return result;
   }
 
-  visitCaseClause(node: any, ctx: PrintContext): string {
-    let result = "case " + this.visitor.visit(node.children.pattern[0], ctx);
+  visitCaseClause(node: CSTNode, ctx: PrintContext): string {
+    const patterns = getChildNodes(node, "pattern");
+    const expressions = getChildNodes(node, "expression");
 
-    if (node.children.If) {
-      result += " if " + this.visitor.visit(node.children.expression[0], ctx);
+    if (patterns.length === 0) {
+      return "case";
     }
 
-    result +=
-      " => " +
-      this.visitor.visit(
-        node.children.expression[node.children.If ? 1 : 0],
-        ctx,
-      );
+    let result = "case " + this.visitor.visit(patterns[0], ctx);
+
+    const ifTokens = getChildNodes(node, "If");
+    if (ifTokens.length > 0 && expressions.length > 0) {
+      result += " if " + this.visitor.visit(expressions[0], ctx);
+    }
+
+    const expressionIndex = ifTokens.length > 0 ? 1 : 0;
+    if (expressions.length > expressionIndex) {
+      result += " => " + this.visitor.visit(expressions[expressionIndex], ctx);
+    }
 
     return result;
   }
 
-  visitBlockExpression(node: any, ctx: PrintContext): string {
-    if (!node.children.blockStatement && !node.children.expression) {
+  visitBlockExpression(node: CSTNode, ctx: PrintContext): string {
+    const blockStatements = getChildNodes(node, "blockStatement");
+    const expressions = getChildNodes(node, "expression");
+
+    if (blockStatements.length === 0 && expressions.length === 0) {
       return "{}";
     }
 
     let result = "{\n";
     const statements = [];
 
-    if (node.children.blockStatement) {
+    if (blockStatements.length > 0) {
       statements.push(
-        ...node.children.blockStatement.map((stmt: any) =>
+        ...blockStatements.map((stmt: CSTNode) =>
           this.visitor.visit(stmt, ctx),
         ),
       );
     }
 
-    if (node.children.expression) {
-      statements.push(this.visitor.visit(node.children.expression[0], ctx));
+    if (expressions.length > 0) {
+      statements.push(this.visitor.visit(expressions[0], ctx));
     }
 
     result += statements.map((stmt) => "  " + stmt).join("\n");
@@ -570,34 +684,64 @@ export class ExpressionVisitorMethods {
     return result;
   }
 
-  visitPartialFunctionLiteral(node: any, ctx: PrintContext): string {
-    let result = "{\n";
+  visitPartialFunctionLiteral(node: CSTNode, ctx: PrintContext): string {
+    const caseClauses = getChildNodes(node, "caseClause");
 
-    if (node.children.caseClause) {
-      const cases = node.children.caseClause.map(
-        (c: any) => "  " + this.visitor.visit(c, ctx),
-      );
-      result += cases.join("\n");
+    if (caseClauses.length === 0) {
+      return "{}";
     }
 
+    // Single case - try to format on one line if short
+    if (caseClauses.length === 1) {
+      const caseStr = this.visitor.visit(caseClauses[0], ctx);
+      if (caseStr.length < 50) {
+        return `{ ${caseStr} }`;
+      }
+    }
+
+    // Multi-line format for long cases or multiple cases
+    let result = "{\n";
+    const cases = caseClauses.map(
+      (c: CSTNode) => "  " + this.visitor.visit(c, ctx),
+    );
+    result += cases.join("\n");
     result += "\n}";
     return result;
   }
 
-  visitAssignmentStatement(node: any, ctx: PrintContext): string {
-    let result = node.children.Identifier[0].image;
+  visitAssignmentStatement(node: CSTNode, ctx: PrintContext): string {
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length === 0) {
+      return "";
+    }
+
+    let result = identifiers[0].image;
+
+    // Find the assignment operator
+    const equals = getChildNodes(node, "Equals");
+    const plusEquals = getChildNodes(node, "PlusEquals");
+    const minusEquals = getChildNodes(node, "MinusEquals");
+    const starEquals = getChildNodes(node, "StarEquals");
+    const slashEquals = getChildNodes(node, "SlashEquals");
+    const percentEquals = getChildNodes(node, "PercentEquals");
+    const sbtAssign = getChildNodes(node, "SbtAssign");
 
     const operator =
-      node.children.Equals?.[0] ||
-      node.children.PlusEquals?.[0] ||
-      node.children.MinusEquals?.[0] ||
-      node.children.StarEquals?.[0] ||
-      node.children.SlashEquals?.[0] ||
-      node.children.PercentEquals?.[0] ||
-      node.children.SbtAssign?.[0];
+      equals[0] ||
+      plusEquals[0] ||
+      minusEquals[0] ||
+      starEquals[0] ||
+      slashEquals[0] ||
+      percentEquals[0] ||
+      sbtAssign[0];
 
-    result += " " + operator.image + " ";
-    result += this.visitor.visit(node.children.expression[0], ctx);
+    if (operator) {
+      result += " " + operator.image + " ";
+      const expressions = getChildNodes(node, "expression");
+      if (expressions.length > 0) {
+        result += this.visitor.visit(expressions[0], ctx);
+      }
+    }
 
     return result;
   }
