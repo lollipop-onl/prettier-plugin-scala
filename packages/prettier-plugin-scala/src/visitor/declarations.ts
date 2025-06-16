@@ -89,7 +89,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitTraitDefinition(node: any, ctx: PrintContext): string {
+  visitTraitDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifier = getFirstChild(node, "Identifier");
     let result = "trait " + (identifier?.image || "");
 
@@ -111,7 +111,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitEnumDefinition(node: any, ctx: PrintContext): string {
+  visitEnumDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
     let result = "enum " + (identifierToken?.image || "");
 
@@ -146,7 +146,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitEnumCase(node: any, ctx: PrintContext): string {
+  visitEnumCase(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
     let result = "case " + (identifierToken?.image || "");
 
@@ -163,7 +163,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitExtensionDefinition(node: any, ctx: PrintContext): string {
+  visitExtensionDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "extension";
 
     const typeParameters = getFirstChild(node, "typeParameters");
@@ -192,7 +192,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitExtensionMember(node: any, ctx: PrintContext): string {
+  visitExtensionMember(node: CSTNode, ctx: PrintContext): string {
     const modifierNodes = getChildNodes(node, "modifier");
     const modifiers = this.visitor.visitModifiers(modifierNodes, ctx);
 
@@ -204,7 +204,7 @@ export class DeclarationVisitorMethods {
     return modifiers ? modifiers + " " + definition : definition;
   }
 
-  visitValDefinition(node: any, ctx: PrintContext): string {
+  visitValDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "val ";
 
     // Handle pattern or identifier
@@ -236,7 +236,7 @@ export class DeclarationVisitorMethods {
     return formatStatement(result, ctx);
   }
 
-  visitVarDefinition(node: any, ctx: PrintContext): string {
+  visitVarDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
     let result = "var " + (identifierToken?.image || "");
 
@@ -256,7 +256,7 @@ export class DeclarationVisitorMethods {
     return formatStatement(result, ctx);
   }
 
-  visitDefDefinition(node: any, ctx: PrintContext): string {
+  visitDefDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "def ";
 
     const identifierToken = getFirstChild(node, "Identifier");
@@ -298,7 +298,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitGivenDefinition(node: any, ctx: PrintContext): string {
+  visitGivenDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "given";
 
     const identifierToken = getFirstChild(node, "Identifier");
@@ -339,7 +339,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitTypeDefinition(node: any, ctx: PrintContext): string {
+  visitTypeDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle opaque types
@@ -364,7 +364,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitAuxiliaryConstructor(node: any, ctx: PrintContext): string {
+  visitAuxiliaryConstructor(node: CSTNode, ctx: PrintContext): string {
     let result = "def this";
 
     const parameterLists = getChildNodes(node, "parameterList");
@@ -383,7 +383,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitClassParameters(node: any, ctx: PrintContext): string {
+  visitClassParameters(node: CSTNode, ctx: PrintContext): string {
     const params = getChildNodes(node, "classParameter");
     if (params.length === 0) {
       return "()";
@@ -410,7 +410,7 @@ export class DeclarationVisitorMethods {
     return `(\n${indentedParams.join(",\n")}\n)`;
   }
 
-  visitClassParameter(node: any, ctx: PrintContext): string {
+  visitClassParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     const modifierNodes = getChildNodes(node, "modifier");
@@ -450,14 +450,14 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitParameterLists(node: any, ctx: PrintContext): string {
+  visitParameterLists(node: CSTNode, ctx: PrintContext): string {
     const parameterLists = getChildNodes(node, "parameterList");
     return parameterLists
       .map((list: CSTNode) => this.visitor.visit(list, ctx))
       .join("");
   }
 
-  visitParameterList(node: any, ctx: PrintContext): string {
+  visitParameterList(node: CSTNode, ctx: PrintContext): string {
     const params = getChildNodes(node, "parameter");
     if (params.length === 0) {
       return "()";
@@ -467,7 +467,7 @@ export class DeclarationVisitorMethods {
     return "(" + paramStrings.join(", ") + ")";
   }
 
-  visitParameter(node: any, ctx: PrintContext): string {
+  visitParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     const usingToken = getFirstChild(node, "Using");
@@ -501,7 +501,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitTypeParameters(node: any, ctx: PrintContext): string {
+  visitTypeParameters(node: CSTNode, ctx: PrintContext): string {
     const params = getChildNodes(node, "typeParameter");
     if (params.length === 0) {
       return "";
@@ -511,7 +511,7 @@ export class DeclarationVisitorMethods {
     return "[" + paramStrings.join(", ") + "]";
   }
 
-  visitTypeParameter(node: any, ctx: PrintContext): string {
+  visitTypeParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle variance annotations
@@ -546,7 +546,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitExtendsClause(node: any, ctx: PrintContext): string {
+  visitExtendsClause(node: CSTNode, ctx: PrintContext): string {
     const typeNodes = getChildNodes(node, "type");
     if (typeNodes.length === 0) {
       return "";
@@ -565,7 +565,7 @@ export class DeclarationVisitorMethods {
     return result;
   }
 
-  visitClassBody(node: any, ctx: PrintContext): string {
+  visitClassBody(node: CSTNode, ctx: PrintContext): string {
     const classMembers = getChildNodes(node, "classMember");
     if (classMembers.length === 0) {
       return "{}";
@@ -578,7 +578,7 @@ export class DeclarationVisitorMethods {
     return "{\n" + members.map((m: string) => "  " + m).join("\n") + "\n}";
   }
 
-  visitClassMember(node: any, ctx: PrintContext): string {
+  visitClassMember(node: CSTNode, ctx: PrintContext): string {
     // Handle different types of class members
     const defDefinition = getFirstChild(node, "defDefinition");
     if (defDefinition) {

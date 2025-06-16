@@ -15,12 +15,12 @@ export class TypeVisitorMethods {
     this.visitor = visitor;
   }
 
-  visitType(node: any, ctx: PrintContext): string {
+  visitType(node: CSTNode, ctx: PrintContext): string {
     const matchType = getFirstChild(node, "matchType");
     return matchType ? this.visitor.visit(matchType, ctx) : "";
   }
 
-  visitMatchType(node: any, ctx: PrintContext): string {
+  visitMatchType(node: CSTNode, ctx: PrintContext): string {
     const unionType = getFirstChild(node, "unionType");
     let result = unionType ? this.visitor.visit(unionType, ctx) : "";
 
@@ -40,7 +40,7 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitMatchTypeCase(node: any, ctx: PrintContext): string {
+  visitMatchTypeCase(node: CSTNode, ctx: PrintContext): string {
     const types = getChildNodes(node, "type");
     if (types.length >= 2) {
       const leftType = this.visitor.visit(types[0], ctx);
@@ -50,27 +50,27 @@ export class TypeVisitorMethods {
     return "";
   }
 
-  visitUnionType(node: any, ctx: PrintContext): string {
+  visitUnionType(node: CSTNode, ctx: PrintContext): string {
     const types = getChildNodes(node, "intersectionType");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
 
-    const typeStrings = types.map((t: any) => this.visitor.visit(t, ctx));
+    const typeStrings = types.map((t: CSTNode) => this.visitor.visit(t, ctx));
     return typeStrings.join(" | ");
   }
 
-  visitIntersectionType(node: any, ctx: PrintContext): string {
+  visitIntersectionType(node: CSTNode, ctx: PrintContext): string {
     const types = getChildNodes(node, "baseType");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
 
-    const typeStrings = types.map((t: any) => this.visitor.visit(t, ctx));
+    const typeStrings = types.map((t: CSTNode) => this.visitor.visit(t, ctx));
     return typeStrings.join(" & ");
   }
 
-  visitContextFunctionType(node: any, ctx: PrintContext): string {
+  visitContextFunctionType(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle parenthesized types
@@ -95,7 +95,7 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitBaseType(node: any, ctx: PrintContext): string {
+  visitBaseType(node: CSTNode, ctx: PrintContext): string {
     // Handle type lambda: [X] =>> F[X]
     const typeLambda = getFirstChild(node, "typeLambda");
     if (typeLambda) {
@@ -147,17 +147,17 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitTupleTypeOrParenthesized(node: any, ctx: PrintContext): string {
+  visitTupleTypeOrParenthesized(node: CSTNode, ctx: PrintContext): string {
     const types = getChildNodes(node, "type");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
 
-    const typeStrings = types.map((t: any) => this.visitor.visit(t, ctx));
+    const typeStrings = types.map((t: CSTNode) => this.visitor.visit(t, ctx));
     return typeStrings.join(", ");
   }
 
-  visitSimpleType(node: any, ctx: PrintContext): string {
+  visitSimpleType(node: CSTNode, ctx: PrintContext): string {
     const qualifiedId = getFirstChild(node, "qualifiedIdentifier");
     if (!qualifiedId) {
       return "";
@@ -168,14 +168,16 @@ export class TypeVisitorMethods {
     const leftBrackets = getChildNodes(node, "LeftBracket");
     if (leftBrackets.length > 0) {
       const typeArgs = getChildNodes(node, "typeArgument");
-      const typeStrings = typeArgs.map((t: any) => this.visitor.visit(t, ctx));
+      const typeStrings = typeArgs.map((t: CSTNode) =>
+        this.visitor.visit(t, ctx),
+      );
       result += "[" + typeStrings.join(", ") + "]";
     }
 
     return result;
   }
 
-  visitTypeArgument(node: any, ctx: PrintContext): string {
+  visitTypeArgument(node: CSTNode, ctx: PrintContext): string {
     // Handle Kind Projector notation: *
     const star = getChildNodes(node, "Star");
     if (star.length > 0) {
@@ -191,12 +193,12 @@ export class TypeVisitorMethods {
     return "";
   }
 
-  visitTypeLambda(node: any, ctx: PrintContext): string {
+  visitTypeLambda(node: CSTNode, ctx: PrintContext): string {
     let result = "[";
 
     const parameters = getChildNodes(node, "typeLambdaParameter");
     if (parameters.length > 0) {
-      const parameterStrings = parameters.map((param: any) =>
+      const parameterStrings = parameters.map((param: CSTNode) =>
         this.visitor.visit(param, ctx),
       );
       result += parameterStrings.join(", ");
@@ -211,7 +213,7 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitTypeLambdaParameter(node: any, ctx: PrintContext): string {
+  visitTypeLambdaParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Add variance annotation if present
@@ -241,12 +243,12 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitDependentFunctionType(node: any, ctx: PrintContext): string {
+  visitDependentFunctionType(node: CSTNode, ctx: PrintContext): string {
     let result = "(";
 
     const parameters = getChildNodes(node, "dependentParameter");
     if (parameters.length > 0) {
-      const parameterStrings = parameters.map((param: any) =>
+      const parameterStrings = parameters.map((param: CSTNode) =>
         this.visitor.visit(param, ctx),
       );
       result += parameterStrings.join(", ");
@@ -261,7 +263,7 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitDependentParameter(node: any, ctx: PrintContext): string {
+  visitDependentParameter(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length === 0) {
       return "";
@@ -275,12 +277,12 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitPolymorphicFunctionType(node: any, ctx: PrintContext): string {
+  visitPolymorphicFunctionType(node: CSTNode, ctx: PrintContext): string {
     let result = "[";
 
     const parameters = getChildNodes(node, "polymorphicTypeParameter");
     if (parameters.length > 0) {
-      const parameterStrings = parameters.map((param: any) =>
+      const parameterStrings = parameters.map((param: CSTNode) =>
         this.visitor.visit(param, ctx),
       );
       result += parameterStrings.join(", ");
@@ -295,7 +297,7 @@ export class TypeVisitorMethods {
     return result;
   }
 
-  visitPolymorphicTypeParameter(node: any, ctx: PrintContext): string {
+  visitPolymorphicTypeParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle variance annotation

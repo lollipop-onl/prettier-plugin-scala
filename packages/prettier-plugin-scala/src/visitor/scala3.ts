@@ -18,14 +18,14 @@ export class Scala3VisitorMethods {
   }
 
   // Quote and splice expressions for macros
-  visitQuoteExpression(node: any, ctx: PrintContext): string {
+  visitQuoteExpression(node: CSTNode, ctx: PrintContext): string {
     const expression = getFirstChild(node, "expression");
     return (
       "'{ " + (expression ? this.visitor.visit(expression, ctx) : "") + " }"
     );
   }
 
-  visitSpliceExpression(node: any, ctx: PrintContext): string {
+  visitSpliceExpression(node: CSTNode, ctx: PrintContext): string {
     const expression = getFirstChild(node, "expression");
     return (
       "${ " + (expression ? this.visitor.visit(expression, ctx) : "") + " }"
@@ -33,7 +33,7 @@ export class Scala3VisitorMethods {
   }
 
   // Polymorphic function literals
-  visitPolymorphicFunctionLiteral(node: any, ctx: PrintContext): string {
+  visitPolymorphicFunctionLiteral(node: CSTNode, ctx: PrintContext): string {
     let result = "[";
 
     const polymorphicTypeParams = getChildNodes(
@@ -41,7 +41,7 @@ export class Scala3VisitorMethods {
       "polymorphicTypeParameter",
     );
     if (polymorphicTypeParams.length > 0) {
-      const parameters = polymorphicTypeParams.map((param: any) =>
+      const parameters = polymorphicTypeParams.map((param: CSTNode) =>
         this.visitor.visit(param, ctx),
       );
       result += parameters.join(", ");
@@ -55,7 +55,7 @@ export class Scala3VisitorMethods {
   }
 
   // Polymorphic function types
-  visitPolymorphicFunctionType(node: any, ctx: PrintContext): string {
+  visitPolymorphicFunctionType(node: CSTNode, ctx: PrintContext): string {
     let result = "[";
 
     const polymorphicTypeParams = getChildNodes(
@@ -63,63 +63,80 @@ export class Scala3VisitorMethods {
       "polymorphicTypeParameter",
     );
     if (polymorphicTypeParams.length > 0) {
-      const parameters = polymorphicTypeParams.map((param: any) =>
+      const parameters = polymorphicTypeParams.map((param: CSTNode) =>
         this.visitor.visit(param, ctx),
       );
       result += parameters.join(", ");
     }
 
     result += "] => ";
-    result += this.visitor.visit(node.children.type[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += this.visitor.visit(typeNode, ctx);
+    }
 
     return result;
   }
 
-  visitPolymorphicTypeParameter(node: any, ctx: PrintContext): string {
+  visitPolymorphicTypeParameter(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Add variance annotation if present
-    if (node.children.Plus) {
+    const plusTokens = getChildNodes(node, "Plus");
+    const minusTokens = getChildNodes(node, "Minus");
+    if (plusTokens.length > 0) {
       result += "+";
-    } else if (node.children.Minus) {
+    } else if (minusTokens.length > 0) {
       result += "-";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      result += identifiers[0].image;
+    }
 
     // Handle type bounds
-    if (node.children.SubtypeOf) {
-      result += " <: " + this.visitor.visit(node.children.type[0], ctx);
+    const subtypeOf = getChildNodes(node, "SubtypeOf");
+    const supertypeOf = getChildNodes(node, "SupertypeOf");
+    const typeNode = getFirstChild(node, "type");
+
+    if (subtypeOf.length > 0 && typeNode) {
+      result += " <: " + this.visitor.visit(typeNode, ctx);
     }
-    if (node.children.SupertypeOf) {
-      result += " >: " + this.visitor.visit(node.children.type[0], ctx);
+    if (supertypeOf.length > 0 && typeNode) {
+      result += " >: " + this.visitor.visit(typeNode, ctx);
     }
 
     return result;
   }
 
   // Enum definitions
-  visitEnumDefinition(node: any, ctx: PrintContext): string {
-    let result = "enum " + node.children.Identifier[0].image;
+  visitEnumDefinition(node: CSTNode, ctx: PrintContext): string {
+    const identifiers = getChildNodes(node, "Identifier");
+    let result = "enum " + (identifiers.length > 0 ? identifiers[0].image : "");
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    if (node.children.classParameters) {
-      result += this.visitor.visit(node.children.classParameters[0], ctx);
+    const classParameters = getFirstChild(node, "classParameters");
+    if (classParameters) {
+      result += this.visitor.visit(classParameters, ctx);
     }
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
     result += " {\n";
 
-    if (node.children.enumCase) {
+    const enumCases = getChildNodes(node, "enumCase");
+    if (enumCases.length > 0) {
       const indent = this.visitor.getIndentation(ctx);
-      const cases = node.children.enumCase.map(
-        (c: any) => indent + this.visitor.visit(c, ctx),
+      const cases = enumCases.map(
+        (c: CSTNode) => indent + this.visitor.visit(c, ctx),
       );
       result += cases.join("\n");
     }
@@ -129,34 +146,45 @@ export class Scala3VisitorMethods {
     return result;
   }
 
-  visitEnumCase(node: any, ctx: PrintContext): string {
-    let result = "case " + node.children.Identifier[0].image;
+  visitEnumCase(node: CSTNode, ctx: PrintContext): string {
+    const identifiers = getChildNodes(node, "Identifier");
+    let result = "case " + (identifiers.length > 0 ? identifiers[0].image : "");
 
-    if (node.children.classParameters) {
-      result += this.visitor.visit(node.children.classParameters[0], ctx);
+    const classParameters = getFirstChild(node, "classParameters");
+    if (classParameters) {
+      result += this.visitor.visit(classParameters, ctx);
     }
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
     return result;
   }
 
   // Extension methods
-  visitExtensionDefinition(node: any, ctx: PrintContext): string {
+  visitExtensionDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "extension";
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    result += " (" + node.children.Identifier[0].image + ": ";
-    result += this.visitor.visit(node.children.type[0], ctx) + ") {\n";
+    const identifiers = getChildNodes(node, "Identifier");
+    const typeNode = getFirstChild(node, "type");
+    result +=
+      " (" + (identifiers.length > 0 ? identifiers[0].image : "") + ": ";
+    if (typeNode) {
+      result += this.visitor.visit(typeNode, ctx);
+    }
+    result += ") {\n";
 
-    if (node.children.extensionMember) {
-      const members = node.children.extensionMember.map(
-        (m: any) => "  " + this.visitor.visit(m, ctx),
+    const extensionMembers = getChildNodes(node, "extensionMember");
+    if (extensionMembers.length > 0) {
+      const members = extensionMembers.map(
+        (m: CSTNode) => "  " + this.visitor.visit(m, ctx),
       );
       result += members.join("\n");
     }
@@ -166,78 +194,103 @@ export class Scala3VisitorMethods {
     return result;
   }
 
-  visitExtensionMember(node: any, ctx: PrintContext): string {
-    const modifiers = this.visitor.visitModifiers(
-      node.children.modifier || [],
-      ctx,
-    );
-    const definition = this.visitor.visit(node.children.defDefinition[0], ctx);
+  visitExtensionMember(node: CSTNode, ctx: PrintContext): string {
+    const modifierNodes = getChildNodes(node, "modifier");
+    const modifiers = this.visitor.visitModifiers(modifierNodes, ctx);
+    const defDefinition = getFirstChild(node, "defDefinition");
+    const definition = defDefinition
+      ? this.visitor.visit(defDefinition, ctx)
+      : "";
 
     return modifiers ? modifiers + " " + definition : definition;
   }
 
   // Given definitions
-  visitGivenDefinition(node: any, ctx: PrintContext): string {
+  visitGivenDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "given";
 
-    if (node.children.Identifier) {
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
       // Named given with potential parameters: given name[T](using ord: Type): Type
-      result += " " + node.children.Identifier[0].image;
+      result += " " + identifiers[0].image;
 
-      if (node.children.typeParameters) {
-        result += this.visitor.visit(node.children.typeParameters[0], ctx);
+      const typeParameters = getFirstChild(node, "typeParameters");
+      if (typeParameters) {
+        result += this.visitor.visit(typeParameters, ctx);
       }
 
-      if (node.children.parameterLists) {
-        result += this.visitor.visit(node.children.parameterLists[0], ctx);
+      const parameterLists = getFirstChild(node, "parameterLists");
+      if (parameterLists) {
+        result += this.visitor.visit(parameterLists, ctx);
       }
 
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     } else {
       // Anonymous given: given Type = expression
-      result += " " + this.visitor.visit(node.children.type[0], ctx);
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += " " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
-    if (node.children.Equals) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const equalsTokens = getChildNodes(node, "Equals");
+    if (equalsTokens.length > 0) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
     }
 
     return result;
   }
 
   // Type definitions including opaque types
-  visitTypeDefinition(node: any, ctx: PrintContext): string {
+  visitTypeDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle opaque types
-    if (node.children.Opaque) {
+    const opaqueTokens = getChildNodes(node, "Opaque");
+    if (opaqueTokens.length > 0) {
       result += "opaque ";
     }
 
-    result += "type " + node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    result += "type " + (identifiers.length > 0 ? identifiers[0].image : "");
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    result += " = " + this.visitor.visit(node.children.type[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += " = " + this.visitor.visit(typeNode, ctx);
+    }
 
     return result;
   }
 
   // Export clauses and expressions
-  visitExportClause(node: any, ctx: PrintContext): string {
+  visitExportClause(node: CSTNode, ctx: PrintContext): string {
+    const exportExpression = getFirstChild(node, "exportExpression");
     return (
-      "export " + this.visitor.visit(node.children.exportExpression[0], ctx)
+      "export " +
+      (exportExpression ? this.visitor.visit(exportExpression, ctx) : "")
     );
   }
 
-  visitExportExpression(node: any, ctx: PrintContext): string {
+  visitExportExpression(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Build the export path
-    const identifiers = node.children.Identifier || [];
-    const dots = node.children.Dot || [];
+    const identifiers = getChildNodes(node, "Identifier");
+    const dots = getChildNodes(node, "Dot");
+    const underscores = getChildNodes(node, "Underscore");
+    const givens = getChildNodes(node, "Given");
+    const leftBraces = getChildNodes(node, "LeftBrace");
 
     // Add first identifier
     if (identifiers.length > 0) {
@@ -250,17 +303,18 @@ export class Scala3VisitorMethods {
       result += ".";
 
       // Check what follows this dot
-      if (node.children.Underscore && i === dots.length - 1) {
+      if (underscores.length > 0 && i === dots.length - 1) {
         // Wildcard export
         result += "_";
-      } else if (node.children.Given && i === dots.length - 1) {
+      } else if (givens.length > 0 && i === dots.length - 1) {
         // Given export
         result += "given";
-      } else if (node.children.LeftBrace && i === dots.length - 1) {
+      } else if (leftBraces.length > 0 && i === dots.length - 1) {
         // Multiple export selectors
         result += "{";
-        if (node.children.exportSelector) {
-          const selectors = node.children.exportSelector.map((sel: any) =>
+        const exportSelectors = getChildNodes(node, "exportSelector");
+        if (exportSelectors.length > 0) {
+          const selectors = exportSelectors.map((sel: CSTNode) =>
             this.visitor.visit(sel, ctx),
           );
           result += selectors.join(", ");
@@ -276,35 +330,40 @@ export class Scala3VisitorMethods {
     return result;
   }
 
-  visitExportSelector(node: any, _ctx: PrintContext): string {
+  visitExportSelector(node: CSTNode, _ctx: PrintContext): string {
+    const underscores = getChildNodes(node, "Underscore");
+    const identifiers = getChildNodes(node, "Identifier");
+    const givens = getChildNodes(node, "Given");
+    const arrows = getChildNodes(node, "Arrow");
+
     // Handle wildcard export
-    if (node.children.Underscore && !node.children.Identifier) {
+    if (underscores.length > 0 && identifiers.length === 0) {
       return "_";
     }
 
     // Handle given export
-    if (node.children.Given && !node.children.Identifier) {
+    if (givens.length > 0 && identifiers.length === 0) {
       return "given";
     }
 
     let result = "";
 
     // Handle regular identifiers
-    if (node.children.Identifier) {
-      result = node.children.Identifier[0].image;
+    if (identifiers.length > 0) {
+      result = identifiers[0].image;
     }
 
     // Handle given with specific identifiers: given SpecificType
-    if (node.children.Given && node.children.Identifier) {
-      result = "given " + node.children.Identifier[0].image;
+    if (givens.length > 0 && identifiers.length > 0) {
+      result = "given " + identifiers[0].image;
     }
 
-    if (node.children.Arrow) {
+    if (arrows.length > 0) {
       result += " => ";
-      if (node.children.Underscore) {
+      if (underscores.length > 0) {
         result += "_";
-      } else if (node.children.Identifier[1]) {
-        result += node.children.Identifier[1].image;
+      } else if (identifiers.length > 1) {
+        result += identifiers[1].image;
       }
     }
 
@@ -312,43 +371,55 @@ export class Scala3VisitorMethods {
   }
 
   // Context function types
-  visitContextFunctionType(node: any, ctx: PrintContext): string {
+  visitContextFunctionType(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle parenthesized types
-    if (node.children.LeftParen) {
-      result +=
-        "(" +
-        this.visitor.visit(node.children.tupleTypeOrParenthesized[0], ctx) +
-        ")";
+    const leftParens = getChildNodes(node, "LeftParen");
+    if (leftParens.length > 0) {
+      const tupleType = getFirstChild(node, "tupleTypeOrParenthesized");
+      if (tupleType) {
+        result += "(" + this.visitor.visit(tupleType, ctx) + ")";
+      }
     } else {
       // Handle simple types
-      result += this.visitor.visit(node.children.simpleType[0], ctx);
+      const simpleType = getFirstChild(node, "simpleType");
+      if (simpleType) {
+        result += this.visitor.visit(simpleType, ctx);
+      }
     }
 
-    result += " ?=> " + this.visitor.visit(node.children.type[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += " ?=> " + this.visitor.visit(typeNode, ctx);
+    }
     return result;
   }
 
   // Inline and transparent modifiers
-  visitInlineModifier(node: any, _ctx: PrintContext): string {
+  visitInlineModifier(node: CSTNode, _ctx: PrintContext): string {
     return "inline";
   }
 
-  visitTransparentModifier(node: any, _ctx: PrintContext): string {
+  visitTransparentModifier(node: CSTNode, _ctx: PrintContext): string {
     return "transparent";
   }
 
   // Using clauses
-  visitUsingClause(node: any, ctx: PrintContext): string {
+  visitUsingClause(node: CSTNode, ctx: PrintContext): string {
     let result = "using ";
 
-    if (node.children.Identifier) {
-      result += node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      result += identifiers[0].image;
     }
 
-    if (node.children.Colon) {
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+    const colonTokens = getChildNodes(node, "Colon");
+    if (colonTokens.length > 0) {
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
     return result;

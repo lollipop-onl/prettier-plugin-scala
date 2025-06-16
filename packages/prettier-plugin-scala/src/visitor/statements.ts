@@ -15,7 +15,7 @@ export class StatementVisitorMethods {
     this.visitor = visitor;
   }
 
-  visitPackageClause(node: any, ctx: PrintContext): string {
+  visitPackageClause(node: CSTNode, ctx: PrintContext): string {
     const qualifiedIdentifier = getFirstChild(node, "qualifiedIdentifier");
     return (
       "package " +
@@ -23,7 +23,7 @@ export class StatementVisitorMethods {
     );
   }
 
-  visitImportClause(node: any, ctx: PrintContext): string {
+  visitImportClause(node: CSTNode, ctx: PrintContext): string {
     const importExpression = getFirstChild(node, "importExpression");
     return (
       "import " +
@@ -31,7 +31,7 @@ export class StatementVisitorMethods {
     );
   }
 
-  visitImportExpression(node: any, ctx: PrintContext): string {
+  visitImportExpression(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Build the import path
@@ -60,7 +60,7 @@ export class StatementVisitorMethods {
         result += "{";
         const importSelectors = getChildNodes(node, "importSelector");
         if (importSelectors.length > 0) {
-          const selectors = importSelectors.map((sel: any) =>
+          const selectors = importSelectors.map((sel: CSTNode) =>
             this.visitor.visit(sel, ctx),
           );
           result += selectors.join(", ");
@@ -76,7 +76,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitImportSelector(node: any, _ctx: PrintContext): string {
+  visitImportSelector(node: CSTNode, _ctx: PrintContext): string {
     // Handle wildcard import
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
@@ -104,7 +104,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitExportClause(node: any, ctx: PrintContext): string {
+  visitExportClause(node: CSTNode, ctx: PrintContext): string {
     const exportExpression = getFirstChild(node, "exportExpression");
     return (
       "export " +
@@ -112,7 +112,7 @@ export class StatementVisitorMethods {
     );
   }
 
-  visitExportExpression(node: any, ctx: PrintContext): string {
+  visitExportExpression(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Build the export path
@@ -147,7 +147,7 @@ export class StatementVisitorMethods {
         result += "{";
         const exportSelectors = getChildNodes(node, "exportSelector");
         if (exportSelectors.length > 0) {
-          const selectors = exportSelectors.map((sel: any) =>
+          const selectors = exportSelectors.map((sel: CSTNode) =>
             this.visitor.visit(sel, ctx),
           );
           result += selectors.join(", ");
@@ -163,7 +163,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitExportSelector(node: any, _ctx: PrintContext): string {
+  visitExportSelector(node: CSTNode, _ctx: PrintContext): string {
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
     const givens = getChildNodes(node, "Given");
@@ -204,7 +204,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitTopLevelDefinition(node: any, ctx: PrintContext): string {
+  visitTopLevelDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle modifiers (including 'case')
@@ -308,7 +308,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitBlockStatement(node: any, ctx: PrintContext): string {
+  visitBlockStatement(node: CSTNode, ctx: PrintContext): string {
     const valDefinition = getFirstChild(node, "valDefinition");
     if (valDefinition) {
       return this.visitor.visit(valDefinition, ctx);
@@ -337,7 +337,7 @@ export class StatementVisitorMethods {
     return "";
   }
 
-  visitCompilationUnit(node: any, ctx: PrintContext): string {
+  visitCompilationUnit(node: CSTNode, ctx: PrintContext): string {
     const parts: string[] = [];
 
     // Add package clause if it exists
@@ -354,7 +354,7 @@ export class StatementVisitorMethods {
     // Add import clauses
     const importClauses = getChildNodes(node, "importClause");
     if (importClauses.length > 0) {
-      importClauses.forEach((importNode: any) => {
+      importClauses.forEach((importNode: CSTNode) => {
         parts.push(this.visitor.visit(importNode, ctx));
       });
     }
@@ -367,7 +367,7 @@ export class StatementVisitorMethods {
     // Add export clauses
     const exportClauses = getChildNodes(node, "exportClause");
     if (exportClauses.length > 0) {
-      exportClauses.forEach((exportNode: any) => {
+      exportClauses.forEach((exportNode: CSTNode) => {
         parts.push(this.visitor.visit(exportNode, ctx));
       });
     }
@@ -390,7 +390,7 @@ export class StatementVisitorMethods {
     // Add top-level definitions
     const topLevelDefinitions = getChildNodes(node, "topLevelDefinition");
     if (topLevelDefinitions.length > 0) {
-      topLevelDefinitions.forEach((def: any) => {
+      topLevelDefinitions.forEach((def: CSTNode) => {
         parts.push(this.visitor.visit(def, ctx));
       });
     }
@@ -398,7 +398,7 @@ export class StatementVisitorMethods {
     // Add top-level statements
     const topLevelStatements = getChildNodes(node, "topLevelStatement");
     if (topLevelStatements.length > 0) {
-      topLevelStatements.forEach((stmt: any) => {
+      topLevelStatements.forEach((stmt: CSTNode) => {
         parts.push(this.visitor.visit(stmt, ctx));
       });
     }
@@ -406,7 +406,7 @@ export class StatementVisitorMethods {
     // Add top-level expressions
     const expressions = getChildNodes(node, "expression");
     if (expressions.length > 0) {
-      expressions.forEach((expr: any) => {
+      expressions.forEach((expr: CSTNode) => {
         parts.push(this.visitor.visit(expr, ctx));
       });
     }
@@ -419,11 +419,11 @@ export class StatementVisitorMethods {
     return parts.join("\n") + "\n";
   }
 
-  visitAnnotations(annotations: any[], ctx: PrintContext): string {
+  visitAnnotations(annotations: CSTNode[], ctx: PrintContext): string {
     return annotations.map((ann) => this.visitor.visit(ann, ctx)).join(" ");
   }
 
-  visitAnnotation(node: any, ctx: PrintContext): string {
+  visitAnnotation(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     let result = "@" + (identifiers.length > 0 ? identifiers[0].image : "");
 
@@ -432,7 +432,7 @@ export class StatementVisitorMethods {
       result += "(";
       const annotationArguments = getChildNodes(node, "annotationArgument");
       if (annotationArguments.length > 0) {
-        const args = annotationArguments.map((arg: any) =>
+        const args = annotationArguments.map((arg: CSTNode) =>
           this.visitor.visit(arg, ctx),
         );
         result += args.join(", ");
@@ -443,7 +443,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitAnnotationArgument(node: any, ctx: PrintContext): string {
+  visitAnnotationArgument(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     const equals = getChildNodes(node, "Equals");
     const expressions = getChildNodes(node, "expression");
@@ -461,11 +461,11 @@ export class StatementVisitorMethods {
     return "";
   }
 
-  visitModifiers(modifiers: any[], ctx: PrintContext): string {
+  visitModifiers(modifiers: CSTNode[], ctx: PrintContext): string {
     return modifiers.map((mod) => this.visitor.visit(mod, ctx)).join(" ");
   }
 
-  visitDefinition(node: any, ctx: PrintContext): string {
+  visitDefinition(node: CSTNode, ctx: PrintContext): string {
     let result = "";
 
     // Handle annotations
@@ -556,7 +556,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitPattern(node: any, ctx: PrintContext): string {
+  visitPattern(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
       return identifiers[0].image;
@@ -577,7 +577,7 @@ export class StatementVisitorMethods {
       // Tuple pattern or parenthesized pattern
       const patterns = getChildNodes(node, "pattern");
       if (patterns.length > 1) {
-        const patternResults = patterns.map((p: any) =>
+        const patternResults = patterns.map((p: CSTNode) =>
           this.visitor.visit(p, ctx),
         );
         return "(" + patternResults.join(", ") + ")";
