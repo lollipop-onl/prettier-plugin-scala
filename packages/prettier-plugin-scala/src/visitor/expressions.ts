@@ -123,12 +123,15 @@ export class ExpressionVisitorMethods {
 
     // Handle method calls and member access
     if (node.children.Dot) {
+      const identifiers = node.children.Identifier || [];
+
       for (let i = 0; i < node.children.Dot.length; i++) {
         result += ".";
 
         // Handle member access or method call
-        if (node.children.Identifier) {
-          result += node.children.Identifier[i + 1]?.image || "";
+        // First identifier is the base, subsequent identifiers follow dots
+        if (identifiers.length > i + 1) {
+          result += identifiers[i + 1].image;
         }
 
         // Add arguments if this is a method call
@@ -165,6 +168,19 @@ export class ExpressionVisitorMethods {
         result += types.join(", ");
       }
       result += "]";
+    }
+
+    // Handle match expressions
+    if (node.children.Match) {
+      result += " match {\n";
+      if (node.children.caseClause) {
+        const cases = node.children.caseClause.map(
+          (c: any) => "  " + this.visitor.visit(c, ctx),
+        );
+        result += cases.join("\n");
+        result += "\n";
+      }
+      result += "}";
     }
 
     // Handle method application without dot

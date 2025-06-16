@@ -458,6 +458,28 @@ export class DeclarationVisitorMethods {
   }
 
   visitClassMember(node: any, ctx: PrintContext): string {
+    // Handle different types of class members
+    if (node.children.defDefinition) {
+      return this.visitor.visit(node.children.defDefinition[0], ctx);
+    }
+    if (node.children.valDefinition) {
+      return this.visitor.visit(node.children.valDefinition[0], ctx);
+    }
+    if (node.children.varDefinition) {
+      return this.visitor.visit(node.children.varDefinition[0], ctx);
+    }
+    if (node.children.classDefinition) {
+      return this.visitor.visit(node.children.classDefinition[0], ctx);
+    }
+    if (node.children.objectDefinition) {
+      return this.visitor.visit(node.children.objectDefinition[0], ctx);
+    }
+    if (node.children.traitDefinition) {
+      return this.visitor.visit(node.children.traitDefinition[0], ctx);
+    }
+    if (node.children.typeDefinition) {
+      return this.visitor.visit(node.children.typeDefinition[0], ctx);
+    }
     if (node.children.definition) {
       return this.visitor.visit(node.children.definition[0], ctx);
     }
