@@ -404,6 +404,8 @@ export class ExpressionVisitorMethods {
       "LogicalOr",
       "DoublePercent",
       "Ask",
+      "To",
+      "Until",
     ];
 
     for (const op of operators) {
@@ -426,6 +428,7 @@ export class ExpressionVisitorMethods {
     // Handle all possible literal types
     const literalTypes = [
       "StringLiteral",
+      "InterpolatedStringLiteral",
       "IntegerLiteral",
       "NumberLiteral",
       "FloatLiteral",
