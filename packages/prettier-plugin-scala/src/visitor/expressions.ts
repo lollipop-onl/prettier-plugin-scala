@@ -129,9 +129,9 @@ export class ExpressionVisitorMethods {
         result += ".";
 
         // Handle member access or method call
-        // First identifier is the base, subsequent identifiers follow dots
-        if (identifiers.length > i + 1) {
-          result += identifiers[i + 1].image;
+        // Identifiers after the first one correspond to members after dots
+        if (identifiers.length > i) {
+          result += identifiers[i].image;
         }
 
         // Add arguments if this is a method call
