@@ -21,9 +21,11 @@ export class ScalaParser extends CstParser {
             this.OPTION(() => this.CONSUME(tokens.Semicolon));
           },
           GATE: () => {
-            // Very specific GATE to avoid ambiguity with expressions
+            // More flexible GATE to handle complex sbt assignments
             const la1 = this.LA(1);
             const la2 = this.LA(2);
+            const la3 = this.LA(3);
+            const la4 = this.LA(4);
 
             if (!la1 || la1.tokenType !== tokens.Identifier) {
               return false;
@@ -33,39 +35,53 @@ export class ScalaParser extends CstParser {
               return false;
             }
 
-            // Only match assignment operators, not expressions
-            return (
+            // Check for direct assignment operators (highest priority)
+            if (
               la2.tokenType === tokens.SbtAssign ||
               la2.tokenType === tokens.PlusEquals ||
               la2.tokenType === tokens.MinusEquals ||
               la2.tokenType === tokens.StarEquals ||
               la2.tokenType === tokens.SlashEquals ||
               la2.tokenType === tokens.PercentEquals ||
-              la2.tokenType === tokens.AppendEquals ||
-              // Only match = if it's clearly an assignment, not function definition
-              (la2.tokenType === tokens.Equals &&
-                this.LA(3) &&
-                (this.LA(3).tokenType === tokens.StringLiteral ||
-                  this.LA(3).tokenType === tokens.IntegerLiteral ||
-                  this.LA(3).tokenType === tokens.FloatingPointLiteral ||
-                  this.LA(3).tokenType === tokens.ScientificNotationLiteral ||
-                  this.LA(3).tokenType === tokens.True ||
-                  this.LA(3).tokenType === tokens.False ||
-                  this.LA(3).tokenType === tokens.Null ||
-                  this.LA(3).tokenType === tokens.Identifier)) ||
-              // Scoped assignment: scope / key := value
-              (la2.tokenType === tokens.Slash &&
-                this.LA(3)?.tokenType === tokens.Identifier &&
-                this.LA(4) &&
-                (this.LA(4).tokenType === tokens.SbtAssign ||
-                  this.LA(4).tokenType === tokens.PlusEquals ||
-                  this.LA(4).tokenType === tokens.MinusEquals ||
-                  this.LA(4).tokenType === tokens.StarEquals ||
-                  this.LA(4).tokenType === tokens.SlashEquals ||
-                  this.LA(4).tokenType === tokens.PercentEquals ||
-                  this.LA(4).tokenType === tokens.AppendEquals ||
-                  this.LA(4).tokenType === tokens.Equals))
-            );
+              la2.tokenType === tokens.AppendEquals
+            ) {
+              return true;
+            }
+
+            // Check for = with clear assignment pattern
+            if (la2.tokenType === tokens.Equals && la3) {
+              return (
+                la3.tokenType === tokens.StringLiteral ||
+                la3.tokenType === tokens.IntegerLiteral ||
+                la3.tokenType === tokens.FloatingPointLiteral ||
+                la3.tokenType === tokens.ScientificNotationLiteral ||
+                la3.tokenType === tokens.True ||
+                la3.tokenType === tokens.False ||
+                la3.tokenType === tokens.Null ||
+                la3.tokenType === tokens.Identifier ||
+                la3.tokenType === tokens.LeftParen // for function calls like Seq(...)
+              );
+            }
+
+            // Check for scoped assignment: scope / key := value
+            if (
+              la2.tokenType === tokens.Slash &&
+              la3?.tokenType === tokens.Identifier &&
+              la4
+            ) {
+              return (
+                la4.tokenType === tokens.SbtAssign ||
+                la4.tokenType === tokens.PlusEquals ||
+                la4.tokenType === tokens.MinusEquals ||
+                la4.tokenType === tokens.StarEquals ||
+                la4.tokenType === tokens.SlashEquals ||
+                la4.tokenType === tokens.PercentEquals ||
+                la4.tokenType === tokens.AppendEquals ||
+                la4.tokenType === tokens.Equals
+              );
+            }
+
+            return false;
           },
         },
         { ALT: () => this.SUBRULE(this.topLevelDefinition) },
@@ -1229,16 +1245,11 @@ export class ScalaParser extends CstParser {
     "assignmentOrInfixExpression",
     () => {
       this.SUBRULE(this.postfixExpression);
-      // First check for assignment (including named arguments)
+      // First check for assignment (excluding sbt assignments - those are handled at top level)
       this.OPTION(() => {
         this.OR([
           { ALT: () => this.CONSUME(tokens.Equals) },
-          { ALT: () => this.CONSUME(tokens.PlusEquals) },
-          { ALT: () => this.CONSUME(tokens.MinusEquals) },
-          { ALT: () => this.CONSUME(tokens.StarEquals) },
-          { ALT: () => this.CONSUME(tokens.SlashEquals) },
-          { ALT: () => this.CONSUME(tokens.PercentEquals) },
-          { ALT: () => this.CONSUME(tokens.SbtAssign) },
+          // Removed sbt-specific operators to avoid conflict with assignmentStatement
         ]);
         this.SUBRULE3(this.expression);
       });
