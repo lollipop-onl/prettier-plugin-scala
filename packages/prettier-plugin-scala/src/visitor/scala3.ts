@@ -1,6 +1,7 @@
 /**
  * Scala 3 specific visitor methods for modern language features
  */
+import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface Scala3Visitor {
@@ -18,26 +19,37 @@ export class Scala3VisitorMethods {
 
   // Quote and splice expressions for macros
   visitQuoteExpression(node: any, ctx: PrintContext): string {
-    return "'{ " + this.visitor.visit(node.children.expression[0], ctx) + " }";
+    const expression = getFirstChild(node, "expression");
+    return (
+      "'{ " + (expression ? this.visitor.visit(expression, ctx) : "") + " }"
+    );
   }
 
   visitSpliceExpression(node: any, ctx: PrintContext): string {
-    return "${ " + this.visitor.visit(node.children.expression[0], ctx) + " }";
+    const expression = getFirstChild(node, "expression");
+    return (
+      "${ " + (expression ? this.visitor.visit(expression, ctx) : "") + " }"
+    );
   }
 
   // Polymorphic function literals
   visitPolymorphicFunctionLiteral(node: any, ctx: PrintContext): string {
     let result = "[";
 
-    if (node.children.polymorphicTypeParameter) {
-      const parameters = node.children.polymorphicTypeParameter.map(
-        (param: any) => this.visitor.visit(param, ctx),
+    const polymorphicTypeParams = getChildNodes(
+      node,
+      "polymorphicTypeParameter",
+    );
+    if (polymorphicTypeParams.length > 0) {
+      const parameters = polymorphicTypeParams.map((param: any) =>
+        this.visitor.visit(param, ctx),
       );
       result += parameters.join(", ");
     }
 
     result += "] => ";
-    result += this.visitor.visit(node.children.expression[0], ctx);
+    const expression = getFirstChild(node, "expression");
+    result += expression ? this.visitor.visit(expression, ctx) : "";
 
     return result;
   }
@@ -46,9 +58,13 @@ export class Scala3VisitorMethods {
   visitPolymorphicFunctionType(node: any, ctx: PrintContext): string {
     let result = "[";
 
-    if (node.children.polymorphicTypeParameter) {
-      const parameters = node.children.polymorphicTypeParameter.map(
-        (param: any) => this.visitor.visit(param, ctx),
+    const polymorphicTypeParams = getChildNodes(
+      node,
+      "polymorphicTypeParameter",
+    );
+    if (polymorphicTypeParams.length > 0) {
+      const parameters = polymorphicTypeParams.map((param: any) =>
+        this.visitor.visit(param, ctx),
       );
       result += parameters.join(", ");
     }

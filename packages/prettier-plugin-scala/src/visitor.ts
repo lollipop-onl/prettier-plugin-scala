@@ -49,50 +49,80 @@ export class CstNodeVisitor
   visit(node: CSTNode, ctx: PrintContext): string {
     if (!node) return "";
 
-    // Debug logging
-    if (process.env.NODE_ENV !== "production") {
-      console.log(
-        "Visiting node:",
-        node.name || node.image || "unknown",
-        "children:",
-        node.children ? Object.keys(node.children) : "none",
-      );
-    }
+    try {
+      // Debug logging
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          "Visiting node:",
+          node.name || node.image || "unknown",
+          "children:",
+          node.children ? Object.keys(node.children) : "none",
+        );
+      }
 
-    // Handle root node with original comments
-    if (node.type === "compilationUnit" && node.originalComments) {
-      const nodeResult = this.visitCore(node, ctx);
-      return attachOriginalComments(
-        nodeResult,
-        node.originalComments as CSTNode[],
-      );
-    }
+      // Handle root node with original comments
+      if (node.type === "compilationUnit" && node.originalComments) {
+        const nodeResult = this.visitCore(node, ctx);
+        return attachOriginalComments(
+          nodeResult,
+          node.originalComments as CSTNode[],
+        );
+      }
 
-    return this.visitCore(node, ctx);
+      return this.visitCore(node, ctx);
+    } catch (error) {
+      console.error(`Error visiting node ${node.name || "unknown"}:`, error);
+
+      // Return a safe fallback for formatting errors
+      if (node.image) {
+        return node.image;
+      }
+
+      return `/* FORMAT ERROR: ${node.name || "unknown"} */`;
+    }
   }
 
   private visitCore(node: CSTNode, ctx: PrintContext): string {
-    // Handle token nodes
-    if (node.image !== undefined) {
-      return node.image;
-    }
-
-    // Handle CST nodes by rule name
-    if (node.name) {
-      // Capitalize the first letter of the rule name
-      const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
-      const methodName = `visit${ruleName}`;
-      if (typeof (this as any)[methodName] === "function") {
-        return (this as any)[methodName](node, ctx);
+    try {
+      // Handle token nodes
+      if (node.image !== undefined) {
+        return node.image;
       }
-    }
 
-    // If no specific visitor method exists, try default handling by type
-    if (node.children) {
-      return this.visitChildren(node, ctx);
-    }
+      // Handle CST nodes by rule name
+      if (node.name) {
+        // Capitalize the first letter of the rule name
+        const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
+        const methodName = `visit${ruleName}`;
+        if (typeof (this as any)[methodName] === "function") {
+          return (this as any)[methodName](node, ctx);
+        }
+      }
 
-    return "";
+      // If no specific visitor method exists, try default handling by type
+      if (node.children) {
+        return this.visitChildren(node, ctx);
+      }
+
+      return "";
+    } catch (error) {
+      console.error(`Error in visitCore for ${node.name || "unknown"}:`, error);
+
+      // Try to recover by visiting children directly
+      if (node.children) {
+        try {
+          return this.visitChildren(node, ctx);
+        } catch (childError) {
+          console.error(
+            `Error visiting children of ${node.name || "unknown"}:`,
+            childError,
+          );
+          return `/* ERROR: ${node.name || "unknown"} */`;
+        }
+      }
+
+      return node.image || "";
+    }
   }
 
   visitChildren(node: CSTNode, ctx: PrintContext): string {
@@ -100,15 +130,32 @@ export class CstNodeVisitor
 
     if (!node.children) return "";
 
-    for (const [_key, children] of Object.entries(node.children)) {
-      if (Array.isArray(children)) {
-        for (const child of children) {
-          const part = this.visit(child, ctx);
-          if (part) {
-            parts.push(part);
+    try {
+      for (const [key, children] of Object.entries(node.children)) {
+        if (Array.isArray(children)) {
+          for (const child of children) {
+            try {
+              const part = this.visit(child, ctx);
+              if (part) {
+                parts.push(part);
+              }
+            } catch (childError) {
+              console.error(
+                `Error visiting child ${child.name || "unknown"} in ${key}:`,
+                childError,
+              );
+              // Continue with next child instead of failing completely
+              parts.push(`/* ERROR: ${child.name || "unknown"} */`);
+            }
           }
         }
       }
+    } catch (error) {
+      console.error(
+        `Error visiting children of ${node.name || "unknown"}:`,
+        error,
+      );
+      return `/* ERROR: ${node.name || "unknown"} children */`;
     }
 
     return parts.join(" ");
