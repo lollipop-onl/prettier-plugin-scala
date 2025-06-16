@@ -426,11 +426,15 @@ export class ExpressionVisitorMethods {
     // Handle all possible literal types
     const literalTypes = [
       "StringLiteral",
+      "IntegerLiteral",
       "NumberLiteral",
       "FloatLiteral",
       "BooleanLiteral",
+      "True",
+      "False",
       "CharLiteral",
       "NullLiteral",
+      "Null",
       "ScientificNumber",
     ];
 
