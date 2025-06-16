@@ -21,21 +21,39 @@ export class ScalaParser extends CstParser {
             this.OPTION(() => this.CONSUME(tokens.Semicolon));
           },
           GATE: () => {
-            // Check if this looks like an assignment
+            // Check if this looks like an assignment (support sbt scoped assignments)
             const first = this.LA(1);
             const second = this.LA(2);
+            const third = this.LA(3);
+            const fourth = this.LA(4);
+
             return (
               first &&
               first.tokenType === tokens.Identifier &&
-              second &&
-              (second.tokenType === tokens.PlusEquals ||
-                second.tokenType === tokens.MinusEquals ||
-                second.tokenType === tokens.StarEquals ||
-                second.tokenType === tokens.SlashEquals ||
-                second.tokenType === tokens.PercentEquals ||
-                second.tokenType === tokens.AppendEquals ||
-                second.tokenType === tokens.SbtAssign ||
-                second.tokenType === tokens.Equals)
+              // Direct assignment: name := value
+              ((second &&
+                (second.tokenType === tokens.PlusEquals ||
+                  second.tokenType === tokens.MinusEquals ||
+                  second.tokenType === tokens.StarEquals ||
+                  second.tokenType === tokens.SlashEquals ||
+                  second.tokenType === tokens.PercentEquals ||
+                  second.tokenType === tokens.AppendEquals ||
+                  second.tokenType === tokens.SbtAssign ||
+                  second.tokenType === tokens.Equals)) ||
+                // Scoped assignment: scope / key := value
+                (second &&
+                  second.tokenType === tokens.Slash &&
+                  third &&
+                  third.tokenType === tokens.Identifier &&
+                  fourth &&
+                  (fourth.tokenType === tokens.PlusEquals ||
+                    fourth.tokenType === tokens.MinusEquals ||
+                    fourth.tokenType === tokens.StarEquals ||
+                    fourth.tokenType === tokens.SlashEquals ||
+                    fourth.tokenType === tokens.PercentEquals ||
+                    fourth.tokenType === tokens.AppendEquals ||
+                    fourth.tokenType === tokens.SbtAssign ||
+                    fourth.tokenType === tokens.Equals)))
             );
           },
         },
@@ -614,18 +632,34 @@ export class ScalaParser extends CstParser {
           this.OPTION(() => this.CONSUME(tokens.Semicolon));
         },
         GATE: () => {
-          // Check if this looks like an assignment
+          // Check if this looks like an assignment (support sbt scoped assignments)
           const first = this.LA(1);
           const second = this.LA(2);
+          const third = this.LA(3);
+          const fourth = this.LA(4);
+
           return (
             first.tokenType === tokens.Identifier &&
+            // Direct assignment: name := value
             (second.tokenType === tokens.PlusEquals ||
               second.tokenType === tokens.MinusEquals ||
               second.tokenType === tokens.StarEquals ||
               second.tokenType === tokens.SlashEquals ||
               second.tokenType === tokens.PercentEquals ||
               second.tokenType === tokens.SbtAssign ||
-              second.tokenType === tokens.Equals)
+              second.tokenType === tokens.Equals ||
+              // Scoped assignment: scope / key := value
+              (second.tokenType === tokens.Slash &&
+                third &&
+                third.tokenType === tokens.Identifier &&
+                fourth &&
+                (fourth.tokenType === tokens.PlusEquals ||
+                  fourth.tokenType === tokens.MinusEquals ||
+                  fourth.tokenType === tokens.StarEquals ||
+                  fourth.tokenType === tokens.SlashEquals ||
+                  fourth.tokenType === tokens.PercentEquals ||
+                  fourth.tokenType === tokens.SbtAssign ||
+                  fourth.tokenType === tokens.Equals)))
           );
         },
       },
@@ -1483,18 +1517,34 @@ export class ScalaParser extends CstParser {
           this.OPTION(() => this.CONSUME(tokens.Semicolon));
         },
         GATE: () => {
-          // Check if this looks like an assignment
+          // Check if this looks like an assignment (support sbt scoped assignments)
           const first = this.LA(1);
           const second = this.LA(2);
+          const third = this.LA(3);
+          const fourth = this.LA(4);
+
           return (
             first.tokenType === tokens.Identifier &&
+            // Direct assignment: name := value
             (second.tokenType === tokens.PlusEquals ||
               second.tokenType === tokens.MinusEquals ||
               second.tokenType === tokens.StarEquals ||
               second.tokenType === tokens.SlashEquals ||
               second.tokenType === tokens.PercentEquals ||
               second.tokenType === tokens.SbtAssign ||
-              second.tokenType === tokens.Equals)
+              second.tokenType === tokens.Equals ||
+              // Scoped assignment: scope / key := value
+              (second.tokenType === tokens.Slash &&
+                third &&
+                third.tokenType === tokens.Identifier &&
+                fourth &&
+                (fourth.tokenType === tokens.PlusEquals ||
+                  fourth.tokenType === tokens.MinusEquals ||
+                  fourth.tokenType === tokens.StarEquals ||
+                  fourth.tokenType === tokens.SlashEquals ||
+                  fourth.tokenType === tokens.PercentEquals ||
+                  fourth.tokenType === tokens.SbtAssign ||
+                  fourth.tokenType === tokens.Equals)))
           );
         },
       },
@@ -1508,7 +1558,8 @@ export class ScalaParser extends CstParser {
   });
 
   private assignmentStatement = this.RULE("assignmentStatement", () => {
-    this.CONSUME(tokens.Identifier);
+    // Support sbt scoped assignments like "test / javaOptions" or "ThisBuild / version"
+    this.SUBRULE(this.sbtLeftSide);
     this.OR([
       { ALT: () => this.CONSUME(tokens.Equals) },
       { ALT: () => this.CONSUME(tokens.PlusEquals) },
@@ -1522,14 +1573,31 @@ export class ScalaParser extends CstParser {
     this.SUBRULE(this.sbtValue);
   });
 
+  private sbtLeftSide = this.RULE("sbtLeftSide", () => {
+    this.CONSUME(tokens.Identifier);
+    this.MANY(() => {
+      this.OR([
+        {
+          // Support slash notation like "test / javaOptions"
+          ALT: () => {
+            this.CONSUME(tokens.Slash);
+            this.CONSUME2(tokens.Identifier);
+          },
+        },
+        {
+          // Support dot notation like "Test.parallelExecution"
+          ALT: () => {
+            this.CONSUME(tokens.Dot);
+            this.CONSUME3(tokens.Identifier);
+          },
+        },
+      ]);
+    });
+  });
+
   private sbtValue = this.RULE("sbtValue", () => {
-    this.OR([
-      { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
-      { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
-      { ALT: () => this.CONSUME(tokens.True) },
-      { ALT: () => this.CONSUME(tokens.False) },
-      { ALT: () => this.SUBRULE(this.sbtExpression) },
-    ]);
+    // Simply delegate to expression - it handles all cases including sbt expressions
+    this.SUBRULE(this.expression);
   });
 
   private sbtExpression = this.RULE("sbtExpression", () => {
