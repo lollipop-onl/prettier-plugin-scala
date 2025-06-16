@@ -11,7 +11,12 @@ export function createScalaPrinter(): Printer {
       );
 
       const visitor = new CstNodeVisitor();
-      const result = visitor.visit(node, { path, options: _options, print });
+      const result = visitor.visit(node, {
+        path,
+        options: _options,
+        print,
+        indentLevel: 0,
+      });
 
       console.log("Visitor result:", JSON.stringify(result));
 

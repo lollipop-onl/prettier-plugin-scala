@@ -29,6 +29,7 @@ export type PrintContext = {
   path: unknown;
   options: PrettierOptions;
   print: (node: CSTNode) => string;
+  indentLevel: number;
 };
 
 /**

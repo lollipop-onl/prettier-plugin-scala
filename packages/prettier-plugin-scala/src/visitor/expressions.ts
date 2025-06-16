@@ -6,6 +6,7 @@ import {
   getChildNodes,
   getFirstChild,
   getChildren,
+  createIndent,
 } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
@@ -690,8 +691,12 @@ export class ExpressionVisitorMethods {
       statements.push(this.visitor.visit(expressions[0], ctx));
     }
 
-    result += statements.map((stmt) => "  " + stmt).join("\n");
-    result += "\n}";
+    const indent = createIndent(1, ctx);
+    result += statements.map((stmt) => indent + stmt).join("\n");
+
+    // Close brace should be indented to the current context level (for method body blocks)
+    const closeIndent = createIndent(ctx.indentLevel > 0 ? 1 : 0, ctx);
+    result += "\n" + closeIndent + "}";
     return result;
   }
 

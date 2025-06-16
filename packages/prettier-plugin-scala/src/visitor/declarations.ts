@@ -8,6 +8,7 @@ import {
   getChildren,
   getChildNodes,
   getFirstChild,
+  createIndent,
 } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
@@ -571,11 +572,18 @@ export class DeclarationVisitorMethods {
       return "{}";
     }
 
+    // Increase indent level for class members
+    const nestedCtx = {
+      ...ctx,
+      indentLevel: ctx.indentLevel + 1,
+    };
+
     const members = classMembers.map((m: CSTNode) =>
-      this.visitor.visit(m, ctx),
+      this.visitor.visit(m, nestedCtx),
     );
 
-    return "{\n" + members.map((m: string) => "  " + m).join("\n") + "\n}";
+    const indent = createIndent(1, ctx);
+    return "{\n" + members.map((m: string) => indent + m).join("\n") + "\n}";
   }
 
   visitClassMember(node: CSTNode, ctx: PrintContext): string {
