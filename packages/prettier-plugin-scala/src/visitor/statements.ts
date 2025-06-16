@@ -1,6 +1,7 @@
 /**
  * Statement visitor methods for import/export, package, and other statements
  */
+import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface StatementVisitor {
@@ -15,14 +16,18 @@ export class StatementVisitorMethods {
   }
 
   visitPackageClause(node: any, ctx: PrintContext): string {
+    const qualifiedIdentifier = getFirstChild(node, "qualifiedIdentifier");
     return (
-      "package " + this.visitor.visit(node.children.qualifiedIdentifier[0], ctx)
+      "package " +
+      (qualifiedIdentifier ? this.visitor.visit(qualifiedIdentifier, ctx) : "")
     );
   }
 
   visitImportClause(node: any, ctx: PrintContext): string {
+    const importExpression = getFirstChild(node, "importExpression");
     return (
-      "import " + this.visitor.visit(node.children.importExpression[0], ctx)
+      "import " +
+      (importExpression ? this.visitor.visit(importExpression, ctx) : "")
     );
   }
 
@@ -30,8 +35,8 @@ export class StatementVisitorMethods {
     let result = "";
 
     // Build the import path
-    const identifiers = node.children.Identifier || [];
-    const dots = node.children.Dot || [];
+    const identifiers = getChildNodes(node, "Identifier");
+    const dots = getChildNodes(node, "Dot");
 
     // Add first identifier
     if (identifiers.length > 0) {
@@ -44,14 +49,18 @@ export class StatementVisitorMethods {
       result += ".";
 
       // Check what follows this dot
-      if (node.children.Underscore && i === dots.length - 1) {
+      const underscores = getChildNodes(node, "Underscore");
+      const leftBraces = getChildNodes(node, "LeftBrace");
+
+      if (underscores.length > 0 && i === dots.length - 1) {
         // Wildcard import
         result += "_";
-      } else if (node.children.LeftBrace && i === dots.length - 1) {
+      } else if (leftBraces.length > 0 && i === dots.length - 1) {
         // Multiple import selectors
         result += "{";
-        if (node.children.importSelector) {
-          const selectors = node.children.importSelector.map((sel: any) =>
+        const importSelectors = getChildNodes(node, "importSelector");
+        if (importSelectors.length > 0) {
+          const selectors = importSelectors.map((sel: any) =>
             this.visitor.visit(sel, ctx),
           );
           result += selectors.join(", ");
@@ -69,18 +78,26 @@ export class StatementVisitorMethods {
 
   visitImportSelector(node: any, _ctx: PrintContext): string {
     // Handle wildcard import
-    if (node.children.Underscore && !node.children.Identifier) {
+    const underscores = getChildNodes(node, "Underscore");
+    const identifiers = getChildNodes(node, "Identifier");
+
+    if (underscores.length > 0 && identifiers.length === 0) {
       return "_";
     }
 
-    let result = node.children.Identifier[0].image;
+    let result = "";
+    if (identifiers.length > 0) {
+      result = identifiers[0].image;
+    }
 
-    if (node.children.Arrow) {
+    const arrows = getChildNodes(node, "Arrow");
+    if (arrows.length > 0) {
       result += " => ";
-      if (node.children.Underscore) {
+      const selectorUnderscores = getChildNodes(node, "Underscore");
+      if (selectorUnderscores.length > 0) {
         result += "_";
-      } else if (node.children.Identifier[1]) {
-        result += node.children.Identifier[1].image;
+      } else if (identifiers.length > 1) {
+        result += identifiers[1].image;
       }
     }
 
@@ -88,8 +105,10 @@ export class StatementVisitorMethods {
   }
 
   visitExportClause(node: any, ctx: PrintContext): string {
+    const exportExpression = getFirstChild(node, "exportExpression");
     return (
-      "export " + this.visitor.visit(node.children.exportExpression[0], ctx)
+      "export " +
+      (exportExpression ? this.visitor.visit(exportExpression, ctx) : "")
     );
   }
 
@@ -97,8 +116,8 @@ export class StatementVisitorMethods {
     let result = "";
 
     // Build the export path
-    const identifiers = node.children.Identifier || [];
-    const dots = node.children.Dot || [];
+    const identifiers = getChildNodes(node, "Identifier");
+    const dots = getChildNodes(node, "Dot");
 
     // Add first identifier
     if (identifiers.length > 0) {
@@ -111,17 +130,24 @@ export class StatementVisitorMethods {
       result += ".";
 
       // Check what follows this dot
-      if (node.children.Underscore && i === dots.length - 1) {
+      const underscores = getChildNodes(node, "Underscore");
+      const givens = getChildNodes(node, "Given");
+
+      if (underscores.length > 0 && i === dots.length - 1) {
         // Wildcard export
         result += "_";
-      } else if (node.children.Given && i === dots.length - 1) {
+      } else if (givens.length > 0 && i === dots.length - 1) {
         // Given export
         result += "given";
-      } else if (node.children.LeftBrace && i === dots.length - 1) {
+      } else if (
+        getChildNodes(node, "LeftBrace").length > 0 &&
+        i === dots.length - 1
+      ) {
         // Multiple export selectors
         result += "{";
-        if (node.children.exportSelector) {
-          const selectors = node.children.exportSelector.map((sel: any) =>
+        const exportSelectors = getChildNodes(node, "exportSelector");
+        if (exportSelectors.length > 0) {
+          const selectors = exportSelectors.map((sel: any) =>
             this.visitor.visit(sel, ctx),
           );
           result += selectors.join(", ");
@@ -138,34 +164,40 @@ export class StatementVisitorMethods {
   }
 
   visitExportSelector(node: any, _ctx: PrintContext): string {
+    const underscores = getChildNodes(node, "Underscore");
+    const identifiers = getChildNodes(node, "Identifier");
+    const givens = getChildNodes(node, "Given");
+
     // Handle wildcard export
-    if (node.children.Underscore && !node.children.Identifier) {
+    if (underscores.length > 0 && identifiers.length === 0) {
       return "_";
     }
 
     // Handle given export
-    if (node.children.Given && !node.children.Identifier) {
+    if (givens.length > 0 && identifiers.length === 0) {
       return "given";
     }
 
     let result = "";
 
     // Handle regular identifiers
-    if (node.children.Identifier) {
-      result = node.children.Identifier[0].image;
+    if (identifiers.length > 0) {
+      result = identifiers[0].image;
     }
 
     // Handle given with specific identifiers: given SpecificType
-    if (node.children.Given && node.children.Identifier) {
-      result = "given " + node.children.Identifier[0].image;
+    if (givens.length > 0 && identifiers.length > 0) {
+      result = "given " + identifiers[0].image;
     }
 
-    if (node.children.Arrow) {
+    const arrows = getChildNodes(node, "Arrow");
+    if (arrows.length > 0) {
       result += " => ";
-      if (node.children.Underscore) {
+      const arrowUnderscores = getChildNodes(node, "Underscore");
+      if (arrowUnderscores.length > 0) {
         result += "_";
-      } else if (node.children.Identifier[1]) {
-        result += node.children.Identifier[1].image;
+      } else if (identifiers.length > 1) {
+        result += identifiers[1].image;
       }
     }
 
@@ -176,86 +208,100 @@ export class StatementVisitorMethods {
     let result = "";
 
     // Handle modifiers (including 'case')
-    if (node.children.modifier) {
-      const modifiers = this.visitModifiers(node.children.modifier, ctx);
-      result += modifiers + " ";
+    const modifiers = getChildNodes(node, "modifier");
+    if (modifiers.length > 0) {
+      const modifierStr = this.visitModifiers(modifiers, ctx);
+      result += modifierStr + " ";
     }
 
     // Handle definitions at top level
-    if (node.children.definition) {
-      result += this.visitor.visit(node.children.definition[0], ctx);
+    const definition = getFirstChild(node, "definition");
+    if (definition) {
+      result += this.visitor.visit(definition, ctx);
       return result;
     }
 
     // Handle class definitions
-    if (node.children.classDefinition) {
-      result += this.visitor.visit(node.children.classDefinition[0], ctx);
+    const classDefinition = getFirstChild(node, "classDefinition");
+    if (classDefinition) {
+      result += this.visitor.visit(classDefinition, ctx);
       return result;
     }
 
     // Handle object definitions
-    if (node.children.objectDefinition) {
-      result += this.visitor.visit(node.children.objectDefinition[0], ctx);
+    const objectDefinition = getFirstChild(node, "objectDefinition");
+    if (objectDefinition) {
+      result += this.visitor.visit(objectDefinition, ctx);
       return result;
     }
 
     // Handle trait definitions
-    if (node.children.traitDefinition) {
-      result += this.visitor.visit(node.children.traitDefinition[0], ctx);
+    const traitDefinition = getFirstChild(node, "traitDefinition");
+    if (traitDefinition) {
+      result += this.visitor.visit(traitDefinition, ctx);
       return result;
     }
 
     // Handle val definitions
-    if (node.children.valDefinition) {
-      result += this.visitor.visit(node.children.valDefinition[0], ctx);
+    const valDefinition = getFirstChild(node, "valDefinition");
+    if (valDefinition) {
+      result += this.visitor.visit(valDefinition, ctx);
       return result;
     }
 
     // Handle var definitions
-    if (node.children.varDefinition) {
-      result += this.visitor.visit(node.children.varDefinition[0], ctx);
+    const varDefinition = getFirstChild(node, "varDefinition");
+    if (varDefinition) {
+      result += this.visitor.visit(varDefinition, ctx);
       return result;
     }
 
     // Handle def definitions
-    if (node.children.defDefinition) {
-      result += this.visitor.visit(node.children.defDefinition[0], ctx);
+    const defDefinition = getFirstChild(node, "defDefinition");
+    if (defDefinition) {
+      result += this.visitor.visit(defDefinition, ctx);
       return result;
     }
 
     // Handle enum definitions (Scala 3)
-    if (node.children.enumDefinition) {
-      result += this.visitor.visit(node.children.enumDefinition[0], ctx);
+    const enumDefinition = getFirstChild(node, "enumDefinition");
+    if (enumDefinition) {
+      result += this.visitor.visit(enumDefinition, ctx);
       return result;
     }
 
     // Handle extension definitions (Scala 3)
-    if (node.children.extensionDefinition) {
-      result += this.visitor.visit(node.children.extensionDefinition[0], ctx);
+    const extensionDefinition = getFirstChild(node, "extensionDefinition");
+    if (extensionDefinition) {
+      result += this.visitor.visit(extensionDefinition, ctx);
       return result;
     }
 
     // Handle given definitions (Scala 3)
-    if (node.children.givenDefinition) {
-      result += this.visitor.visit(node.children.givenDefinition[0], ctx);
+    const givenDefinition = getFirstChild(node, "givenDefinition");
+    if (givenDefinition) {
+      result += this.visitor.visit(givenDefinition, ctx);
       return result;
     }
 
     // Handle type definitions (including opaque types)
-    if (node.children.typeDefinition) {
-      result += this.visitor.visit(node.children.typeDefinition[0], ctx);
+    const typeDefinition = getFirstChild(node, "typeDefinition");
+    if (typeDefinition) {
+      result += this.visitor.visit(typeDefinition, ctx);
       return result;
     }
 
     // Handle assignment statements
-    if (node.children.assignmentStatement) {
-      result += this.visitor.visit(node.children.assignmentStatement[0], ctx);
+    const assignmentStatement = getFirstChild(node, "assignmentStatement");
+    if (assignmentStatement) {
+      result += this.visitor.visit(assignmentStatement, ctx);
       return result;
     }
 
     // Handle expressions
-    if (node.children.expression) {
-      result += this.visitor.visit(node.children.expression[0], ctx);
+    const expression = getFirstChild(node, "expression");
+    if (expression) {
+      result += this.visitor.visit(expression, ctx);
       return result;
     }
 
@@ -263,17 +309,31 @@ export class StatementVisitorMethods {
   }
 
   visitBlockStatement(node: any, ctx: PrintContext): string {
-    if (node.children.valDefinition) {
-      return this.visitor.visit(node.children.valDefinition[0], ctx);
-    } else if (node.children.varDefinition) {
-      return this.visitor.visit(node.children.varDefinition[0], ctx);
-    } else if (node.children.defDefinition) {
-      return this.visitor.visit(node.children.defDefinition[0], ctx);
-    } else if (node.children.assignmentStatement) {
-      return this.visitor.visit(node.children.assignmentStatement[0], ctx);
-    } else if (node.children.expression) {
-      return this.visitor.visit(node.children.expression[0], ctx);
+    const valDefinition = getFirstChild(node, "valDefinition");
+    if (valDefinition) {
+      return this.visitor.visit(valDefinition, ctx);
     }
+
+    const varDefinition = getFirstChild(node, "varDefinition");
+    if (varDefinition) {
+      return this.visitor.visit(varDefinition, ctx);
+    }
+
+    const defDefinition = getFirstChild(node, "defDefinition");
+    if (defDefinition) {
+      return this.visitor.visit(defDefinition, ctx);
+    }
+
+    const assignmentStatement = getFirstChild(node, "assignmentStatement");
+    if (assignmentStatement) {
+      return this.visitor.visit(assignmentStatement, ctx);
+    }
+
+    const expression = getFirstChild(node, "expression");
+    if (expression) {
+      return this.visitor.visit(expression, ctx);
+    }
+
     return "";
   }
 
@@ -281,8 +341,9 @@ export class StatementVisitorMethods {
     const parts: string[] = [];
 
     // Add package clause if it exists
-    if (node.children.packageClause) {
-      parts.push(this.visitor.visit(node.children.packageClause[0], ctx));
+    const packageClause = getFirstChild(node, "packageClause");
+    if (packageClause) {
+      parts.push(this.visitor.visit(packageClause, ctx));
     }
 
     // Add empty line after package
@@ -291,53 +352,61 @@ export class StatementVisitorMethods {
     }
 
     // Add import clauses
-    if (node.children.importClause) {
-      node.children.importClause.forEach((importNode: any) => {
+    const importClauses = getChildNodes(node, "importClause");
+    if (importClauses.length > 0) {
+      importClauses.forEach((importNode: any) => {
         parts.push(this.visitor.visit(importNode, ctx));
       });
     }
 
     // Add empty line after imports
-    if (node.children.importClause && node.children.importClause.length > 0) {
+    if (importClauses.length > 0) {
       parts.push("");
     }
 
     // Add export clauses
-    if (node.children.exportClause) {
-      node.children.exportClause.forEach((exportNode: any) => {
+    const exportClauses = getChildNodes(node, "exportClause");
+    if (exportClauses.length > 0) {
+      exportClauses.forEach((exportNode: any) => {
         parts.push(this.visitor.visit(exportNode, ctx));
       });
     }
 
     // Don't add empty line after exports unless there are subsequent elements
-    if (node.children.exportClause && node.children.exportClause.length > 0) {
+    if (exportClauses.length > 0) {
       // Only add empty line if there are other elements after exports
+      const topLevelDefinitions = getChildNodes(node, "topLevelDefinition");
+      const topLevelStatements = getChildNodes(node, "topLevelStatement");
+      const expressions = getChildNodes(node, "expression");
       const hasSubsequentElements =
-        node.children.topLevelDefinition ||
-        node.children.topLevelStatement ||
-        node.children.expression;
+        topLevelDefinitions.length > 0 ||
+        topLevelStatements.length > 0 ||
+        expressions.length > 0;
       if (hasSubsequentElements) {
         parts.push("");
       }
     }
 
     // Add top-level definitions
-    if (node.children.topLevelDefinition) {
-      node.children.topLevelDefinition.forEach((def: any) => {
+    const topLevelDefinitions = getChildNodes(node, "topLevelDefinition");
+    if (topLevelDefinitions.length > 0) {
+      topLevelDefinitions.forEach((def: any) => {
         parts.push(this.visitor.visit(def, ctx));
       });
     }
 
     // Add top-level statements
-    if (node.children.topLevelStatement) {
-      node.children.topLevelStatement.forEach((stmt: any) => {
+    const topLevelStatements = getChildNodes(node, "topLevelStatement");
+    if (topLevelStatements.length > 0) {
+      topLevelStatements.forEach((stmt: any) => {
         parts.push(this.visitor.visit(stmt, ctx));
       });
     }
 
     // Add top-level expressions
-    if (node.children.expression) {
-      node.children.expression.forEach((expr: any) => {
+    const expressions = getChildNodes(node, "expression");
+    if (expressions.length > 0) {
+      expressions.forEach((expr: any) => {
         parts.push(this.visitor.visit(expr, ctx));
       });
     }
@@ -355,12 +424,15 @@ export class StatementVisitorMethods {
   }
 
   visitAnnotation(node: any, ctx: PrintContext): string {
-    let result = "@" + node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    let result = "@" + (identifiers.length > 0 ? identifiers[0].image : "");
 
-    if (node.children.LeftParen) {
+    const leftParens = getChildNodes(node, "LeftParen");
+    if (leftParens.length > 0) {
       result += "(";
-      if (node.children.annotationArgument) {
-        const args = node.children.annotationArgument.map((arg: any) =>
+      const annotationArguments = getChildNodes(node, "annotationArgument");
+      if (annotationArguments.length > 0) {
+        const args = annotationArguments.map((arg: any) =>
           this.visitor.visit(arg, ctx),
         );
         result += args.join(", ");
@@ -372,16 +444,18 @@ export class StatementVisitorMethods {
   }
 
   visitAnnotationArgument(node: any, ctx: PrintContext): string {
-    if (node.children.Identifier && node.children.Equals) {
+    const identifiers = getChildNodes(node, "Identifier");
+    const equals = getChildNodes(node, "Equals");
+    const expressions = getChildNodes(node, "expression");
+
+    if (identifiers.length > 0 && equals.length > 0 && expressions.length > 0) {
       // Named argument: name = value
       return (
-        node.children.Identifier[0].image +
-        " = " +
-        this.visitor.visit(node.children.expression[0], ctx)
+        identifiers[0].image + " = " + this.visitor.visit(expressions[0], ctx)
       );
-    } else if (node.children.expression) {
+    } else if (expressions.length > 0) {
       // Positional argument
-      return this.visitor.visit(node.children.expression[0], ctx);
+      return this.visitor.visit(expressions[0], ctx);
     }
 
     return "";
@@ -395,65 +469,127 @@ export class StatementVisitorMethods {
     let result = "";
 
     // Handle annotations
-    if (node.children.annotation) {
-      const annotations = this.visitAnnotations(node.children.annotation, ctx);
-      result += annotations + " ";
+    const annotations = getChildNodes(node, "annotation");
+    if (annotations.length > 0) {
+      const annotationStr = this.visitAnnotations(annotations, ctx);
+      result += annotationStr + " ";
     }
 
     // Handle modifiers
-    if (node.children.modifier) {
-      const modifiers = this.visitModifiers(node.children.modifier, ctx);
-      result += modifiers + " ";
+    const modifiers = getChildNodes(node, "modifier");
+    if (modifiers.length > 0) {
+      const modifierStr = this.visitModifiers(modifiers, ctx);
+      result += modifierStr + " ";
     }
 
     // Handle specific definition types
-    if (node.children.classDefinition) {
-      result += this.visitor.visit(node.children.classDefinition[0], ctx);
-    } else if (node.children.objectDefinition) {
-      result += this.visitor.visit(node.children.objectDefinition[0], ctx);
-    } else if (node.children.traitDefinition) {
-      result += this.visitor.visit(node.children.traitDefinition[0], ctx);
-    } else if (node.children.enumDefinition) {
-      result += this.visitor.visit(node.children.enumDefinition[0], ctx);
-    } else if (node.children.extensionDefinition) {
-      result += this.visitor.visit(node.children.extensionDefinition[0], ctx);
-    } else if (node.children.valDefinition) {
-      result += this.visitor.visit(node.children.valDefinition[0], ctx);
-    } else if (node.children.varDefinition) {
-      result += this.visitor.visit(node.children.varDefinition[0], ctx);
-    } else if (node.children.defDefinition) {
-      result += this.visitor.visit(node.children.defDefinition[0], ctx);
-    } else if (node.children.givenDefinition) {
-      result += this.visitor.visit(node.children.givenDefinition[0], ctx);
-    } else if (node.children.typeDefinition) {
-      result += this.visitor.visit(node.children.typeDefinition[0], ctx);
-    } else if (node.children.assignmentStatement) {
-      result += this.visitor.visit(node.children.assignmentStatement[0], ctx);
+    const classDefinition = getFirstChild(node, "classDefinition");
+    if (classDefinition) {
+      result += this.visitor.visit(classDefinition, ctx);
+    } else {
+      const objectDefinition = getFirstChild(node, "objectDefinition");
+      if (objectDefinition) {
+        result += this.visitor.visit(objectDefinition, ctx);
+      } else {
+        const traitDefinition = getFirstChild(node, "traitDefinition");
+        if (traitDefinition) {
+          result += this.visitor.visit(traitDefinition, ctx);
+        } else {
+          const enumDefinition = getFirstChild(node, "enumDefinition");
+          if (enumDefinition) {
+            result += this.visitor.visit(enumDefinition, ctx);
+          } else {
+            const extensionDefinition = getFirstChild(
+              node,
+              "extensionDefinition",
+            );
+            if (extensionDefinition) {
+              result += this.visitor.visit(extensionDefinition, ctx);
+            } else {
+              const valDefinition = getFirstChild(node, "valDefinition");
+              if (valDefinition) {
+                result += this.visitor.visit(valDefinition, ctx);
+              } else {
+                const varDefinition = getFirstChild(node, "varDefinition");
+                if (varDefinition) {
+                  result += this.visitor.visit(varDefinition, ctx);
+                } else {
+                  const defDefinition = getFirstChild(node, "defDefinition");
+                  if (defDefinition) {
+                    result += this.visitor.visit(defDefinition, ctx);
+                  } else {
+                    const givenDefinition = getFirstChild(
+                      node,
+                      "givenDefinition",
+                    );
+                    if (givenDefinition) {
+                      result += this.visitor.visit(givenDefinition, ctx);
+                    } else {
+                      const typeDefinition = getFirstChild(
+                        node,
+                        "typeDefinition",
+                      );
+                      if (typeDefinition) {
+                        result += this.visitor.visit(typeDefinition, ctx);
+                      } else {
+                        const assignmentStatement = getFirstChild(
+                          node,
+                          "assignmentStatement",
+                        );
+                        if (assignmentStatement) {
+                          result += this.visitor.visit(
+                            assignmentStatement,
+                            ctx,
+                          );
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     return result;
   }
 
   visitPattern(node: any, ctx: PrintContext): string {
-    if (node.children.Identifier) {
-      return node.children.Identifier[0].image;
-    } else if (node.children.Underscore) {
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      return identifiers[0].image;
+    }
+
+    const underscores = getChildNodes(node, "Underscore");
+    if (underscores.length > 0) {
       return "_";
-    } else if (node.children.literal) {
-      return this.visitor.visit(node.children.literal[0], ctx);
-    } else if (node.children.LeftParen) {
+    }
+
+    const literal = getFirstChild(node, "literal");
+    if (literal) {
+      return this.visitor.visit(literal, ctx);
+    }
+
+    const leftParens = getChildNodes(node, "LeftParen");
+    if (leftParens.length > 0) {
       // Tuple pattern or parenthesized pattern
-      if (node.children.pattern && node.children.pattern.length > 1) {
-        const patterns = node.children.pattern.map((p: any) =>
+      const patterns = getChildNodes(node, "pattern");
+      if (patterns.length > 1) {
+        const patternResults = patterns.map((p: any) =>
           this.visitor.visit(p, ctx),
         );
-        return "(" + patterns.join(", ") + ")";
-      } else if (node.children.pattern) {
-        return "(" + this.visitor.visit(node.children.pattern[0], ctx) + ")";
+        return "(" + patternResults.join(", ") + ")";
+      } else if (patterns.length === 1) {
+        return "(" + this.visitor.visit(patterns[0], ctx) + ")";
       }
-    } else if (node.children.pattern) {
+    }
+
+    const patterns = getChildNodes(node, "pattern");
+    if (patterns.length > 0) {
       // Constructor pattern or other complex patterns
-      return this.visitor.visit(node.children.pattern[0], ctx);
+      return this.visitor.visit(patterns[0], ctx);
     }
 
     return "";

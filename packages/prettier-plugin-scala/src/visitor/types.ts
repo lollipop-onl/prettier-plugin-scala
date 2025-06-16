@@ -1,6 +1,7 @@
 /**
  * Type-related visitor methods for handling type expressions, type parameters, and type systems
  */
+import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface TypeVisitor {
@@ -15,16 +16,20 @@ export class TypeVisitorMethods {
   }
 
   visitType(node: any, ctx: PrintContext): string {
-    return this.visitor.visit(node.children.matchType[0], ctx);
+    const matchType = getFirstChild(node, "matchType");
+    return matchType ? this.visitor.visit(matchType, ctx) : "";
   }
 
   visitMatchType(node: any, ctx: PrintContext): string {
-    let result = this.visitor.visit(node.children.unionType[0], ctx);
+    const unionType = getFirstChild(node, "unionType");
+    let result = unionType ? this.visitor.visit(unionType, ctx) : "";
 
-    if (node.children.Match) {
+    const matchTokens = getChildNodes(node, "Match");
+    if (matchTokens.length > 0) {
       result += " match {";
-      if (node.children.matchTypeCase) {
-        for (const caseNode of node.children.matchTypeCase) {
+      const matchTypeCases = getChildNodes(node, "matchTypeCase");
+      if (matchTypeCases.length > 0) {
+        for (const caseNode of matchTypeCases) {
           result += "\n  " + this.visitor.visit(caseNode, ctx);
         }
         result += "\n";
@@ -36,13 +41,17 @@ export class TypeVisitorMethods {
   }
 
   visitMatchTypeCase(node: any, ctx: PrintContext): string {
-    const leftType = this.visitor.visit(node.children.type[0], ctx);
-    const rightType = this.visitor.visit(node.children.type[1], ctx);
-    return `case ${leftType} => ${rightType}`;
+    const types = getChildNodes(node, "type");
+    if (types.length >= 2) {
+      const leftType = this.visitor.visit(types[0], ctx);
+      const rightType = this.visitor.visit(types[1], ctx);
+      return `case ${leftType} => ${rightType}`;
+    }
+    return "";
   }
 
   visitUnionType(node: any, ctx: PrintContext): string {
-    const types = node.children.intersectionType || [];
+    const types = getChildNodes(node, "intersectionType");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
@@ -52,7 +61,7 @@ export class TypeVisitorMethods {
   }
 
   visitIntersectionType(node: any, ctx: PrintContext): string {
-    const types = node.children.baseType || [];
+    const types = getChildNodes(node, "baseType");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
@@ -65,65 +74,81 @@ export class TypeVisitorMethods {
     let result = "";
 
     // Handle parenthesized types
-    if (node.children.LeftParen) {
-      result +=
-        "(" +
-        this.visitor.visit(node.children.tupleTypeOrParenthesized[0], ctx) +
-        ")";
+    const leftParen = getChildNodes(node, "LeftParen");
+    if (leftParen.length > 0) {
+      const tupleType = getFirstChild(node, "tupleTypeOrParenthesized");
+      if (tupleType) {
+        result += "(" + this.visitor.visit(tupleType, ctx) + ")";
+      }
     } else {
       // Handle simple types
-      result += this.visitor.visit(node.children.simpleType[0], ctx);
+      const simpleType = getFirstChild(node, "simpleType");
+      if (simpleType) {
+        result += this.visitor.visit(simpleType, ctx);
+      }
     }
 
-    result += " ?=> " + this.visitor.visit(node.children.type[0], ctx);
+    const type = getFirstChild(node, "type");
+    if (type) {
+      result += " ?=> " + this.visitor.visit(type, ctx);
+    }
     return result;
   }
 
   visitBaseType(node: any, ctx: PrintContext): string {
     // Handle type lambda: [X] =>> F[X]
-    if (node.children.typeLambda) {
-      return this.visitor.visit(node.children.typeLambda[0], ctx);
+    const typeLambda = getFirstChild(node, "typeLambda");
+    if (typeLambda) {
+      return this.visitor.visit(typeLambda, ctx);
     }
 
     // Handle polymorphic function type: [T] => T => T
-    if (node.children.polymorphicFunctionType) {
-      return this.visitor.visit(node.children.polymorphicFunctionType[0], ctx);
+    const polymorphicFunctionType = getFirstChild(
+      node,
+      "polymorphicFunctionType",
+    );
+    if (polymorphicFunctionType) {
+      return this.visitor.visit(polymorphicFunctionType, ctx);
     }
 
     // Handle context function type: String ?=> Int
-    if (node.children.contextFunctionType) {
-      return this.visitor.visit(node.children.contextFunctionType[0], ctx);
+    const contextFunctionType = getFirstChild(node, "contextFunctionType");
+    if (contextFunctionType) {
+      return this.visitor.visit(contextFunctionType, ctx);
     }
 
     // Handle dependent function type: (x: Int) => Vector[x.type]
-    if (node.children.dependentFunctionType) {
-      return this.visitor.visit(node.children.dependentFunctionType[0], ctx);
+    const dependentFunctionType = getFirstChild(node, "dependentFunctionType");
+    if (dependentFunctionType) {
+      return this.visitor.visit(dependentFunctionType, ctx);
     }
 
     // Handle parenthesized types or tuple types: (String | Int) or (A, B)
-    if (node.children.LeftParen && node.children.tupleTypeOrParenthesized) {
-      return (
-        "(" +
-        this.visitor.visit(node.children.tupleTypeOrParenthesized[0], ctx) +
-        ")"
-      );
+    const leftParen = getChildNodes(node, "LeftParen");
+    const tupleType = getFirstChild(node, "tupleTypeOrParenthesized");
+    if (leftParen.length > 0 && tupleType) {
+      return "(" + this.visitor.visit(tupleType, ctx) + ")";
     }
 
     // Handle simple types with array notation
-    let result = this.visitor.visit(node.children.simpleType[0], ctx);
+    const simpleType = getFirstChild(node, "simpleType");
+    if (!simpleType) {
+      return "";
+    }
+    let result = this.visitor.visit(simpleType, ctx);
 
     // Handle array types like Array[String]
-    if (node.children.LeftBracket) {
-      for (let i = 0; i < node.children.LeftBracket.length; i++) {
-        result += "[" + this.visitor.visit(node.children.type[i], ctx) + "]";
-      }
+    const leftBrackets = getChildNodes(node, "LeftBracket");
+    const types = getChildNodes(node, "type");
+    for (let i = 0; i < leftBrackets.length && i < types.length; i++) {
+      result += "[" + this.visitor.visit(types[i], ctx) + "]";
     }
 
     return result;
   }
 
   visitTupleTypeOrParenthesized(node: any, ctx: PrintContext): string {
-    const types = node.children.type || [];
+    const types = getChildNodes(node, "type");
     if (types.length === 1) {
       return this.visitor.visit(types[0], ctx);
     }
@@ -133,11 +158,16 @@ export class TypeVisitorMethods {
   }
 
   visitSimpleType(node: any, ctx: PrintContext): string {
-    let result = this.visitor.visit(node.children.qualifiedIdentifier[0], ctx);
+    const qualifiedId = getFirstChild(node, "qualifiedIdentifier");
+    if (!qualifiedId) {
+      return "";
+    }
+    let result = this.visitor.visit(qualifiedId, ctx);
 
     // Handle type parameters like List[Int] or Kind Projector like Map[String, *]
-    if (node.children.LeftBracket) {
-      const typeArgs = node.children.typeArgument || [];
+    const leftBrackets = getChildNodes(node, "LeftBracket");
+    if (leftBrackets.length > 0) {
+      const typeArgs = getChildNodes(node, "typeArgument");
       const typeStrings = typeArgs.map((t: any) => this.visitor.visit(t, ctx));
       result += "[" + typeStrings.join(", ") + "]";
     }
@@ -147,13 +177,15 @@ export class TypeVisitorMethods {
 
   visitTypeArgument(node: any, ctx: PrintContext): string {
     // Handle Kind Projector notation: *
-    if (node.children.Star) {
+    const star = getChildNodes(node, "Star");
+    if (star.length > 0) {
       return "*";
     }
 
     // Handle regular type
-    if (node.children.type) {
-      return this.visitor.visit(node.children.type[0], ctx);
+    const type = getFirstChild(node, "type");
+    if (type) {
+      return this.visitor.visit(type, ctx);
     }
 
     return "";
@@ -162,15 +194,19 @@ export class TypeVisitorMethods {
   visitTypeLambda(node: any, ctx: PrintContext): string {
     let result = "[";
 
-    if (node.children.typeLambdaParameter) {
-      const parameters = node.children.typeLambdaParameter.map((param: any) =>
+    const parameters = getChildNodes(node, "typeLambdaParameter");
+    if (parameters.length > 0) {
+      const parameterStrings = parameters.map((param: any) =>
         this.visitor.visit(param, ctx),
       );
-      result += parameters.join(", ");
+      result += parameterStrings.join(", ");
     }
 
     result += "] =>> ";
-    result += this.visitor.visit(node.children.type[0], ctx);
+    const type = getFirstChild(node, "type");
+    if (type) {
+      result += this.visitor.visit(type, ctx);
+    }
 
     return result;
   }
@@ -179,18 +215,27 @@ export class TypeVisitorMethods {
     let result = "";
 
     // Add variance annotation if present
-    if (node.children.Plus) {
+    const plus = getChildNodes(node, "Plus");
+    const minus = getChildNodes(node, "Minus");
+    if (plus.length > 0) {
       result += "+";
-    } else if (node.children.Minus) {
+    } else if (minus.length > 0) {
       result += "-";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      result += identifiers[0].image;
+    }
 
-    if (node.children.SubtypeOf) {
-      result += " <: " + this.visitor.visit(node.children.type[0], ctx);
-    } else if (node.children.SupertypeOf) {
-      result += " >: " + this.visitor.visit(node.children.type[0], ctx);
+    const subtypeOf = getChildNodes(node, "SubtypeOf");
+    const supertypeOf = getChildNodes(node, "SupertypeOf");
+    const type = getFirstChild(node, "type");
+
+    if (subtypeOf.length > 0 && type) {
+      result += " <: " + this.visitor.visit(type, ctx);
+    } else if (supertypeOf.length > 0 && type) {
+      result += " >: " + this.visitor.visit(type, ctx);
     }
 
     return result;
@@ -199,37 +244,53 @@ export class TypeVisitorMethods {
   visitDependentFunctionType(node: any, ctx: PrintContext): string {
     let result = "(";
 
-    if (node.children.dependentParameter) {
-      const parameters = node.children.dependentParameter.map((param: any) =>
+    const parameters = getChildNodes(node, "dependentParameter");
+    if (parameters.length > 0) {
+      const parameterStrings = parameters.map((param: any) =>
         this.visitor.visit(param, ctx),
       );
-      result += parameters.join(", ");
+      result += parameterStrings.join(", ");
     }
 
     result += ") => ";
-    result += this.visitor.visit(node.children.type[0], ctx);
+    const type = getFirstChild(node, "type");
+    if (type) {
+      result += this.visitor.visit(type, ctx);
+    }
 
     return result;
   }
 
   visitDependentParameter(node: any, ctx: PrintContext): string {
-    let result = node.children.Identifier[0].image;
-    result += ": " + this.visitor.visit(node.children.type[0], ctx);
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length === 0) {
+      return "";
+    }
+
+    let result = identifiers[0].image;
+    const type = getFirstChild(node, "type");
+    if (type) {
+      result += ": " + this.visitor.visit(type, ctx);
+    }
     return result;
   }
 
   visitPolymorphicFunctionType(node: any, ctx: PrintContext): string {
     let result = "[";
 
-    if (node.children.polymorphicTypeParameter) {
-      const parameters = node.children.polymorphicTypeParameter.map(
-        (param: any) => this.visitor.visit(param, ctx),
+    const parameters = getChildNodes(node, "polymorphicTypeParameter");
+    if (parameters.length > 0) {
+      const parameterStrings = parameters.map((param: any) =>
+        this.visitor.visit(param, ctx),
       );
-      result += parameters.join(", ");
+      result += parameterStrings.join(", ");
     }
 
     result += "] => ";
-    result += this.visitor.visit(node.children.type[0], ctx);
+    const type = getFirstChild(node, "type");
+    if (type) {
+      result += this.visitor.visit(type, ctx);
+    }
 
     return result;
   }
@@ -238,20 +299,29 @@ export class TypeVisitorMethods {
     let result = "";
 
     // Handle variance annotation
-    if (node.children.Plus) {
+    const plus = getChildNodes(node, "Plus");
+    const minus = getChildNodes(node, "Minus");
+    if (plus.length > 0) {
       result += "+";
-    } else if (node.children.Minus) {
+    } else if (minus.length > 0) {
       result += "-";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifiers = getChildNodes(node, "Identifier");
+    if (identifiers.length > 0) {
+      result += identifiers[0].image;
+    }
 
     // Handle type bounds
-    if (node.children.SubtypeOf) {
-      result += " <: " + this.visitor.visit(node.children.type[0], ctx);
+    const subtypeOf = getChildNodes(node, "SubtypeOf");
+    const supertypeOf = getChildNodes(node, "SupertypeOf");
+    const type = getFirstChild(node, "type");
+
+    if (subtypeOf.length > 0 && type) {
+      result += " <: " + this.visitor.visit(type, ctx);
     }
-    if (node.children.SupertypeOf) {
-      result += " >: " + this.visitor.visit(node.children.type[0], ctx);
+    if (supertypeOf.length > 0 && type) {
+      result += " >: " + this.visitor.visit(type, ctx);
     }
 
     return result;

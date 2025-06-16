@@ -76,56 +76,67 @@ export class DeclarationVisitorMethods {
     const identifierToken = getFirstChild(node, "Identifier");
     let result = "object " + (identifierToken?.image || "");
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
-    if (node.children.classBody) {
-      result += " " + this.visitor.visit(node.children.classBody[0], ctx);
+    const classBody = getFirstChild(node, "classBody");
+    if (classBody) {
+      result += " " + this.visitor.visit(classBody, ctx);
     }
 
     return result;
   }
 
   visitTraitDefinition(node: any, ctx: PrintContext): string {
-    let result = "trait " + node.children.Identifier[0].image;
+    const identifier = getFirstChild(node, "Identifier");
+    let result = "trait " + (identifier?.image || "");
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
-    if (node.children.classBody) {
-      result += " " + this.visitor.visit(node.children.classBody[0], ctx);
+    const traitBody = getFirstChild(node, "classBody");
+    if (traitBody) {
+      result += " " + this.visitor.visit(traitBody, ctx);
     }
 
     return result;
   }
 
   visitEnumDefinition(node: any, ctx: PrintContext): string {
-    let result = "enum " + node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    let result = "enum " + (identifierToken?.image || "");
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    if (node.children.classParameters) {
-      result += this.visitor.visit(node.children.classParameters[0], ctx);
+    const classParameters = getFirstChild(node, "classParameters");
+    if (classParameters) {
+      result += this.visitor.visit(classParameters, ctx);
     }
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
     result += " {\n";
 
-    if (node.children.enumCase) {
+    const enumCases = getChildNodes(node, "enumCase");
+    if (enumCases.length > 0) {
       const indent = this.visitor.getIndentation(ctx);
-      const cases = node.children.enumCase.map(
-        (c: any) => indent + this.visitor.visit(c, ctx),
+      const cases = enumCases.map(
+        (c: CSTNode) => indent + this.visitor.visit(c, ctx),
       );
       result += cases.join("\n");
     }
@@ -136,14 +147,17 @@ export class DeclarationVisitorMethods {
   }
 
   visitEnumCase(node: any, ctx: PrintContext): string {
-    let result = "case " + node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    let result = "case " + (identifierToken?.image || "");
 
-    if (node.children.classParameters) {
-      result += this.visitor.visit(node.children.classParameters[0], ctx);
+    const classParameters = getFirstChild(node, "classParameters");
+    if (classParameters) {
+      result += this.visitor.visit(classParameters, ctx);
     }
 
-    if (node.children.extendsClause) {
-      result += " " + this.visitor.visit(node.children.extendsClause[0], ctx);
+    const extendsClause = getFirstChild(node, "extendsClause");
+    if (extendsClause) {
+      result += " " + this.visitor.visit(extendsClause, ctx);
     }
 
     return result;
@@ -152,16 +166,23 @@ export class DeclarationVisitorMethods {
   visitExtensionDefinition(node: any, ctx: PrintContext): string {
     let result = "extension";
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    result += " (" + node.children.Identifier[0].image + ": ";
-    result += this.visitor.visit(node.children.type[0], ctx) + ") {\n";
+    const identifierToken = getFirstChild(node, "Identifier");
+    const typeNode = getFirstChild(node, "type");
+    result += " (" + (identifierToken?.image || "") + ": ";
+    if (typeNode) {
+      result += this.visitor.visit(typeNode, ctx);
+    }
+    result += ") {\n";
 
-    if (node.children.extensionMember) {
-      const members = node.children.extensionMember.map(
-        (m: any) => "  " + this.visitor.visit(m, ctx),
+    const extensionMembers = getChildNodes(node, "extensionMember");
+    if (extensionMembers.length > 0) {
+      const members = extensionMembers.map(
+        (m: CSTNode) => "  " + this.visitor.visit(m, ctx),
       );
       result += members.join("\n");
     }
@@ -172,11 +193,13 @@ export class DeclarationVisitorMethods {
   }
 
   visitExtensionMember(node: any, ctx: PrintContext): string {
-    const modifiers = this.visitor.visitModifiers(
-      node.children.modifier || [],
-      ctx,
-    );
-    const definition = this.visitor.visit(node.children.defDefinition[0], ctx);
+    const modifierNodes = getChildNodes(node, "modifier");
+    const modifiers = this.visitor.visitModifiers(modifierNodes, ctx);
+
+    const defDefinition = getFirstChild(node, "defDefinition");
+    const definition = defDefinition
+      ? this.visitor.visit(defDefinition, ctx)
+      : "";
 
     return modifiers ? modifiers + " " + definition : definition;
   }
@@ -185,61 +208,90 @@ export class DeclarationVisitorMethods {
     let result = "val ";
 
     // Handle pattern or identifier
-    if (node.children.pattern && node.children.pattern[0]) {
-      result += this.visitor.visit(node.children.pattern[0], ctx);
-    } else if (node.children.Identifier && node.children.Identifier[0]) {
-      result += node.children.Identifier[0].image;
+    const pattern = getFirstChild(node, "pattern");
+    const identifierToken = getFirstChild(node, "Identifier");
+
+    if (pattern) {
+      result += this.visitor.visit(pattern, ctx);
+    } else if (identifierToken) {
+      result += identifierToken.image;
     }
 
-    if (node.children.Colon) {
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+    const colonToken = getFirstChild(node, "Colon");
+    if (colonToken) {
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
-    if (
-      node.children.Equals &&
-      node.children.expression &&
-      node.children.expression[0]
-    ) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const equalsToken = getFirstChild(node, "Equals");
+    if (equalsToken) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
     }
 
     return formatStatement(result, ctx);
   }
 
   visitVarDefinition(node: any, ctx: PrintContext): string {
-    let result = "var " + node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    let result = "var " + (identifierToken?.image || "");
 
-    if (node.children.Colon) {
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+    const colonToken = getFirstChild(node, "Colon");
+    if (colonToken) {
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
-    result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const expression = getFirstChild(node, "expression");
+    if (expression) {
+      result += " = " + this.visitor.visit(expression, ctx);
+    }
 
     return formatStatement(result, ctx);
   }
 
   visitDefDefinition(node: any, ctx: PrintContext): string {
     let result = "def ";
-    if (node.children.Identifier) {
-      result += node.children.Identifier[0].image;
-    } else if (node.children.This) {
+
+    const identifierToken = getFirstChild(node, "Identifier");
+    const thisToken = getFirstChild(node, "This");
+
+    if (identifierToken) {
+      result += identifierToken.image;
+    } else if (thisToken) {
       result += "this";
     }
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    if (node.children.parameterLists) {
-      result += this.visitor.visit(node.children.parameterLists[0], ctx);
+    const parameterLists = getFirstChild(node, "parameterLists");
+    if (parameterLists) {
+      result += this.visitor.visit(parameterLists, ctx);
     }
 
-    if (node.children.Colon) {
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+    const colonToken = getFirstChild(node, "Colon");
+    if (colonToken) {
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
-    if (node.children.Equals) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const equalsToken = getFirstChild(node, "Equals");
+    if (equalsToken) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
       return formatStatement(result, ctx);
     }
 
@@ -249,26 +301,39 @@ export class DeclarationVisitorMethods {
   visitGivenDefinition(node: any, ctx: PrintContext): string {
     let result = "given";
 
-    if (node.children.Identifier) {
+    const identifierToken = getFirstChild(node, "Identifier");
+    if (identifierToken) {
       // Named given with potential parameters: given name[T](using ord: Type): Type
-      result += " " + node.children.Identifier[0].image;
+      result += " " + identifierToken.image;
 
-      if (node.children.typeParameters) {
-        result += this.visitor.visit(node.children.typeParameters[0], ctx);
+      const typeParameters = getFirstChild(node, "typeParameters");
+      if (typeParameters) {
+        result += this.visitor.visit(typeParameters, ctx);
       }
 
-      if (node.children.parameterLists) {
-        result += this.visitor.visit(node.children.parameterLists[0], ctx);
+      const parameterLists = getFirstChild(node, "parameterLists");
+      if (parameterLists) {
+        result += this.visitor.visit(parameterLists, ctx);
       }
 
-      result += ": " + this.visitor.visit(node.children.type[0], ctx);
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += ": " + this.visitor.visit(typeNode, ctx);
+      }
     } else {
       // Anonymous given: given Type = expression
-      result += " " + this.visitor.visit(node.children.type[0], ctx);
+      const typeNode = getFirstChild(node, "type");
+      if (typeNode) {
+        result += " " + this.visitor.visit(typeNode, ctx);
+      }
     }
 
-    if (node.children.Equals) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const equalsToken = getFirstChild(node, "Equals");
+    if (equalsToken) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
     }
 
     return result;
@@ -278,17 +343,23 @@ export class DeclarationVisitorMethods {
     let result = "";
 
     // Handle opaque types
-    if (node.children.Opaque) {
+    const opaqueToken = getFirstChild(node, "Opaque");
+    if (opaqueToken) {
       result += "opaque ";
     }
 
-    result += "type " + node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    result += "type " + (identifierToken?.image || "");
 
-    if (node.children.typeParameters) {
-      result += this.visitor.visit(node.children.typeParameters[0], ctx);
+    const typeParameters = getFirstChild(node, "typeParameters");
+    if (typeParameters) {
+      result += this.visitor.visit(typeParameters, ctx);
     }
 
-    result += " = " + this.visitor.visit(node.children.type[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += " = " + this.visitor.visit(typeNode, ctx);
+    }
 
     return result;
   }
@@ -296,25 +367,29 @@ export class DeclarationVisitorMethods {
   visitAuxiliaryConstructor(node: any, ctx: PrintContext): string {
     let result = "def this";
 
-    if (node.children.parameterList) {
-      const params = node.children.parameterList.map((list: any) =>
+    const parameterLists = getChildNodes(node, "parameterList");
+    if (parameterLists.length > 0) {
+      const params = parameterLists.map((list: CSTNode) =>
         this.visitor.visit(list, ctx),
       );
       result += params.join("");
     }
 
-    result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const expression = getFirstChild(node, "expression");
+    if (expression) {
+      result += " = " + this.visitor.visit(expression, ctx);
+    }
 
     return result;
   }
 
   visitClassParameters(node: any, ctx: PrintContext): string {
-    const params = node.children.classParameter || [];
+    const params = getChildNodes(node, "classParameter");
     if (params.length === 0) {
       return "()";
     }
 
-    const paramStrings = params.map((p: any) => this.visitor.visit(p, ctx));
+    const paramStrings = params.map((p: CSTNode) => this.visitor.visit(p, ctx));
     const printWidth = getPrintWidth(ctx);
 
     // Check if single line is appropriate
@@ -338,74 +413,101 @@ export class DeclarationVisitorMethods {
   visitClassParameter(node: any, ctx: PrintContext): string {
     let result = "";
 
-    if (node.children.modifier) {
-      const modifiers = this.visitor.visitModifiers(
-        node.children.modifier,
-        ctx,
-      );
+    const modifierNodes = getChildNodes(node, "modifier");
+    if (modifierNodes.length > 0) {
+      const modifiers = this.visitor.visitModifiers(modifierNodes, ctx);
       result += modifiers + " ";
     }
 
-    if (node.children.Val) {
+    const valToken = getFirstChild(node, "Val");
+    const varToken = getFirstChild(node, "Var");
+
+    if (valToken) {
       result += "val ";
-    } else if (node.children.Var) {
+    } else if (varToken) {
       result += "var ";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    if (identifierToken) {
+      result += identifierToken.image;
+    }
     result += ": ";
-    result += this.visitor.visit(node.children.type[0], ctx);
 
-    if (node.children.Equals) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += this.visitor.visit(typeNode, ctx);
+    }
+
+    const equalsToken = getFirstChild(node, "Equals");
+    if (equalsToken) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
     }
 
     return result;
   }
 
   visitParameterLists(node: any, ctx: PrintContext): string {
-    return node.children.parameterList
-      .map((list: any) => this.visitor.visit(list, ctx))
+    const parameterLists = getChildNodes(node, "parameterList");
+    return parameterLists
+      .map((list: CSTNode) => this.visitor.visit(list, ctx))
       .join("");
   }
 
   visitParameterList(node: any, ctx: PrintContext): string {
-    const params = node.children.parameter || [];
+    const params = getChildNodes(node, "parameter");
     if (params.length === 0) {
       return "()";
     }
 
-    const paramStrings = params.map((p: any) => this.visitor.visit(p, ctx));
+    const paramStrings = params.map((p: CSTNode) => this.visitor.visit(p, ctx));
     return "(" + paramStrings.join(", ") + ")";
   }
 
   visitParameter(node: any, ctx: PrintContext): string {
     let result = "";
 
-    if (node.children.Using) {
+    const usingToken = getFirstChild(node, "Using");
+    const implicitToken = getFirstChild(node, "Implicit");
+
+    if (usingToken) {
       result += "using ";
-    } else if (node.children.Implicit) {
+    } else if (implicitToken) {
       result += "implicit ";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    if (identifierToken) {
+      result += identifierToken.image;
+    }
     result += ": ";
-    result += this.visitor.visit(node.children.type[0], ctx);
 
-    if (node.children.Equals) {
-      result += " = " + this.visitor.visit(node.children.expression[0], ctx);
+    const typeNode = getFirstChild(node, "type");
+    if (typeNode) {
+      result += this.visitor.visit(typeNode, ctx);
+    }
+
+    const equalsToken = getFirstChild(node, "Equals");
+    if (equalsToken) {
+      const expression = getFirstChild(node, "expression");
+      if (expression) {
+        result += " = " + this.visitor.visit(expression, ctx);
+      }
     }
 
     return result;
   }
 
   visitTypeParameters(node: any, ctx: PrintContext): string {
-    const params = node.children.typeParameter || [];
+    const params = getChildNodes(node, "typeParameter");
     if (params.length === 0) {
       return "";
     }
 
-    const paramStrings = params.map((p: any) => this.visitor.visit(p, ctx));
+    const paramStrings = params.map((p: CSTNode) => this.visitor.visit(p, ctx));
     return "[" + paramStrings.join(", ") + "]";
   }
 
@@ -413,32 +515,50 @@ export class DeclarationVisitorMethods {
     let result = "";
 
     // Handle variance annotations
-    if (node.children.Plus) {
+    const plusToken = getFirstChild(node, "Plus");
+    const minusToken = getFirstChild(node, "Minus");
+
+    if (plusToken) {
       result += "+";
-    } else if (node.children.Minus) {
+    } else if (minusToken) {
       result += "-";
     }
 
-    result += node.children.Identifier[0].image;
+    const identifierToken = getFirstChild(node, "Identifier");
+    if (identifierToken) {
+      result += identifierToken.image;
+    }
 
     // Add bounds
-    if (node.children.SubtypeOf) {
-      result += " <: " + this.visitor.visit(node.children.type[0], ctx);
+    const subtypeOfToken = getFirstChild(node, "SubtypeOf");
+    const supertypeOfToken = getFirstChild(node, "SupertypeOf");
+    const typeNodes = getChildNodes(node, "type");
+
+    if (subtypeOfToken && typeNodes.length > 0) {
+      result += " <: " + this.visitor.visit(typeNodes[0], ctx);
     }
-    if (node.children.SupertypeOf) {
-      result += " >: " + this.visitor.visit(node.children.type[0], ctx);
+    if (supertypeOfToken && typeNodes.length > 1) {
+      result += " >: " + this.visitor.visit(typeNodes[1], ctx);
+    } else if (supertypeOfToken && typeNodes.length === 1 && !subtypeOfToken) {
+      result += " >: " + this.visitor.visit(typeNodes[0], ctx);
     }
 
     return result;
   }
 
   visitExtendsClause(node: any, ctx: PrintContext): string {
-    let result = "extends " + this.visitor.visit(node.children.type[0], ctx);
+    const typeNodes = getChildNodes(node, "type");
+    if (typeNodes.length === 0) {
+      return "";
+    }
 
-    if (node.children.With) {
-      const withTypes = node.children.type
+    let result = "extends " + this.visitor.visit(typeNodes[0], ctx);
+
+    const withToken = getFirstChild(node, "With");
+    if (withToken && typeNodes.length > 1) {
+      const withTypes = typeNodes
         .slice(1)
-        .map((t: any) => this.visitor.visit(t, ctx));
+        .map((t: CSTNode) => this.visitor.visit(t, ctx));
       result += " with " + withTypes.join(" with ");
     }
 
@@ -446,11 +566,12 @@ export class DeclarationVisitorMethods {
   }
 
   visitClassBody(node: any, ctx: PrintContext): string {
-    if (!node.children.classMember) {
+    const classMembers = getChildNodes(node, "classMember");
+    if (classMembers.length === 0) {
       return "{}";
     }
 
-    const members = node.children.classMember.map((m: any) =>
+    const members = classMembers.map((m: CSTNode) =>
       this.visitor.visit(m, ctx),
     );
 
@@ -459,29 +580,44 @@ export class DeclarationVisitorMethods {
 
   visitClassMember(node: any, ctx: PrintContext): string {
     // Handle different types of class members
-    if (node.children.defDefinition) {
-      return this.visitor.visit(node.children.defDefinition[0], ctx);
+    const defDefinition = getFirstChild(node, "defDefinition");
+    if (defDefinition) {
+      return this.visitor.visit(defDefinition, ctx);
     }
-    if (node.children.valDefinition) {
-      return this.visitor.visit(node.children.valDefinition[0], ctx);
+
+    const valDefinition = getFirstChild(node, "valDefinition");
+    if (valDefinition) {
+      return this.visitor.visit(valDefinition, ctx);
     }
-    if (node.children.varDefinition) {
-      return this.visitor.visit(node.children.varDefinition[0], ctx);
+
+    const varDefinition = getFirstChild(node, "varDefinition");
+    if (varDefinition) {
+      return this.visitor.visit(varDefinition, ctx);
     }
-    if (node.children.classDefinition) {
-      return this.visitor.visit(node.children.classDefinition[0], ctx);
+
+    const classDefinition = getFirstChild(node, "classDefinition");
+    if (classDefinition) {
+      return this.visitor.visit(classDefinition, ctx);
     }
-    if (node.children.objectDefinition) {
-      return this.visitor.visit(node.children.objectDefinition[0], ctx);
+
+    const objectDefinition = getFirstChild(node, "objectDefinition");
+    if (objectDefinition) {
+      return this.visitor.visit(objectDefinition, ctx);
     }
-    if (node.children.traitDefinition) {
-      return this.visitor.visit(node.children.traitDefinition[0], ctx);
+
+    const traitDefinition = getFirstChild(node, "traitDefinition");
+    if (traitDefinition) {
+      return this.visitor.visit(traitDefinition, ctx);
     }
-    if (node.children.typeDefinition) {
-      return this.visitor.visit(node.children.typeDefinition[0], ctx);
+
+    const typeDefinition = getFirstChild(node, "typeDefinition");
+    if (typeDefinition) {
+      return this.visitor.visit(typeDefinition, ctx);
     }
-    if (node.children.definition) {
-      return this.visitor.visit(node.children.definition[0], ctx);
+
+    const definition = getFirstChild(node, "definition");
+    if (definition) {
+      return this.visitor.visit(definition, ctx);
     }
 
     return "";
