@@ -16,44 +16,55 @@ export class ScalaParser extends CstParser {
         { ALT: () => this.SUBRULE(this.exportClause) },
         {
           ALT: () => {
-            // Try assignment statement at top level
+            // Assignment statement (highest priority for sbt files)
             this.SUBRULE(this.assignmentStatement);
             this.OPTION(() => this.CONSUME(tokens.Semicolon));
           },
           GATE: () => {
-            // Check if this looks like an assignment (support sbt scoped assignments)
-            const first = this.LA(1);
-            const second = this.LA(2);
-            const third = this.LA(3);
-            const fourth = this.LA(4);
+            // Very specific GATE to avoid ambiguity with expressions
+            const la1 = this.LA(1);
+            const la2 = this.LA(2);
 
+            if (!la1 || la1.tokenType !== tokens.Identifier) {
+              return false;
+            }
+
+            if (!la2) {
+              return false;
+            }
+
+            // Only match assignment operators, not expressions
             return (
-              first &&
-              first.tokenType === tokens.Identifier &&
-              // Direct assignment: name := value
-              ((second &&
-                (second.tokenType === tokens.PlusEquals ||
-                  second.tokenType === tokens.MinusEquals ||
-                  second.tokenType === tokens.StarEquals ||
-                  second.tokenType === tokens.SlashEquals ||
-                  second.tokenType === tokens.PercentEquals ||
-                  second.tokenType === tokens.AppendEquals ||
-                  second.tokenType === tokens.SbtAssign ||
-                  second.tokenType === tokens.Equals)) ||
-                // Scoped assignment: scope / key := value
-                (second &&
-                  second.tokenType === tokens.Slash &&
-                  third &&
-                  third.tokenType === tokens.Identifier &&
-                  fourth &&
-                  (fourth.tokenType === tokens.PlusEquals ||
-                    fourth.tokenType === tokens.MinusEquals ||
-                    fourth.tokenType === tokens.StarEquals ||
-                    fourth.tokenType === tokens.SlashEquals ||
-                    fourth.tokenType === tokens.PercentEquals ||
-                    fourth.tokenType === tokens.AppendEquals ||
-                    fourth.tokenType === tokens.SbtAssign ||
-                    fourth.tokenType === tokens.Equals)))
+              la2.tokenType === tokens.SbtAssign ||
+              la2.tokenType === tokens.PlusEquals ||
+              la2.tokenType === tokens.MinusEquals ||
+              la2.tokenType === tokens.StarEquals ||
+              la2.tokenType === tokens.SlashEquals ||
+              la2.tokenType === tokens.PercentEquals ||
+              la2.tokenType === tokens.AppendEquals ||
+              // Only match = if it's clearly an assignment, not function definition
+              (la2.tokenType === tokens.Equals &&
+                this.LA(3) &&
+                (this.LA(3).tokenType === tokens.StringLiteral ||
+                  this.LA(3).tokenType === tokens.IntegerLiteral ||
+                  this.LA(3).tokenType === tokens.FloatingPointLiteral ||
+                  this.LA(3).tokenType === tokens.ScientificNotationLiteral ||
+                  this.LA(3).tokenType === tokens.True ||
+                  this.LA(3).tokenType === tokens.False ||
+                  this.LA(3).tokenType === tokens.Null ||
+                  this.LA(3).tokenType === tokens.Identifier)) ||
+              // Scoped assignment: scope / key := value
+              (la2.tokenType === tokens.Slash &&
+                this.LA(3)?.tokenType === tokens.Identifier &&
+                this.LA(4) &&
+                (this.LA(4).tokenType === tokens.SbtAssign ||
+                  this.LA(4).tokenType === tokens.PlusEquals ||
+                  this.LA(4).tokenType === tokens.MinusEquals ||
+                  this.LA(4).tokenType === tokens.StarEquals ||
+                  this.LA(4).tokenType === tokens.SlashEquals ||
+                  this.LA(4).tokenType === tokens.PercentEquals ||
+                  this.LA(4).tokenType === tokens.AppendEquals ||
+                  this.LA(4).tokenType === tokens.Equals))
             );
           },
         },
