@@ -71,4 +71,61 @@ class UserController @Inject()(
     const result = parse(code);
     expect(result).toBeDefined();
   });
+
+  it("should parse multiple parameter lists in annotation (new feature)", () => {
+    const code = `@Component()(val config: Config)
+class ConfigService`;
+
+    try {
+      const result = parse(code);
+      expect(result.errors).toHaveLength(0);
+    } catch (error) {
+      console.error("Parsing error:", error);
+      throw error;
+    }
+  });
+
+  it("should parse complex DI annotation with multiple parameters", () => {
+    const code = `@Service()(val db: Database, var cache: Cache)
+class DataService`;
+
+    try {
+      const result = parse(code);
+      expect(result.errors).toHaveLength(0);
+    } catch (error) {
+      console.error("Parsing error:", error);
+      throw error;
+    }
+  });
+
+  it("should parse annotation with parameter defaults", () => {
+    const code = `@Component()(val timeout: Int = 5000, val retries: Int = 3)
+class HttpService`;
+
+    try {
+      const result = parse(code);
+      expect(result.errors).toHaveLength(0);
+    } catch (error) {
+      console.error("Parsing error:", error);
+      throw error;
+    }
+  });
+
+  it("should parse real Play Framework controller pattern", () => {
+    const code = `@Singleton
+class UserController @Inject()(
+  val components: ControllerComponents,
+  val userService: UserService
+) extends BaseController {
+  def index = Action { Ok("Hello") }
+}`;
+
+    try {
+      const result = parse(code);
+      expect(result.errors).toHaveLength(0);
+    } catch (error) {
+      console.error("Parsing error:", error);
+      throw error;
+    }
+  });
 });

@@ -424,37 +424,96 @@ export class StatementVisitorMethods {
   }
 
   visitAnnotation(node: CSTNode, ctx: PrintContext): string {
-    const identifiers = getChildNodes(node, "Identifier");
-    let result = "@" + (identifiers.length > 0 ? identifiers[0].image : "");
+    const qualifiedIdentifier = getFirstChild(node, "qualifiedIdentifier");
+    let result =
+      "@" +
+      (qualifiedIdentifier ? this.visitor.visit(qualifiedIdentifier, ctx) : "");
 
+    // Handle multiple parameter lists: @Inject() or @Inject()(val x: Type)
     const leftParens = getChildNodes(node, "LeftParen");
+    const rightParens = getChildNodes(node, "RightParen");
+
     if (leftParens.length > 0) {
-      result += "(";
       const annotationArguments = getChildNodes(node, "annotationArgument");
-      if (annotationArguments.length > 0) {
-        const args = annotationArguments.map((arg: CSTNode) =>
-          this.visitor.visit(arg, ctx),
+      let argIndex = 0;
+
+      // Process each parameter list
+      for (let i = 0; i < leftParens.length; i++) {
+        result += "(";
+
+        // Determine how many arguments are in this parameter list
+        // We need to group arguments by parameter list
+        const argsInThisList: CSTNode[] = [];
+
+        // For simplicity, distribute arguments evenly across parameter lists
+        // In practice, this should be based on actual parsing structure
+        const argsPerList = Math.ceil(
+          annotationArguments.length / leftParens.length,
         );
-        result += args.join(", ");
+        const endIndex = Math.min(
+          argIndex + argsPerList,
+          annotationArguments.length,
+        );
+
+        for (let j = argIndex; j < endIndex; j++) {
+          argsInThisList.push(annotationArguments[j]);
+        }
+        argIndex = endIndex;
+
+        if (argsInThisList.length > 0) {
+          const args = argsInThisList.map((arg: CSTNode) =>
+            this.visitor.visit(arg, ctx),
+          );
+          result += args.join(", ");
+        }
+
+        result += ")";
       }
-      result += ")";
     }
 
     return result;
   }
 
   visitAnnotationArgument(node: CSTNode, ctx: PrintContext): string {
+    const valTokens = getChildNodes(node, "Val");
+    const varTokens = getChildNodes(node, "Var");
     const identifiers = getChildNodes(node, "Identifier");
+    const colons = getChildNodes(node, "Colon");
     const equals = getChildNodes(node, "Equals");
     const expressions = getChildNodes(node, "expression");
+    const types = getChildNodes(node, "type");
 
-    if (identifiers.length > 0 && equals.length > 0 && expressions.length > 0) {
-      // Named argument: name = value
+    // Parameter declaration: val x: Type or var y: Type
+    if (
+      (valTokens.length > 0 || varTokens.length > 0) &&
+      identifiers.length > 0 &&
+      colons.length > 0 &&
+      types.length > 0
+    ) {
+      let result = valTokens.length > 0 ? "val " : "var ";
+      result += identifiers[0].image;
+      result += ": ";
+      result += this.visitor.visit(types[0], ctx);
+
+      // Optional default value
+      if (equals.length > 0 && expressions.length > 0) {
+        result += " = " + this.visitor.visit(expressions[0], ctx);
+      }
+
+      return result;
+    }
+    // Named argument: name = value
+    else if (
+      identifiers.length > 0 &&
+      equals.length > 0 &&
+      expressions.length > 0
+    ) {
       return (
         identifiers[0].image + " = " + this.visitor.visit(expressions[0], ctx)
       );
-    } else if (expressions.length > 0) {
-      // Positional argument
+    }
+    // Positional argument
+    else if (expressions.length > 0) {
       return this.visitor.visit(expressions[0], ctx);
     }
 

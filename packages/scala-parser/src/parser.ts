@@ -211,8 +211,8 @@ export class ScalaParser extends CstParser {
   private annotation = this.RULE("annotation", () => {
     this.CONSUME(tokens.At);
     this.SUBRULE(this.qualifiedIdentifier);
-    // Support single parameter list: @Inject() or @Entity(name = "value")
-    this.OPTION(() => {
+    // Support multiple parameter lists: @Inject() or @Inject()(val x: Type) or @Entity(name = "value")
+    this.MANY(() => {
       this.CONSUME(tokens.LeftParen);
       this.MANY_SEP({
         SEP: tokens.Comma,
@@ -225,21 +225,59 @@ export class ScalaParser extends CstParser {
   private annotationArgument = this.RULE("annotationArgument", () => {
     this.OR([
       {
-        // Named argument: name = value
+        // Parameter declaration: val x: Type or var y: Type
         ALT: () => {
+          this.OR2([
+            { ALT: () => this.CONSUME(tokens.Val) },
+            { ALT: () => this.CONSUME(tokens.Var) },
+          ]);
           this.CONSUME(tokens.Identifier);
-          this.CONSUME(tokens.Equals);
-          this.SUBRULE(this.expression);
+          this.CONSUME(tokens.Colon);
+          this.SUBRULE(this.type);
+          // Optional default value
+          this.OPTION(() => {
+            this.CONSUME(tokens.Equals);
+            this.SUBRULE(this.expression);
+          });
         },
         GATE: () => {
-          // Look ahead for identifier followed by equals
-          const next = this.LA(2);
-          return next && next.tokenType === tokens.Equals;
+          // Look ahead for val/var followed by identifier and colon
+          const first = this.LA(1);
+          const second = this.LA(2);
+          const third = this.LA(3);
+          return (
+            first &&
+            (first.tokenType === tokens.Val ||
+              first.tokenType === tokens.Var) &&
+            second &&
+            second.tokenType === tokens.Identifier &&
+            third &&
+            third.tokenType === tokens.Colon
+          );
+        },
+      },
+      {
+        // Named argument: name = value
+        ALT: () => {
+          this.CONSUME2(tokens.Identifier);
+          this.CONSUME2(tokens.Equals);
+          this.SUBRULE2(this.expression);
+        },
+        GATE: () => {
+          // Look ahead for identifier followed by equals (not val/var)
+          const first = this.LA(1);
+          const second = this.LA(2);
+          return (
+            first &&
+            first.tokenType === tokens.Identifier &&
+            second &&
+            second.tokenType === tokens.Equals
+          );
         },
       },
       {
         // Positional argument: value
-        ALT: () => this.SUBRULE2(this.expression),
+        ALT: () => this.SUBRULE3(this.expression),
       },
     ]);
   });
