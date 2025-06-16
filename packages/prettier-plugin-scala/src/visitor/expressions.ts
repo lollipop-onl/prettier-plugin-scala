@@ -408,7 +408,7 @@ export class ExpressionVisitorMethods {
       "Until",
       "PrependOp",
       "AppendOp",
-      "PlusPlus",
+      "ConcatOp",
       "RightArrow",
     ];
 
