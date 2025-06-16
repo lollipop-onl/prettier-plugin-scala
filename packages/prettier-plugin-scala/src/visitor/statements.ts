@@ -309,9 +309,16 @@ export class StatementVisitorMethods {
       });
     }
 
-    // Add empty line after exports
+    // Don't add empty line after exports unless there are subsequent elements
     if (node.children.exportClause && node.children.exportClause.length > 0) {
-      parts.push("");
+      // Only add empty line if there are other elements after exports
+      const hasSubsequentElements =
+        node.children.topLevelDefinition ||
+        node.children.topLevelStatement ||
+        node.children.expression;
+      if (hasSubsequentElements) {
+        parts.push("");
+      }
     }
 
     // Add top-level definitions
@@ -335,7 +342,12 @@ export class StatementVisitorMethods {
       });
     }
 
-    return parts.join("\n");
+    // Join parts and ensure proper file formatting
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0] + "\n";
+
+    // For multiple parts, join with newlines and add trailing newline
+    return parts.join("\n") + "\n";
   }
 
   visitAnnotations(annotations: any[], ctx: PrintContext): string {
