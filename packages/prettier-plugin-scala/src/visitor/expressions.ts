@@ -406,6 +406,10 @@ export class ExpressionVisitorMethods {
       "Ask",
       "To",
       "Until",
+      "PrependOp",
+      "AppendOp",
+      "PlusPlus",
+      "RightArrow",
     ];
 
     for (const op of operators) {
