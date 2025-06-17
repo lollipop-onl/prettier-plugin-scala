@@ -1,0 +1,1 @@
+numbers.map { n => n * 2 }

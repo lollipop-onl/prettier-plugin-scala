@@ -368,12 +368,10 @@ export class DeclarationVisitorMethods {
   visitAuxiliaryConstructor(node: CSTNode, ctx: PrintContext): string {
     let result = "def this";
 
-    const parameterLists = getChildNodes(node, "parameterList");
-    if (parameterLists.length > 0) {
-      const params = parameterLists.map((list: CSTNode) =>
-        this.visitor.visit(list, ctx),
-      );
-      result += params.join("");
+    // CST uses "parameterList" (singular) for auxiliary constructors
+    const parameterList = getFirstChild(node, "parameterList");
+    if (parameterList) {
+      result += this.visitor.visit(parameterList, ctx);
     }
 
     const expression = getFirstChild(node, "expression");
@@ -591,6 +589,11 @@ export class DeclarationVisitorMethods {
     const defDefinition = getFirstChild(node, "defDefinition");
     if (defDefinition) {
       return this.visitor.visit(defDefinition, ctx);
+    }
+
+    const auxiliaryConstructor = getFirstChild(node, "auxiliaryConstructor");
+    if (auxiliaryConstructor) {
+      return this.visitor.visit(auxiliaryConstructor, ctx);
     }
 
     const valDefinition = getFirstChild(node, "valDefinition");

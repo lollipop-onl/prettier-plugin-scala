@@ -50,16 +50,6 @@ export class CstNodeVisitor
     if (!node) return "";
 
     try {
-      // Debug logging
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "Visiting node:",
-          node.name || node.image || "unknown",
-          "children:",
-          node.children ? Object.keys(node.children) : "none",
-        );
-      }
-
       // Handle root node with original comments
       if (node.type === "compilationUnit" && node.originalComments) {
         const nodeResult = this.visitCore(node, ctx);

@@ -57,12 +57,18 @@ export class ExpressionVisitorMethods {
 
       const statements = [];
 
+      // Create nested context for lambda body
+      const nestedCtx = {
+        ...ctx,
+        indentLevel: ctx.indentLevel + 1,
+      };
+
       // Add statements (val/var/def definitions)
       const blockStatements = getChildNodes(node, "blockStatement");
       if (blockStatements.length > 0) {
         statements.push(
           ...blockStatements.map((stmt: CSTNode) =>
-            this.visitor.visit(stmt, ctx),
+            this.visitor.visit(stmt, nestedCtx),
           ),
         );
       }
@@ -70,7 +76,7 @@ export class ExpressionVisitorMethods {
       // Add final expression
       const finalExpression = getFirstChild(node, "expression");
       if (finalExpression) {
-        statements.push(this.visitor.visit(finalExpression, ctx));
+        statements.push(this.visitor.visit(finalExpression, nestedCtx));
       }
 
       if (statements.length === 0) {
@@ -81,11 +87,13 @@ export class ExpressionVisitorMethods {
         if (stmt.length < 50) {
           result += " " + stmt + " }";
         } else {
-          result += "\n  " + stmt + "\n}";
+          const indent = createIndent(1, ctx);
+          result += "\n" + indent + stmt + "\n}";
         }
       } else {
         // Multiple statements - use multiple lines
-        const indentedStmts = statements.map((stmt) => "  " + stmt);
+        const indent = createIndent(1, ctx);
+        const indentedStmts = statements.map((stmt) => indent + stmt);
         result += "\n" + indentedStmts.join("\n") + "\n}";
       }
 
@@ -233,6 +241,53 @@ export class ExpressionVisitorMethods {
         result += args.join(", ");
       }
       result += ")";
+    }
+
+    // Handle block lambda expressions: method { param => ... }
+    const leftBrace = getChildNodes(node, "LeftBrace");
+    const arrowNodes = getChildNodes(node, "Arrow");
+    const identifiers = getChildNodes(node, "Identifier");
+
+    if (
+      leftBrace.length > 0 &&
+      arrowNodes.length > 0 &&
+      identifiers.length > 1
+    ) {
+      // The lambda parameter is the second identifier (first is method name)
+      const lambdaParam = identifiers[1].image;
+      result += " { " + lambdaParam + " =>";
+
+      // Create nested context for lambda body
+      const nestedCtx = {
+        ...ctx,
+        indentLevel: ctx.indentLevel + 1,
+      };
+
+      // Process block statements
+      const blockStatements = getChildNodes(node, "blockStatement");
+      const statements = [];
+
+      for (const stmt of blockStatements) {
+        statements.push(this.visitor.visit(stmt, nestedCtx));
+      }
+
+      if (statements.length === 0) {
+        result += " }";
+      } else if (statements.length === 1) {
+        // Single statement - keep on same line if short
+        const stmt = statements[0];
+        if (stmt.length < 50) {
+          result += " " + stmt + " }";
+        } else {
+          const indent = createIndent(1, ctx);
+          result += "\n" + indent + stmt + "\n}";
+        }
+      } else {
+        // Multiple statements - use multiple lines
+        const indent = createIndent(1, ctx);
+        const indentedStmts = statements.map((stmt) => indent + stmt);
+        result += "\n" + indentedStmts.join("\n") + "\n}";
+      }
     }
 
     return result;
@@ -679,24 +734,28 @@ export class ExpressionVisitorMethods {
     let result = "{\n";
     const statements = [];
 
+    // Create nested context for block contents
+    const nestedCtx = {
+      ...ctx,
+      indentLevel: ctx.indentLevel + 1,
+    };
+
     if (blockStatements.length > 0) {
       statements.push(
         ...blockStatements.map((stmt: CSTNode) =>
-          this.visitor.visit(stmt, ctx),
+          this.visitor.visit(stmt, nestedCtx),
         ),
       );
     }
 
     if (expressions.length > 0) {
-      statements.push(this.visitor.visit(expressions[0], ctx));
+      statements.push(this.visitor.visit(expressions[0], nestedCtx));
     }
 
     const indent = createIndent(1, ctx);
     result += statements.map((stmt) => indent + stmt).join("\n");
 
-    // Close brace should be indented to the current context level (for method body blocks)
-    const closeIndent = createIndent(ctx.indentLevel > 0 ? 1 : 0, ctx);
-    result += "\n" + closeIndent + "}";
+    result += "\n}";
     return result;
   }
 
