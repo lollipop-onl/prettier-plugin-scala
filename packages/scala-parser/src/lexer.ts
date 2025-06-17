@@ -94,7 +94,7 @@ export const Identifier = createToken({
 // Literals
 export const IntegerLiteral = createToken({
   name: "IntegerLiteral",
-  pattern: /-?\d+[lL]?/,
+  pattern: /-?\d+[lLiIsSbB]?/,
 });
 
 // Scientific notation literal (must come before FloatingPointLiteral)
@@ -372,13 +372,6 @@ export const allTokens = [
   InterpolatedStringLiteral, // Must come before StringLiteral
   StringLiteral,
   CharLiteral,
-  // Numeric suffixes
-  LongSuffix,
-  IntSuffix,
-  ShortSuffix,
-  ByteSuffix,
-  FloatSuffix,
-  DoubleSuffix,
 
   // Multi-character operators (must come before single-character)
   TypeLambdaArrow, // Must come before Arrow to avoid ambiguity
