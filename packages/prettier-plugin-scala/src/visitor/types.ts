@@ -139,9 +139,9 @@ export class TypeVisitorMethods {
 
     // Handle array types like Array[String]
     const leftBrackets = getChildNodes(node, "LeftBracket");
-    const types = getChildNodes(node, "type");
-    for (let i = 0; i < leftBrackets.length && i < types.length; i++) {
-      result += "[" + this.visitor.visit(types[i], ctx) + "]";
+    const typeArguments = getChildNodes(node, "typeArgument");
+    for (let i = 0; i < leftBrackets.length && i < typeArguments.length; i++) {
+      result += "[" + this.visitor.visit(typeArguments[i], ctx) + "]";
     }
 
     return result;
@@ -188,6 +188,12 @@ export class TypeVisitorMethods {
     const type = getFirstChild(node, "type");
     if (type) {
       return this.visitor.visit(type, ctx);
+    }
+
+    // Handle type argument union structure
+    const typeArgumentUnion = getFirstChild(node, "typeArgumentUnion");
+    if (typeArgumentUnion) {
+      return this.visitor.visit(typeArgumentUnion, ctx);
     }
 
     return "";
@@ -327,5 +333,37 @@ export class TypeVisitorMethods {
     }
 
     return result;
+  }
+
+  visitTypeArgumentUnion(node: CSTNode, ctx: PrintContext): string {
+    const typeArgumentIntersection = getFirstChild(
+      node,
+      "typeArgumentIntersection",
+    );
+    return typeArgumentIntersection
+      ? this.visitor.visit(typeArgumentIntersection, ctx)
+      : "";
+  }
+
+  visitTypeArgumentIntersection(node: CSTNode, ctx: PrintContext): string {
+    const typeArgumentSimple = getFirstChild(node, "typeArgumentSimple");
+    return typeArgumentSimple
+      ? this.visitor.visit(typeArgumentSimple, ctx)
+      : "";
+  }
+
+  visitTypeArgumentSimple(node: CSTNode, ctx: PrintContext): string {
+    const qualifiedIdentifier = getFirstChild(node, "qualifiedIdentifier");
+    if (qualifiedIdentifier) {
+      return this.visitor.visit(qualifiedIdentifier, ctx);
+    }
+
+    // Handle other type argument patterns
+    const identifier = getFirstChild(node, "Identifier");
+    if (identifier) {
+      return getNodeImage(identifier);
+    }
+
+    return "";
   }
 }

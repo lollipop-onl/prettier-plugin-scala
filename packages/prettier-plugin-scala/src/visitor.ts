@@ -366,6 +366,18 @@ export class CstNodeVisitor
     return this.types.visitTypeArgument(node, ctx);
   }
 
+  visitTypeArgumentUnion(node: CSTNode, ctx: PrintContext): string {
+    return this.types.visitTypeArgumentUnion(node, ctx);
+  }
+
+  visitTypeArgumentIntersection(node: CSTNode, ctx: PrintContext): string {
+    return this.types.visitTypeArgumentIntersection(node, ctx);
+  }
+
+  visitTypeArgumentSimple(node: CSTNode, ctx: PrintContext): string {
+    return this.types.visitTypeArgumentSimple(node, ctx);
+  }
+
   visitTypeLambda(node: CSTNode, ctx: PrintContext): string {
     return this.types.visitTypeLambda(node, ctx);
   }
