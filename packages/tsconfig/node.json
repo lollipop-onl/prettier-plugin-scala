@@ -5,14 +5,9 @@
     "@tsconfig/node-ts/tsconfig.json"
   ],
   "compilerOptions": {
-    // Fix target for esbuild compatibility
     "target": "esnext",
     "module": "esnext",
-
-    // Module resolution for bundler
     "moduleResolution": "bundler",
-
-    // Disable problematic TS 5.7 features
     "rewriteRelativeImportExtensions": false,
     "verbatimModuleSyntax": false,
     "erasableSyntaxOnly": false
