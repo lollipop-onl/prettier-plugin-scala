@@ -1,8 +1,10 @@
 import { ScalaLexer } from "./lexer.js";
 import { parserInstance } from "./parser.js";
+import { ModularScalaParser } from "./parser/modular-parser.js";
 
 export { ScalaLexer, allTokens } from "./lexer.js";
 export { ScalaParser, parserInstance } from "./parser.js";
+export { ModularScalaParser };
 
 export interface ParseResult {
   cst: any;
@@ -148,6 +150,40 @@ export function parse(text: string): ParseResult {
   if (parserInstance.errors.length > 0) {
     throw new Error(
       `Parsing errors: ${parserInstance.errors.map((e) => e.message).join(", ")}`,
+    );
+  }
+
+  // CSTに位置情報を追加
+  const cstWithLocation = addLocationToCST(cst, lexResult.tokens, text);
+
+  return {
+    cst: cstWithLocation,
+    errors: [],
+    comments: lexResult.groups.comments || [],
+  };
+}
+
+// Parse function using the modular parser
+export function parseModular(text: string): ParseResult {
+  // Tokenize
+  const lexResult = ScalaLexer.tokenize(text);
+
+  if (lexResult.errors.length > 0) {
+    throw new Error(
+      `Lexing errors: ${lexResult.errors.map((e) => e.message).join(", ")}`,
+    );
+  }
+
+  // Create new modular parser instance
+  const modularParser = new ModularScalaParser();
+
+  // Parse
+  modularParser.input = lexResult.tokens;
+  const cst = modularParser.compilationUnit();
+
+  if (modularParser.errors.length > 0) {
+    throw new Error(
+      `Parsing errors: ${modularParser.errors.map((e) => e.message).join(", ")}`,
     );
   }
 

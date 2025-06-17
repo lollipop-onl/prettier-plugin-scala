@@ -7,6 +7,7 @@ import type { Rule, ParserMethod, CstNode } from "chevrotain";
 export class StatementParserMixin extends BaseParserModule {
   // Dependencies from other modules
   qualifiedIdentifier!: ParserMethod<any[], CstNode>;
+  expression!: ParserMethod<any[], CstNode>;
 
   // Package declaration
   packageClause = this.parser.RULE("packageClause", () => {
@@ -144,5 +145,21 @@ export class StatementParserMixin extends BaseParserModule {
         },
       },
     ]);
+  });
+
+  // Assignment statement (for sbt files and general assignments)
+  assignmentStatement = this.parser.RULE("assignmentStatement", () => {
+    this.consumeTokenType(tokens.Identifier);
+    this.oneOf([
+      { ALT: () => this.consumeTokenType(tokens.SbtAssign) },
+      { ALT: () => this.consumeTokenType(tokens.PlusEquals) },
+      { ALT: () => this.consumeTokenType(tokens.MinusEquals) },
+      { ALT: () => this.consumeTokenType(tokens.StarEquals) },
+      { ALT: () => this.consumeTokenType(tokens.SlashEquals) },
+      { ALT: () => this.consumeTokenType(tokens.PercentEquals) },
+      { ALT: () => this.consumeTokenType(tokens.AppendEquals) },
+      { ALT: () => this.consumeTokenType(tokens.Equals) },
+    ]);
+    this.subrule(this.expression);
   });
 }

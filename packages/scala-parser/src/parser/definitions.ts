@@ -166,4 +166,14 @@ export class DefinitionParserMixin extends BaseParserModule {
     });
     this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
   });
+
+  // Type definition
+  typeDefinition = this.parser.RULE("typeDefinition", () => {
+    this.consumeTokenType(tokens.Type);
+    this.consumeTokenType(tokens.Identifier);
+    this.parser.OPTION(() => this.subrule(this.typeParameters));
+    this.consumeTokenType(tokens.Equals);
+    this.subrule(this.type);
+    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
+  });
 }

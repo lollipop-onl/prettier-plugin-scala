@@ -62,6 +62,7 @@ export const Given = createToken({ name: "Given", pattern: /given\b/ });
 export const Using = createToken({ name: "Using", pattern: /using\b/ });
 export const To = createToken({ name: "To", pattern: /to\b/ });
 export const Enum = createToken({ name: "Enum", pattern: /enum\b/ });
+export const Array = createToken({ name: "Array", pattern: /Array\b/ });
 export const Extension = createToken({
   name: "Extension",
   pattern: /extension\b/,
@@ -76,6 +77,12 @@ export const Transparent = createToken({
 
 // Identifiers (must come after keywords)
 // Enhanced Unicode identifier support following Scala Language Specification
+// Operator identifier for custom operators (e.g., +++, <~>, etc.)
+export const OperatorIdentifier = createToken({
+  name: "OperatorIdentifier",
+  pattern: /[+\-*\/:%&|^<>=!~?#@$\\]+/,
+});
+
 // Backward compatible with existing implementation, enhanced mathematical symbol support
 // Supports: Latin, Greek, Cyrillic, CJK, Arabic, Hebrew, Mathematical symbols, Emojis (via surrogate pairs)
 export const Identifier = createToken({
@@ -123,6 +130,7 @@ export const Plus = createToken({ name: "Plus", pattern: /\+/ });
 export const Minus = createToken({ name: "Minus", pattern: /-/ });
 export const Star = createToken({ name: "Star", pattern: /\*/ });
 export const Slash = createToken({ name: "Slash", pattern: /\// });
+export const Backslash = createToken({ name: "Backslash", pattern: /\\/ });
 export const Percent = createToken({ name: "Percent", pattern: /%/ });
 export const LessThan = createToken({ name: "LessThan", pattern: /</ });
 export const GreaterThan = createToken({ name: "GreaterThan", pattern: />/ });
@@ -138,6 +146,7 @@ export const EqualsEquals = createToken({
   name: "EqualsEquals",
   pattern: /==/,
 });
+export const DoubleEquals = EqualsEquals; // Alias for modular parser compatibility
 export const NotEquals = createToken({ name: "NotEquals", pattern: /!=/ });
 export const LogicalAnd = createToken({ name: "LogicalAnd", pattern: /&&/ });
 export const LogicalOr = createToken({ name: "LogicalOr", pattern: /\|\|/ });
@@ -147,6 +156,7 @@ export const TypeLambdaArrow = createToken({
   name: "TypeLambdaArrow",
   pattern: /=>>/,
 });
+export const DoubleArrow = TypeLambdaArrow; // Alias for modular parser compatibility
 export const LeftArrow = createToken({ name: "LeftArrow", pattern: /<-/ });
 export const RightArrow = createToken({ name: "RightArrow", pattern: /->/ });
 export const ContextArrow = createToken({
@@ -154,10 +164,16 @@ export const ContextArrow = createToken({
   pattern: /\?=>/,
 });
 export const SubtypeOf = createToken({ name: "SubtypeOf", pattern: /<:/ });
+export const ColonLess = SubtypeOf; // Alias for modular parser compatibility
 export const SupertypeOf = createToken({ name: "SupertypeOf", pattern: />:/ });
+export const GreaterColon = SupertypeOf; // Alias for modular parser compatibility
 export const AppendOp = createToken({ name: "AppendOp", pattern: /:\+/ });
+export const PlusColon = AppendOp; // Alias for modular parser compatibility
+export const ColonPlus = createToken({ name: "ColonPlus", pattern: /:\+/ }); // Same as AppendOp but separate token for parser
 export const PrependOp = createToken({ name: "PrependOp", pattern: /::/ });
+export const ColonColon = PrependOp; // Alias for modular parser compatibility
 export const ConcatOp = createToken({ name: "ConcatOp", pattern: /\+\+/ });
+export const DoublePlus = ConcatOp; // Alias for modular parser compatibility
 export const AppendEquals = createToken({
   name: "AppendEquals",
   pattern: /\+\+=/,
@@ -172,7 +188,6 @@ export const PercentEquals = createToken({
   pattern: /%=/,
 });
 // sbt DSL operators
-export const SbtAssign = createToken({ name: "SbtAssign", pattern: /:=/ });
 export const DoublePercent = createToken({
   name: "DoublePercent",
   pattern: /%%/,
@@ -189,6 +204,8 @@ export const UnsignedRightShift = createToken({
   pattern: />>>/,
 });
 export const Colon = createToken({ name: "Colon", pattern: /:/ });
+export const ColonEquals = createToken({ name: "ColonEquals", pattern: /:=/ });
+export const SbtAssign = ColonEquals; // Alias for sbt compatibility
 export const Semicolon = createToken({ name: "Semicolon", pattern: /;/ });
 export const Comma = createToken({ name: "Comma", pattern: /,/ });
 export const Dot = createToken({ name: "Dot", pattern: /\./ });
@@ -205,6 +222,14 @@ export const QuoteStart = createToken({ name: "QuoteStart", pattern: /'\{/ });
 export const SpliceStart = createToken({
   name: "SpliceStart",
   pattern: /\$\{/,
+});
+
+// Additional tokens for modular parser
+export const Quote = createToken({ name: "Quote", pattern: /'/ });
+export const Dollar = createToken({ name: "Dollar", pattern: /\$/ });
+export const QuestionArrow = createToken({
+  name: "QuestionArrow",
+  pattern: /\?\=>/,
 });
 
 // Delimiters
@@ -290,6 +315,7 @@ export const allTokens = [
   Using,
   To,
   Enum,
+  Array,
   Extension,
   Export,
   Opaque,
@@ -318,6 +344,7 @@ export const allTokens = [
   NotEquals,
   LogicalAnd,
   LogicalOr,
+  ColonEquals, // := must come before :
   AppendOp,
   PrependOp,
   AppendEquals, // ++= must come before ++
@@ -331,7 +358,6 @@ export const allTokens = [
   StarEquals,
   SlashEquals,
   PercentEquals,
-  SbtAssign,
   // Bitwise shift operators (must come before single-character)
   UnsignedRightShift, // >>> must come before >>
   LeftShift,
@@ -343,6 +369,7 @@ export const allTokens = [
   Minus,
   Star,
   Slash,
+  Backslash,
   DoublePercent, // %% must come before single %
   Percent,
   LessThan,
@@ -358,7 +385,10 @@ export const allTokens = [
   Dot,
   Underscore,
   At,
+  QuestionArrow, // Must come before Question
   Question,
+  Quote,
+  Dollar,
 
   // Delimiters
   LeftParen,
@@ -367,6 +397,9 @@ export const allTokens = [
   RightBracket,
   LeftBrace,
   RightBrace,
+
+  // Operator identifier (before regular identifier)
+  OperatorIdentifier,
 
   // Identifier (must come last)
   Identifier,
