@@ -2,7 +2,9 @@ import { createScalaPrinter } from "./printer";
 import { parse, type ScalaCstNode, type IToken } from "@simochee/scala-parser";
 import { type Plugin, type SupportOption } from "prettier";
 
-// Language definition
+/**
+ * Prettierがサポートする言語の定義
+ */
 const languages = [
   {
     name: "Scala",
@@ -12,7 +14,9 @@ const languages = [
   },
 ];
 
-// Parser definition
+/**
+ * Scalaパーサーの定義
+ */
 const parsers = {
   scala: {
     parse: (text: string) => {
@@ -54,12 +58,16 @@ const parsers = {
   },
 };
 
-// Printer definition
+/**
+ * プリンターの定義
+ */
 const printers = {
   "scala-cst": createScalaPrinter(),
 };
 
-// Options (scalafmt compatibility - Phase 1)
+/**
+ * プラグインオプション（scalafmt互換性 - フェーズ1）
+ */
 const options: Record<string, SupportOption> = {
   // Prettier standard options with Scala-specific defaults
   semi: {
@@ -88,7 +96,9 @@ const options: Record<string, SupportOption> = {
   } as const,
 };
 
-// Export the plugin
+/**
+ * Prettierプラグインのエクスポート
+ */
 const plugin: Plugin = {
   languages,
   parsers,

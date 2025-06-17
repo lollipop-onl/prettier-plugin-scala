@@ -1,7 +1,7 @@
 import type { ScalaCstNode, IToken } from "@simochee/scala-parser";
 
 /**
- * Shared utilities and formatting helpers for the visitor pattern
+ * ビジターパターンで使用する共有ユーティリティとフォーマットヘルパー
  */
 
 export interface PrettierOptions {
@@ -14,7 +14,7 @@ export interface PrettierOptions {
   scalaLineWidth?: number; // Deprecated, for backward compatibility
 }
 
-// Union type for CST elements (nodes or tokens)
+// CST要素（ノードまたはトークン）のユニオン型
 export type CSTNode = ScalaCstNode | IToken;
 
 export type PrintContext = {
@@ -25,7 +25,9 @@ export type PrintContext = {
 };
 
 /**
- * Safe access to node children with null check
+ * nullチェック付きでノードの子要素に安全にアクセス
+ * @param node - 対象ノード
+ * @returns 子要素のマップ
  */
 export function getChildren(node: CSTNode): Record<string, CSTNode[]> {
   if ("children" in node && node.children) {
@@ -35,14 +37,20 @@ export function getChildren(node: CSTNode): Record<string, CSTNode[]> {
 }
 
 /**
- * Get specific child nodes by key with null safety
+ * キーで指定した子ノードを安全に取得
+ * @param node - 対象ノード
+ * @param key - 子ノードのキー
+ * @returns 子ノードの配列
  */
 export function getChildNodes(node: CSTNode, key: string): CSTNode[] {
   return getChildren(node)[key] || [];
 }
 
 /**
- * Get first child node by key with null safety
+ * キーで指定した最初の子ノードを安全に取得
+ * @param node - 対象ノード
+ * @param key - 子ノードのキー
+ * @returns 最初の子ノードまたはundefined
  */
 export function getFirstChild(node: CSTNode, key: string): CSTNode | undefined {
   const children = getChildNodes(node, key);
@@ -50,7 +58,9 @@ export function getFirstChild(node: CSTNode, key: string): CSTNode | undefined {
 }
 
 /**
- * Get node image with safe fallback
+ * ノードのimageプロパティを安全に取得
+ * @param node - 対象ノード
+ * @returns imageプロパティまたは空文字列
  */
 export function getNodeImage(node: CSTNode): string {
   if ("image" in node && node.image) {
@@ -60,7 +70,9 @@ export function getNodeImage(node: CSTNode): string {
 }
 
 /**
- * Get node image with safe fallback for potentially null nodes
+ * nullまたはundefinedの可能性があるノードのimageを安全に取得
+ * @param node - 対象ノード（null/undefined可）
+ * @returns imageプロパティまたは空文字列
  */
 export function getNodeImageSafe(node: CSTNode | undefined | null): string {
   if (node && "image" in node && node.image) {
@@ -70,17 +82,19 @@ export function getNodeImageSafe(node: CSTNode | undefined | null): string {
 }
 
 /**
- * Helper method to get effective printWidth (supports scalafmt compatibility)
+ * 有効なprintWidthを取得（scalafmt互換性をサポート）
+ * @param ctx - 印刷コンテキスト
+ * @returns 有効な行幅
  */
 export function getPrintWidth(ctx: PrintContext): number {
-  // Use Prettier's printWidth (scalafmt maxColumn compatible)
+  // PrettierのprintWidthを使用（scalafmtのmaxColumn互換）
   if (ctx.options.printWidth) {
     return ctx.options.printWidth;
   }
 
-  // Fallback to deprecated scalaLineWidth for backward compatibility
+  // 後方互換性のため非推奨のscalaLineWidthにフォールバック
   if (ctx.options.scalaLineWidth) {
-    // Show deprecation warning in development
+    // 開発環境で非推奨警告を表示
     if (process.env.NODE_ENV !== "production") {
       console.warn(
         "scalaLineWidth is deprecated. Use printWidth instead for scalafmt compatibility.",
@@ -89,35 +103,40 @@ export function getPrintWidth(ctx: PrintContext): number {
     return ctx.options.scalaLineWidth;
   }
 
-  // Default value
+  // デフォルト値
   return 80;
 }
 
 /**
- * Helper method to get effective tabWidth (supports scalafmt compatibility)
+ * 有効なtabWidthを取得（scalafmt互換性をサポート）
+ * @param ctx - 印刷コンテキスト
+ * @returns 有効なタブ幅
  */
 export function getTabWidth(ctx: PrintContext): number {
-  // Use Prettier's tabWidth (scalafmt indent.main compatible)
+  // PrettierのtabWidthを使用（scalafmtのindent.main互換）
   if (ctx.options.tabWidth) {
     return ctx.options.tabWidth;
   }
 
-  // Default value
+  // デフォルト値
   return 2;
 }
 
 /**
- * Helper method to handle semicolon formatting (supports Prettier semi option)
+ * セミコロンのフォーマットを処理（Prettierのsemiオプションをサポート）
+ * @param statement - ステートメント文字列
+ * @param ctx - 印刷コンテキスト
+ * @returns フォーマット済みのステートメント
  */
 export function formatStatement(statement: string, ctx: PrintContext): string {
-  // Use Prettier's semi option
-  // The plugin sets default semi=false for Scala, but respect explicit user choice
+  // Prettierのsemiオプションを使用
+  // プラグインはScala用にデフォルトsemi=falseを設定するが、明示的なユーザー選択を尊重
   const useSemi = ctx.options.semi === true;
 
-  // Remove existing trailing semicolon
+  // 既存の末尾セミコロンを削除
   const cleanStatement = statement.replace(/;\s*$/, "");
 
-  // Add semicolon if requested
+  // リクエストされた場合セミコロンを追加
   if (useSemi) {
     return cleanStatement + ";";
   }
@@ -126,21 +145,24 @@ export function formatStatement(statement: string, ctx: PrintContext): string {
 }
 
 /**
- * Helper method to handle string quote formatting (supports Prettier singleQuote option)
+ * 文字列クォートのフォーマットを処理（PrettierのsingleQuoteオプションをサポート）
+ * @param content - 文字列リテラルの内容
+ * @param ctx - 印刷コンテキスト
+ * @returns フォーマット済みの文字列
  */
 export function formatStringLiteral(
   content: string,
   ctx: PrintContext,
 ): string {
-  // Use Prettier's singleQuote option
+  // PrettierのsingleQuoteオプションを使用
   const useSingleQuote = ctx.options.singleQuote === true;
 
-  // Skip string interpolation (starts with s", f", raw", etc.)
+  // 文字列補間をスキップ（s"、f"、raw"などで始まる）
   if (content.match(/^[a-zA-Z]"/)) {
-    return content; // Don't modify interpolated strings
+    return content; // 補間文字列は変更しない
   }
 
-  // Extract the content
+  // 内容を抽出
   let innerContent = content;
 
   if (content.startsWith('"') && content.endsWith('"')) {

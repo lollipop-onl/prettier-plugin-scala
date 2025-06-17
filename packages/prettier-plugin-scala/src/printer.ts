@@ -2,8 +2,19 @@ import { CstNodeVisitor, type CSTNode } from "./visitor";
 import type { ScalaCstNode, IToken } from "@simochee/scala-parser";
 import { type Doc, type Printer, type AstPath, type Options } from "prettier";
 
+/**
+ * Scala用のPrettierプリンターを作成
+ * @returns Prettierプリンターオブジェクト
+ */
 export function createScalaPrinter(): Printer {
   return {
+    /**
+     * ASTノードをフォーマット済みのテキストに変換
+     * @param path - 現在のノードへのパス
+     * @param options - Prettierオプション
+     * @param print - 子ノードを印刷するための関数
+     * @returns フォーマット済みのDoc
+     */
     print(
       path: AstPath<ScalaCstNode>,
       options: Options,
@@ -24,7 +35,7 @@ export function createScalaPrinter(): Printer {
             options.trailingComma === "es5" ? "all" : options.trailingComma,
         },
         print: (childNode: CSTNode) => {
-          // Create a mock path for the child node
+          // 子ノード用のモックパスを作成
           const mockPath = {
             getValue: () => childNode,
             call: (fn: () => unknown) => fn(),
@@ -37,6 +48,11 @@ export function createScalaPrinter(): Printer {
       // 文字列結果をPrettierのDocに変換
       return result;
     },
+    /**
+     * コメントを印刷
+     * @param path - コメントトークンへのパス
+     * @returns フォーマット済みのコメント
+     */
     printComment(path: AstPath<IToken>): Doc {
       const comment = path.getValue();
       if (!comment) return "";

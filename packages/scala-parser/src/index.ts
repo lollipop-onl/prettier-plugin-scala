@@ -18,7 +18,13 @@ export type {
 } from "./types";
 export type { IToken } from "chevrotain";
 
-// CSTノードに位置情報を自動設定するヘルパー関数
+/**
+ * CSTノードに位置情報を自動設定するヘルパー関数
+ * @param cst - 処理対象のCSTノード
+ * @param tokens - 解析で使用されたトークンの配列
+ * @param text - 元のソースコードテキスト
+ * @returns 位置情報が付与されたCSTノード
+ */
 function addLocationToCST(
   cst: ScalaCstNode,
   tokens: IToken[],

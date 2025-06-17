@@ -448,16 +448,28 @@ export const allTokens = [
   Underscore,
 ];
 
-// Create the lexer (lazy initialization to avoid issues during import)
+// レキサーの作成（インポート時の問題を回避するための遅延初期化）
 let scalaLexerInstance: Lexer | null = null;
 
+/**
+ * Scalaコードの字句解析を行うレキサー
+ */
 export const ScalaLexer = {
+  /**
+   * レキサーインスタンスを取得（遅延初期化）
+   * @returns Chevrotainレキサーのインスタンス
+   */
   get instance(): Lexer {
     if (!scalaLexerInstance) {
       scalaLexerInstance = new Lexer(allTokens);
     }
     return scalaLexerInstance;
   },
+  /**
+   * 入力文字列をトークン化
+   * @param input - 字句解析対象のScalaソースコード
+   * @returns トークン化の結果（トークン、エラー、グループ化されたトークン）
+   */
   tokenize(input: string): ILexingResult {
     return this.instance.tokenize(input);
   },

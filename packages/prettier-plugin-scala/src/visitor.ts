@@ -1,4 +1,7 @@
-// Import all visitor modules
+/**
+ * CSTノードビジターのメインモジュール
+ * 各種ビジターモジュールを統合して使用
+ */
 import {
   DeclarationVisitorMethods,
   type DeclarationVisitor,
@@ -24,12 +27,16 @@ import {
 import type { PrintContext, CSTNode } from "./visitor/utils";
 import type { ScalaCstNode } from "@simochee/scala-parser";
 
-// Re-export types from utils for external use
+// 外部使用のためのユーティリティ型の再エクスポート
 export type { PrintContext, CSTNode, PrettierOptions } from "./visitor/utils";
 
-// Type alias for backward compatibility
+// 後方互換性のための型エイリアス
 type VisitorContext = PrintContext;
 
+/**
+ * CSTノードを訪問してフォーマット済みのテキストに変換するビジター
+ * 各種言語構造に対応するビジターモジュールを統合
+ */
 export class CstNodeVisitor
   implements
     DeclarationVisitor,
@@ -38,18 +45,24 @@ export class CstNodeVisitor
     TypeVisitor,
     Scala3Visitor
 {
-  // Initialize visitor modules
+  // ビジターモジュールの初期化
   private declarations = new DeclarationVisitorMethods(this);
   private expressions = new ExpressionVisitorMethods(this);
   private statements = new StatementVisitorMethods(this);
   private types = new TypeVisitorMethods(this);
   private scala3 = new Scala3VisitorMethods(this);
 
+  /**
+   * CSTノードを訪問してフォーマット済みテキストに変換
+   * @param node - 訪問対象のCSTノード
+   * @param ctx - 印刷コンテキスト（オプション、パスなど）
+   * @returns フォーマット済みの文字列
+   */
   visit(node: ScalaCstNode, ctx: PrintContext): string {
     if (!node) return "";
 
     try {
-      // Handle root node with original comments
+      // オリジナルコメントを含むルートノードの処理
       if (
         "type" in node &&
         node.type === "compilationUnit" &&
@@ -57,7 +70,7 @@ export class CstNodeVisitor
         node.originalComments
       ) {
         const nodeResult = this.visitCore(node, ctx);
-        // Safe type conversion for originalComments
+        // originalCommentsの安全な型変換
         const comments = Array.isArray(node.originalComments)
           ? (node.originalComments as unknown as CSTNode[])
           : [];
@@ -69,7 +82,7 @@ export class CstNodeVisitor
       const nodeName = "name" in node ? node.name : "unknown";
       console.error(`Error visiting node ${nodeName}:`, error);
 
-      // Return a safe fallback for formatting errors
+      // フォーマットエラー時の安全なフォールバック
       if ("image" in node && node.image) {
         return String(node.image);
       }
@@ -78,16 +91,22 @@ export class CstNodeVisitor
     }
   }
 
+  /**
+   * CSTノード訪問のコアロジック
+   * @param node - 訪問対象のCSTノード
+   * @param ctx - 印刷コンテキスト
+   * @returns フォーマット済みの文字列
+   */
   private visitCore(node: CSTNode, ctx: PrintContext): string {
     try {
-      // Handle token nodes
+      // トークンノードの処理
       if ("image" in node && node.image !== undefined) {
         return node.image;
       }
 
-      // Handle CST nodes by rule name
+      // ルール名によるCSTノードの処理
       if ("name" in node && node.name) {
-        // Capitalize the first letter of the rule name
+        // ルール名の最初の文字を大文字化
         const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
         const methodName = `visit${ruleName}`;
         if (
