@@ -6,7 +6,7 @@ import type {
   TokenBounds,
   LineColumn,
 } from "./types";
-import type { IToken } from "chevrotain";
+import type { IToken, CstElement } from "chevrotain";
 
 export { ScalaLexer, allTokens } from "./lexer";
 export { ScalaParser, parserInstance } from "./parser";
@@ -111,10 +111,7 @@ function addLocationToCST(
     // CSTノードの場合
     if (node.children) {
       // 子ノードを先に処理
-      const processedChildren: Record<
-        string,
-        import("chevrotain").CstElement[]
-      > = {};
+      const processedChildren: Record<string, CstElement[]> = {};
       for (const [key, children] of Object.entries(node.children)) {
         if (Array.isArray(children)) {
           processedChildren[key] = children.map((child) => {
