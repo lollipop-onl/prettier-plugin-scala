@@ -97,7 +97,7 @@ describe("ScalaLexer", () => {
 
     expect(result.errors.length).toBe(0);
     const interpolatedStrings = result.tokens.filter(
-      (t) => t.tokenType.name === "InterpolatedStringLiteral",
+      (t) => t.tokenType.name === "CustomInterpolatedString",
     );
     expect(interpolatedStrings.length).toBe(3);
   });
