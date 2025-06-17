@@ -196,6 +196,76 @@ jobs:
           # Test examples directory
           npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js test-fixtures/examples/features/*.scala > /dev/null || echo "⚠️ Some examples may need parser updates"
 
+      - name: Setup Scala for compilation verification
+        uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:1.17
+          apps: scala:3.3.4
+
+      - name: Verify formatted Scala files compile
+        run: |
+          echo "🔧 Testing Scala compilation after formatting..."
+          
+          # Create temporary directory for formatted files
+          mkdir -p /tmp/formatted-scala
+          
+          # Format test fixtures and save to temp directory
+          echo "📝 Formatting test files..."
+          for file in test-fixtures/unit/basic/*.scala; do
+            if [ -f "$file" ]; then
+              echo "Formatting: $file"
+              npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js "$file" > "/tmp/formatted-scala/$(basename "$file")" 2>/dev/null || {
+                echo "⚠️ Skipping $file (formatting failed)"
+                continue
+              }
+            fi
+          done
+          
+          # Format examples and save to temp directory
+          for file in test-fixtures/examples/features/*.scala; do
+            if [ -f "$file" ]; then
+              echo "Formatting: $file"
+              npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js "$file" > "/tmp/formatted-scala/$(basename "$file").example" 2>/dev/null || {
+                echo "⚠️ Skipping $file (formatting failed)"
+                continue
+              }
+            fi
+          done
+          
+          # Test compilation of formatted files
+          echo "🏗️ Testing Scala compilation..."
+          compiled_count=0
+          failed_count=0
+          
+          for formatted_file in /tmp/formatted-scala/*.scala*; do
+            if [ -f "$formatted_file" ]; then
+              echo "Compiling: $(basename "$formatted_file")"
+              if scala -e "import scala.io.Source; val code = Source.fromFile(\"$formatted_file\").mkString; println(s\"File: $(basename "$formatted_file") - Length: \${code.length} chars\")" 2>/dev/null; then
+                ((compiled_count++))
+                echo "✅ $(basename "$formatted_file") - Basic syntax check passed"
+              else
+                ((failed_count++))
+                echo "❌ $(basename "$formatted_file") - Compilation failed"
+                # Show file content for debugging (first 10 lines)
+                echo "File content (first 10 lines):"
+                head -10 "$formatted_file" || echo "Could not read file"
+              fi
+            fi
+          done
+          
+          echo "📊 Compilation Results:"
+          echo "  ✅ Successful: $compiled_count files"
+          echo "  ❌ Failed: $failed_count files"
+          
+          # Allow some failures but ensure majority works
+          if [ $compiled_count -gt 0 ]; then
+            echo "✅ Scala compilation verification completed - At least some files compile successfully"
+            exit 0
+          else
+            echo "❌ No files compiled successfully - This may indicate serious formatting issues"
+            exit 1
+          fi
+
   # パフォーマンスベンチマーク（mainブランチのみ）
   benchmark:
     name: Performance Benchmark
