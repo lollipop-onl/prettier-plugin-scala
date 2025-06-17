@@ -2,22 +2,20 @@
  * Definition parsing module for class, object, trait, method, and variable definitions
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule } from "chevrotain";
+import type { Rule, ParserMethod, CstNode } from "chevrotain";
 
 export class DefinitionParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  annotation!: Rule;
-  modifier!: Rule;
-  typeParameters!: Rule;
-  classParameters!: Rule;
-  extendsClause!: Rule;
-  classBody!: Rule;
-  type!: Rule;
-  expression!: Rule;
-  pattern!: Rule;
-  parameterLists!: Rule;
-  extensionMember!: Rule;
-  enumCase!: Rule;
+  annotation!: ParserMethod<any[], CstNode>;
+  modifier!: ParserMethod<any[], CstNode>;
+  typeParameters!: ParserMethod<any[], CstNode>;
+  classParameters!: ParserMethod<any[], CstNode>;
+  extendsClause!: ParserMethod<any[], CstNode>;
+  classBody!: ParserMethod<any[], CstNode>;
+  type!: ParserMethod<any[], CstNode>;
+  expression!: ParserMethod<any[], CstNode>;
+  pattern!: ParserMethod<any[], CstNode>;
+  parameterLists!: ParserMethod<any[], CstNode>;
 
   // Class definition
   classDefinition = this.parser.RULE("classDefinition", () => {
@@ -27,15 +25,9 @@ export class DefinitionParserMixin extends BaseParserModule {
     // Constructor annotations (for DI patterns like @Inject())
     this.manyOf(() => this.subrule(this.annotation));
     // Constructor parameters (multiple parameter lists supported)
-    this.parser.MANY(() => this.subrule(this.classParameters), {
-      LABEL: "classParametersMany",
-    });
-    this.parser.OPTION(() => this.subrule(this.extendsClause), {
-      LABEL: "extendsClauseOption2",
-    });
-    this.parser.OPTION(() => this.subrule(this.classBody), {
-      LABEL: "classBodyOption3",
-    });
+    this.parser.MANY(() => this.subrule(this.classParameters));
+    this.parser.OPTION(() => this.subrule(this.extendsClause));
+    this.parser.OPTION(() => this.subrule(this.classBody));
   });
 
   // Object definition
@@ -43,9 +35,7 @@ export class DefinitionParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.ObjectKeyword);
     this.consumeTokenType(tokens.Identifier);
     this.parser.OPTION(() => this.subrule(this.extendsClause));
-    this.parser.OPTION(() => this.subrule(this.classBody), {
-      LABEL: "classBodyOption2",
-    });
+    this.parser.OPTION(() => this.subrule(this.classBody));
   });
 
   // Trait definition
@@ -53,12 +43,8 @@ export class DefinitionParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.Trait);
     this.consumeTokenType(tokens.Identifier);
     this.parser.OPTION(() => this.subrule(this.typeParameters));
-    this.parser.OPTION(() => this.subrule(this.extendsClause), {
-      LABEL: "extendsClauseOption2",
-    });
-    this.parser.OPTION(() => this.subrule(this.classBody), {
-      LABEL: "classBodyOption3",
-    });
+    this.parser.OPTION(() => this.subrule(this.extendsClause));
+    this.parser.OPTION(() => this.subrule(this.classBody));
   });
 
   // Enum definition (Scala 3)
@@ -66,27 +52,19 @@ export class DefinitionParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.Enum);
     this.consumeTokenType(tokens.Identifier);
     this.parser.OPTION(() => this.subrule(this.typeParameters));
-    this.parser.OPTION(() => this.subrule(this.classParameters), {
-      LABEL: "classParametersOption2",
-    });
-    this.parser.OPTION(() => this.subrule(this.extendsClause), {
-      LABEL: "extendsClauseOption3",
-    });
+    this.parser.OPTION(() => this.subrule(this.classParameters));
+    this.parser.OPTION(() => this.subrule(this.extendsClause));
     this.consumeTokenType(tokens.LeftBrace);
-    this.manyOf(() => this.subrule(this.enumCase));
+    this.manyOf(() => this.subrule(this.enumCaseDef));
     this.consumeTokenType(tokens.RightBrace);
   });
 
-  enumCase = this.parser.RULE("enumCase", () => {
+  enumCaseDef = this.parser.RULE("enumCaseDef", () => {
     this.consumeTokenType(tokens.Case);
     this.consumeTokenType(tokens.Identifier);
     this.parser.OPTION(() => this.subrule(this.classParameters));
-    this.parser.OPTION(() => this.subrule(this.extendsClause), {
-      LABEL: "extendsClauseOption2",
-    });
-    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon), {
-      LABEL: "semicolonOption3",
-    });
+    this.parser.OPTION(() => this.subrule(this.extendsClause));
+    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
   });
 
   // Extension definition (Scala 3)
@@ -99,11 +77,11 @@ export class DefinitionParserMixin extends BaseParserModule {
     this.subrule(this.type);
     this.consumeTokenType(tokens.RightParen);
     this.consumeTokenType(tokens.LeftBrace);
-    this.manyOf(() => this.subrule(this.extensionMember));
+    this.manyOf(() => this.subrule(this.extensionMemberDef));
     this.consumeTokenType(tokens.RightBrace);
   });
 
-  extensionMember = this.parser.RULE("extensionMember", () => {
+  extensionMemberDef = this.parser.RULE("extensionMemberDef", () => {
     this.manyOf(() => this.subrule(this.modifier));
     this.subrule(this.defDefinition);
   });
@@ -120,13 +98,10 @@ export class DefinitionParserMixin extends BaseParserModule {
             this.consumeTokenType(tokens.Colon);
             this.subrule(this.type);
           });
-          this.parser.OPTION(
-            () => {
-              this.consumeTokenType(tokens.Equals);
-              this.subrule(this.expression);
-            },
-            { LABEL: "expressionOption3" },
-          );
+          this.parser.OPTION(() => {
+            this.consumeTokenType(tokens.Equals);
+            this.subrule(this.expression);
+          });
         },
         GATE: () => {
           // This alternative is for simple identifier patterns only
@@ -149,14 +124,12 @@ export class DefinitionParserMixin extends BaseParserModule {
         // Pattern matching: val (x, y) = expr or val SomeClass(...) = expr
         ALT: () => {
           this.subrule(this.pattern);
-          this.parser.CONSUME(tokens.Equals, { LABEL: "Equals2" });
-          this.parser.SUBRULE(this.expression, { LABEL: "expression2" });
+          this.consumeTokenType(tokens.Equals);
+          this.subrule(this.expression);
         },
       },
     ]);
-    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon), {
-      LABEL: "semicolonOption4",
-    });
+    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
   });
 
   // Var definition
@@ -169,9 +142,7 @@ export class DefinitionParserMixin extends BaseParserModule {
     });
     this.consumeTokenType(tokens.Equals);
     this.subrule(this.expression);
-    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon), {
-      LABEL: "semicolonOption2",
-    });
+    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
   });
 
   // Method definition
@@ -184,25 +155,15 @@ export class DefinitionParserMixin extends BaseParserModule {
       { ALT: () => this.consumeTokenType(tokens.This) },
     ]);
     this.parser.OPTION(() => this.subrule(this.typeParameters));
-    this.parser.OPTION(() => this.subrule(this.parameterLists), {
-      LABEL: "parameterListsOption2",
+    this.parser.OPTION(() => this.subrule(this.parameterLists));
+    this.parser.OPTION(() => {
+      this.consumeTokenType(tokens.Colon);
+      this.subrule(this.type);
     });
-    this.parser.OPTION(
-      () => {
-        this.consumeTokenType(tokens.Colon);
-        this.subrule(this.type);
-      },
-      { LABEL: "typeOption3" },
-    );
-    this.parser.OPTION(
-      () => {
-        this.consumeTokenType(tokens.Equals);
-        this.subrule(this.expression);
-      },
-      { LABEL: "expressionOption4" },
-    );
-    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon), {
-      LABEL: "semicolonOption5",
+    this.parser.OPTION(() => {
+      this.consumeTokenType(tokens.Equals);
+      this.subrule(this.expression);
     });
+    this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
   });
 }

@@ -1,7 +1,13 @@
 /**
  * Statement visitor methods for import/export, package, and other statements
  */
-import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
+import {
+  getChildNodes,
+  getFirstChild,
+  getChildren,
+  getNodeImage,
+  getNodeImageSafe,
+} from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface StatementVisitor {
@@ -40,7 +46,7 @@ export class StatementVisitorMethods {
 
     // Add first identifier
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     // Process remaining parts
@@ -68,7 +74,7 @@ export class StatementVisitorMethods {
         result += "}";
       } else if (identifierIndex < identifiers.length) {
         // Next identifier in path
-        result += identifiers[identifierIndex].image;
+        result += getNodeImage(identifiers[identifierIndex]);
         identifierIndex++;
       }
     }
@@ -87,7 +93,7 @@ export class StatementVisitorMethods {
 
     let result = "";
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     const arrows = getChildNodes(node, "Arrow");
@@ -97,7 +103,7 @@ export class StatementVisitorMethods {
       if (selectorUnderscores.length > 0) {
         result += "_";
       } else if (identifiers.length > 1) {
-        result += identifiers[1].image;
+        result += getNodeImage(identifiers[1]);
       }
     }
 
@@ -121,7 +127,7 @@ export class StatementVisitorMethods {
 
     // Add first identifier
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     // Process remaining parts
@@ -155,7 +161,7 @@ export class StatementVisitorMethods {
         result += "}";
       } else if (identifierIndex < identifiers.length) {
         // Next identifier in path
-        result += identifiers[identifierIndex].image;
+        result += getNodeImage(identifiers[identifierIndex]);
         identifierIndex++;
       }
     }
@@ -182,12 +188,12 @@ export class StatementVisitorMethods {
 
     // Handle regular identifiers
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     // Handle given with specific identifiers: given SpecificType
     if (givens.length > 0 && identifiers.length > 0) {
-      result = "given " + identifiers[0].image;
+      result = "given " + getNodeImage(identifiers[0]);
     }
 
     const arrows = getChildNodes(node, "Arrow");
@@ -197,7 +203,7 @@ export class StatementVisitorMethods {
       if (arrowUnderscores.length > 0) {
         result += "_";
       } else if (identifiers.length > 1) {
-        result += identifiers[1].image;
+        result += getNodeImage(identifiers[1]);
       }
     }
 
@@ -491,7 +497,7 @@ export class StatementVisitorMethods {
       types.length > 0
     ) {
       let result = valTokens.length > 0 ? "val " : "var ";
-      result += identifiers[0].image;
+      result += getNodeImage(identifiers[0]);
       result += ": ";
       result += this.visitor.visit(types[0], ctx);
 
@@ -509,7 +515,9 @@ export class StatementVisitorMethods {
       expressions.length > 0
     ) {
       return (
-        identifiers[0].image + " = " + this.visitor.visit(expressions[0], ctx)
+        getNodeImage(identifiers[0]) +
+        " = " +
+        this.visitor.visit(expressions[0], ctx)
       );
     }
     // Positional argument
@@ -618,7 +626,7 @@ export class StatementVisitorMethods {
   visitPattern(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      return identifiers[0].image;
+      return getNodeImage(identifiers[0]);
     }
 
     const underscores = getChildNodes(node, "Underscore");

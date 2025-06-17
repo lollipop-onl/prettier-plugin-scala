@@ -1,7 +1,13 @@
 /**
  * Type-related visitor methods for handling type expressions, type parameters, and type systems
  */
-import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
+import {
+  getChildNodes,
+  getFirstChild,
+  getChildren,
+  getNodeImage,
+  getNodeImageSafe,
+} from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface TypeVisitor {
@@ -227,7 +233,7 @@ export class TypeVisitorMethods {
 
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      result += identifiers[0].image;
+      result += getNodeImage(identifiers[0]);
     }
 
     const subtypeOf = getChildNodes(node, "SubtypeOf");
@@ -269,7 +275,7 @@ export class TypeVisitorMethods {
       return "";
     }
 
-    let result = identifiers[0].image;
+    let result = getNodeImage(identifiers[0]);
     const type = getFirstChild(node, "type");
     if (type) {
       result += ": " + this.visitor.visit(type, ctx);
@@ -311,7 +317,7 @@ export class TypeVisitorMethods {
 
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      result += identifiers[0].image;
+      result += getNodeImage(identifiers[0]);
     }
 
     // Handle type bounds

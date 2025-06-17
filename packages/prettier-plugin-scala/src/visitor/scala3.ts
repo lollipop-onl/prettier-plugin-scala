@@ -1,7 +1,13 @@
 /**
  * Scala 3 specific visitor methods for modern language features
  */
-import { getChildNodes, getFirstChild, getChildren } from "./utils.js";
+import {
+  getChildNodes,
+  getFirstChild,
+  getChildren,
+  getNodeImage,
+  getNodeImageSafe,
+} from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface Scala3Visitor {
@@ -92,7 +98,7 @@ export class Scala3VisitorMethods {
 
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      result += identifiers[0].image;
+      result += getNodeImage(identifiers[0]);
     }
 
     // Handle type bounds
@@ -113,7 +119,8 @@ export class Scala3VisitorMethods {
   // Enum definitions
   visitEnumDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
-    let result = "enum " + (identifiers.length > 0 ? identifiers[0].image : "");
+    let result =
+      "enum " + (identifiers.length > 0 ? getNodeImage(identifiers[0]) : "");
 
     const typeParameters = getFirstChild(node, "typeParameters");
     if (typeParameters) {
@@ -148,7 +155,8 @@ export class Scala3VisitorMethods {
 
   visitEnumCase(node: CSTNode, ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
-    let result = "case " + (identifiers.length > 0 ? identifiers[0].image : "");
+    let result =
+      "case " + (identifiers.length > 0 ? getNodeImage(identifiers[0]) : "");
 
     const classParameters = getFirstChild(node, "classParameters");
     if (classParameters) {
@@ -175,7 +183,9 @@ export class Scala3VisitorMethods {
     const identifiers = getChildNodes(node, "Identifier");
     const typeNode = getFirstChild(node, "type");
     result +=
-      " (" + (identifiers.length > 0 ? identifiers[0].image : "") + ": ";
+      " (" +
+      (identifiers.length > 0 ? getNodeImage(identifiers[0]) : "") +
+      ": ";
     if (typeNode) {
       result += this.visitor.visit(typeNode, ctx);
     }
@@ -212,7 +222,7 @@ export class Scala3VisitorMethods {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
       // Named given with potential parameters: given name[T](using ord: Type): Type
-      result += " " + identifiers[0].image;
+      result += " " + getNodeImage(identifiers[0]);
 
       const typeParameters = getFirstChild(node, "typeParameters");
       if (typeParameters) {
@@ -258,7 +268,8 @@ export class Scala3VisitorMethods {
     }
 
     const identifiers = getChildNodes(node, "Identifier");
-    result += "type " + (identifiers.length > 0 ? identifiers[0].image : "");
+    result +=
+      "type " + (identifiers.length > 0 ? getNodeImage(identifiers[0]) : "");
 
     const typeParameters = getFirstChild(node, "typeParameters");
     if (typeParameters) {
@@ -294,7 +305,7 @@ export class Scala3VisitorMethods {
 
     // Add first identifier
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     // Process remaining parts
@@ -322,7 +333,7 @@ export class Scala3VisitorMethods {
         result += "}";
       } else if (identifierIndex < identifiers.length) {
         // Next identifier in path
-        result += identifiers[identifierIndex].image;
+        result += getNodeImage(identifiers[identifierIndex]);
         identifierIndex++;
       }
     }
@@ -350,12 +361,12 @@ export class Scala3VisitorMethods {
 
     // Handle regular identifiers
     if (identifiers.length > 0) {
-      result = identifiers[0].image;
+      result = getNodeImage(identifiers[0]);
     }
 
     // Handle given with specific identifiers: given SpecificType
     if (givens.length > 0 && identifiers.length > 0) {
-      result = "given " + identifiers[0].image;
+      result = "given " + getNodeImage(identifiers[0]);
     }
 
     if (arrows.length > 0) {
@@ -363,7 +374,7 @@ export class Scala3VisitorMethods {
       if (underscores.length > 0) {
         result += "_";
       } else if (identifiers.length > 1) {
-        result += identifiers[1].image;
+        result += getNodeImage(identifiers[1]);
       }
     }
 
@@ -411,7 +422,7 @@ export class Scala3VisitorMethods {
 
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      result += identifiers[0].image;
+      result += getNodeImage(identifiers[0]);
     }
 
     const colonTokens = getChildNodes(node, "Colon");

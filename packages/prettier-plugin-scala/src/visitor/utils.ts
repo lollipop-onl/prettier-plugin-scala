@@ -55,6 +55,20 @@ export function getFirstChild(node: CSTNode, key: string): CSTNode | undefined {
 }
 
 /**
+ * Get node image with safe fallback
+ */
+export function getNodeImage(node: CSTNode): string {
+  return node.image || "";
+}
+
+/**
+ * Get node image with safe fallback for potentially null nodes
+ */
+export function getNodeImageSafe(node: CSTNode | undefined | null): string {
+  return node?.image || "";
+}
+
+/**
  * Helper method to get effective printWidth (supports scalafmt compatibility)
  */
 export function getPrintWidth(ctx: PrintContext): number {

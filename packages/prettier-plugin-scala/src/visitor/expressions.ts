@@ -7,6 +7,8 @@ import {
   getFirstChild,
   getChildren,
   createIndent,
+  getNodeImage,
+  getNodeImageSafe,
 } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
@@ -53,7 +55,7 @@ export class ExpressionVisitorMethods {
       identifier.length > 0 &&
       arrowNodes.length > 0
     ) {
-      let result = "{ " + identifier[0].image + " =>";
+      let result = "{ " + getNodeImage(identifier[0]) + " =>";
 
       const statements = [];
 
@@ -115,7 +117,7 @@ export class ExpressionVisitorMethods {
     if (simpleIdentifier.length > 0 && simpleArrow.length > 0) {
       const expression = getFirstChild(node, "expression");
       return (
-        simpleIdentifier[0].image +
+        getNodeImage(simpleIdentifier[0]) +
         " => " +
         (expression ? this.visitor.visit(expression, ctx) : "")
       );
@@ -171,7 +173,7 @@ export class ExpressionVisitorMethods {
         // Handle member access or method call
         // Identifiers after the first one correspond to members after dots
         if (identifiers.length > i) {
-          result += identifiers[i].image;
+          result += getNodeImage(identifiers[i]);
         }
 
         // Add arguments if this is a method call
@@ -254,7 +256,7 @@ export class ExpressionVisitorMethods {
       identifiers.length > 1
     ) {
       // The lambda parameter is the second identifier (first is method name)
-      const lambdaParam = identifiers[1].image;
+      const lambdaParam = getNodeImage(identifiers[1]);
       result += " { " + lambdaParam + " =>";
 
       // Create nested context for lambda body
@@ -301,7 +303,7 @@ export class ExpressionVisitorMethods {
 
     const identifier = getFirstChild(node, "Identifier");
     if (identifier) {
-      return identifier.image || "";
+      return getNodeImage(identifier);
     }
 
     const thisToken = getChildNodes(node, "This");
@@ -414,7 +416,7 @@ export class ExpressionVisitorMethods {
       sbtAssign[0];
 
     if (operator) {
-      result += " " + operator.image + " ";
+      result += " " + getNodeImage(operator) + " ";
       const expressions = getChildNodes(node, "expression");
       if (expressions.length > 0) {
         result += this.visitor.visit(expressions[0], ctx);
@@ -471,14 +473,14 @@ export class ExpressionVisitorMethods {
     for (const op of operators) {
       const tokens = getChildNodes(node, op);
       if (tokens.length > 0) {
-        return tokens[0].image;
+        return getNodeImage(tokens[0]);
       }
     }
 
     // Fallback to identifier for custom operators
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length > 0) {
-      return identifiers[0].image;
+      return getNodeImage(identifiers[0]);
     }
 
     return "";
@@ -504,7 +506,7 @@ export class ExpressionVisitorMethods {
     for (const literalType of literalTypes) {
       const tokens = getChildNodes(node, literalType);
       if (tokens.length > 0) {
-        const tokenImage = tokens[0].image;
+        const tokenImage = getNodeImage(tokens[0]);
 
         // Apply singleQuote formatting to string literals
         if (tokenImage.startsWith('"') || tokenImage.startsWith("'")) {
@@ -524,7 +526,7 @@ export class ExpressionVisitorMethods {
       return "";
     }
 
-    let result = identifiers[0].image;
+    let result = getNodeImage(identifiers[0]);
 
     const dots = getChildNodes(node, "Dot");
     if (dots.length > 0) {
@@ -536,10 +538,10 @@ export class ExpressionVisitorMethods {
 
         // Determine which token comes next (identifier or type keyword)
         if (i + 1 < identifiers.length) {
-          result += identifiers[i + 1].image;
+          result += getNodeImage(identifiers[i + 1]);
         } else if (types.length > 0) {
           // Use the type keyword (e.g., "type" for .type syntax)
-          result += types[0].image;
+          result += getNodeImage(types[0]);
         }
       }
     }
@@ -790,7 +792,7 @@ export class ExpressionVisitorMethods {
       return "";
     }
 
-    let result = identifiers[0].image;
+    let result = getNodeImage(identifiers[0]);
 
     // Find the assignment operator
     const equals = getChildNodes(node, "Equals");
@@ -811,7 +813,7 @@ export class ExpressionVisitorMethods {
       sbtAssign[0];
 
     if (operator) {
-      result += " " + operator.image + " ";
+      result += " " + getNodeImage(operator) + " ";
       const expressions = getChildNodes(node, "expression");
       if (expressions.length > 0) {
         result += this.visitor.visit(expressions[0], ctx);

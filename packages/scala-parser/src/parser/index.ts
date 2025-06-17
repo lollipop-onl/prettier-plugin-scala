@@ -17,9 +17,9 @@ export class ModularScalaParser extends CstParser {
   constructor() {
     super(tokens.allTokens);
 
-    // Initialize parser mixins
-    this.statements = new StatementParserMixin(this);
-    this.definitions = new DefinitionParserMixin(this);
+    // Initialize parser mixins - cast this to ParserRuleMixin to resolve access modifier issues
+    this.statements = new StatementParserMixin(this as any);
+    this.definitions = new DefinitionParserMixin(this as any);
 
     this.performSelfAnalysis();
   }

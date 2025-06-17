@@ -2,10 +2,10 @@
  * Base parser module with shared utilities and interfaces
  */
 import * as tokens from "../lexer.js";
-import { CstParser, Rule } from "chevrotain";
+import { CstParser, Rule, ParserMethod, CstNode } from "chevrotain";
 
 export interface ParserRuleMixin {
-  // Utility methods for parser rules
+  // Utility methods for parser rules - these need to match CstParser access levels
   RULE: CstParser["RULE"];
   SUBRULE: CstParser["SUBRULE"];
   CONSUME: CstParser["CONSUME"];
@@ -16,6 +16,7 @@ export interface ParserRuleMixin {
   AT_LEAST_ONE: CstParser["AT_LEAST_ONE"];
   AT_LEAST_ONE_SEP: CstParser["AT_LEAST_ONE_SEP"];
   LA: CstParser["LA"];
+  performSelfAnalysis: CstParser["performSelfAnalysis"];
 }
 
 export abstract class BaseParserModule {
@@ -44,7 +45,7 @@ export abstract class BaseParserModule {
     return this.parser.OR(alternatives);
   }
 
-  protected subrule(rule: Rule) {
+  protected subrule(rule: ParserMethod<any[], CstNode>) {
     return this.parser.SUBRULE(rule);
   }
 
