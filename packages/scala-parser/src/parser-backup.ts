@@ -1,49 +1,9 @@
-/**
- * Main Scala parser implementation using modular architecture.
- *
- * This parser combines functionality from various modules in src/parser/:
- * - literals.ts: Literal value parsing
- * - expressions.ts: Expression parsing
- * - types.ts: Type system parsing
- * - patterns.ts: Pattern matching
- * - statements.ts: Import/export statements
- * - definitions.ts: Class/object/trait definitions
- * - scala3.ts: Scala 3 specific features
- *
- * Gradually migrating from monolithic to modular approach.
- */
 import * as tokens from "./lexer.js";
 import { CstParser } from "chevrotain";
 
-// TODO: Import additional parser modules as they are integrated:
-// import { LiteralParserMixin } from "./parser/literals.js";
-// import { ExpressionParserMixin } from "./parser/expressions.js";
-// import { TypeParserMixin } from "./parser/types.js";
-// import { PatternParserMixin } from "./parser/patterns.js";
-// import { StatementParserMixin } from "./parser/statements.js";
-// import { DefinitionParserMixin } from "./parser/definitions.js";
-// import { Scala3ParserMixin } from "./parser/scala3.js";
-
 export class ScalaParser extends CstParser {
-  // TODO: Modular parsers - to be integrated gradually:
-  // private literals: LiteralParserMixin;
-  // private expressions: ExpressionParserMixin;
-  // private types: TypeParserMixin;
-  // private patterns: PatternParserMixin;
-  // private statements: StatementParserMixin;
-  // private definitions: DefinitionParserMixin;
-  // private scala3: Scala3ParserMixin;
-
   constructor() {
     super(tokens.allTokens);
-
-    // TODO: Initialize modular parser components to avoid rule name conflicts:
-    // this.literals = new LiteralParserMixin(this as any);
-    // this.expressions = new ExpressionParserMixin(this as any);
-    // ... etc
-
-    // TODO: Wire up dependencies between modules when they are added
-
     this.performSelfAnalysis();
   }
 
@@ -1891,8 +1851,7 @@ export class ScalaParser extends CstParser {
     ]);
   });
 
-  // Literals - ready for modular integration
-  // TODO: Replace with LiteralParserMixin when rule name conflicts are resolved
+  // Literals
   private literal = this.RULE("literal", () => {
     this.OR([
       { ALT: () => this.CONSUME(tokens.ScientificNotationLiteral) },
@@ -1923,33 +1882,3 @@ export class ScalaParser extends CstParser {
 
 // Export singleton parser instance
 export const parserInstance = new ScalaParser();
-
-/**
- * MODULAR PARSER INTEGRATION PLAN
- *
- * This file represents a transitional state where the monolithic parser.ts
- * has been prepared for gradual integration with the modular parser architecture
- * located in src/parser/.
- *
- * The modular parsers are already implemented and working:
- * - literals.ts: Complete literal value parsing
- * - expressions.ts: Complete expression parsing including lambdas, operators
- * - types.ts: Complete type system with Scala 3 features
- * - patterns.ts: Pattern matching and destructuring
- * - statements.ts: Import/export statements
- * - definitions.ts: Class/object/trait/val/var/def definitions
- * - scala3.ts: Scala 3 specific features (enum, extension, given, etc.)
- *
- * INTEGRATION CHALLENGES:
- * 1. Rule Name Conflicts: Many modules define rules with the same names
- * 2. Circular Dependencies: Modules need to reference each other's rules
- * 3. Testing Stability: Need to maintain 94.4% test success rate during migration
- *
- * RECOMMENDED APPROACH:
- * 1. Create new parser class that extends ScalaParser
- * 2. Override specific methods with modular implementations one by one
- * 3. Use composition rather than inheritance to avoid rule conflicts
- * 4. Gradual feature-by-feature migration with comprehensive testing
- *
- * STATUS: Architecture documented, modules ready, awaiting careful integration.
- */
