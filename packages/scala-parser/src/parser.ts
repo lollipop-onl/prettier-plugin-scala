@@ -1031,10 +1031,68 @@ export class ScalaParser extends CstParser {
     this.OR([
       // Kind Projector notation: *
       { ALT: () => this.CONSUME(tokens.Star) },
-      // Array type constructor (to avoid left recursion)
-      { ALT: () => this.CONSUME(tokens.Array) },
-      // Regular type - use qualified identifier to avoid recursion
-      { ALT: () => this.SUBRULE(this.qualifiedIdentifier) },
+      // Array type constructor
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Array);
+          this.OPTION(() => {
+            this.CONSUME(tokens.LeftBracket);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE(this.typeArgument),
+            });
+            this.CONSUME(tokens.RightBracket);
+          });
+        },
+      },
+      // Union and intersection types
+      { ALT: () => this.SUBRULE(this.typeArgumentUnion) },
+    ]);
+  });
+
+  private typeArgumentUnion = this.RULE("typeArgumentUnion", () => {
+    this.SUBRULE(this.typeArgumentIntersection);
+    this.MANY(() => {
+      this.CONSUME(tokens.BitwiseOr); // | for union types
+      this.SUBRULE2(this.typeArgumentIntersection);
+    });
+  });
+
+  private typeArgumentIntersection = this.RULE(
+    "typeArgumentIntersection",
+    () => {
+      this.SUBRULE(this.typeArgumentSimple);
+      this.MANY(() => {
+        this.CONSUME(tokens.BitwiseAnd); // & for intersection types
+        this.SUBRULE2(this.typeArgumentSimple);
+      });
+    },
+  );
+
+  private typeArgumentSimple = this.RULE("typeArgumentSimple", () => {
+    this.OR([
+      // Parenthesized type
+      {
+        ALT: () => {
+          this.CONSUME(tokens.LeftParen);
+          this.SUBRULE(this.typeArgument);
+          this.CONSUME(tokens.RightParen);
+        },
+      },
+      // Regular type with optional type arguments
+      {
+        ALT: () => {
+          this.SUBRULE(this.qualifiedIdentifier);
+          this.OPTION(() => {
+            this.CONSUME(tokens.LeftBracket);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE2(this.typeArgument),
+            });
+            this.CONSUME(tokens.RightBracket);
+          });
+        },
+      },
     ]);
   });
 
