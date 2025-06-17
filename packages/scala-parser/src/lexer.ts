@@ -362,10 +362,11 @@ export const allTokens = [
   FloatingPointLiteral, // Must come before IntegerLiteral
   IntegerLiteral,
   // String interpolation literals (must come before StringLiteral)
-  CustomInterpolatedString,
+  // Specific interpolators must come before CustomInterpolatedString
   InterpolatedString,
   FormattedString,
   RawString,
+  CustomInterpolatedString,
   InterpolatedStringLiteral, // Must come before StringLiteral
   StringLiteral,
   CharLiteral,

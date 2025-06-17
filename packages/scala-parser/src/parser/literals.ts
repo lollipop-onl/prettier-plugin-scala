@@ -25,7 +25,13 @@ export class LiteralParserMixin extends BaseParserModule {
       { ALT: () => this.consumeTokenType(tokens.StringLiteral) },
       { ALT: () => this.consumeTokenType(tokens.InterpolatedStringLiteral) },
 
-      // Interpolated strings
+      // Interpolated strings (individual tokens)
+      { ALT: () => this.consumeTokenType(tokens.InterpolatedString) },
+      { ALT: () => this.consumeTokenType(tokens.FormattedString) },
+      { ALT: () => this.consumeTokenType(tokens.RawString) },
+      { ALT: () => this.consumeTokenType(tokens.CustomInterpolatedString) },
+
+      // Interpolated strings (subrule - deprecated)
       { ALT: () => this.subrule(this.interpolatedString) },
 
       // Null literal

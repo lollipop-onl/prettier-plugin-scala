@@ -96,10 +96,24 @@ describe("ScalaLexer", () => {
     const result = ScalaLexer.tokenize(input);
 
     expect(result.errors.length).toBe(0);
-    const interpolatedStrings = result.tokens.filter(
-      (t) => t.tokenType.name === "CustomInterpolatedString",
+
+    // Check for specific interpolation types
+    const sStrings = result.tokens.filter(
+      (t) => t.tokenType.name === "InterpolatedString",
     );
-    expect(interpolatedStrings.length).toBe(3);
+    const fStrings = result.tokens.filter(
+      (t) => t.tokenType.name === "FormattedString",
+    );
+    const rawStrings = result.tokens.filter(
+      (t) => t.tokenType.name === "RawString",
+    );
+
+    expect(sStrings.length).toBe(1);
+    expect(fStrings.length).toBe(1);
+    expect(rawStrings.length).toBe(1);
+
+    // Total interpolated strings should be 3
+    expect(sStrings.length + fStrings.length + rawStrings.length).toBe(3);
   });
 
   it("should tokenize a simple class definition", () => {

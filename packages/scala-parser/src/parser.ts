@@ -25,6 +25,11 @@ export class ScalaParser extends CstParser {
         { ALT: () => this.CONSUME(tokens.InterpolatedStringLiteral) },
         { ALT: () => this.CONSUME(tokens.StringLiteral) },
         { ALT: () => this.CONSUME(tokens.CharLiteral) },
+        // Interpolated string tokens
+        { ALT: () => this.CONSUME(tokens.InterpolatedString) },
+        { ALT: () => this.CONSUME(tokens.FormattedString) },
+        { ALT: () => this.CONSUME(tokens.RawString) },
+        { ALT: () => this.CONSUME(tokens.CustomInterpolatedString) },
         { ALT: () => this.CONSUME(tokens.True) },
         { ALT: () => this.CONSUME(tokens.False) },
         { ALT: () => this.CONSUME(tokens.Null) },

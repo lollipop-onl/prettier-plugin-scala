@@ -501,9 +501,16 @@ export class ExpressionVisitorMethods {
     const literalTypes = [
       "StringLiteral",
       "InterpolatedStringLiteral",
+      // String interpolation tokens
+      "InterpolatedString",
+      "FormattedString",
+      "RawString",
+      "CustomInterpolatedString",
       "IntegerLiteral",
       "NumberLiteral",
       "FloatLiteral",
+      "ScientificNotationLiteral",
+      "FloatingPointLiteral",
       "BooleanLiteral",
       "True",
       "False",
