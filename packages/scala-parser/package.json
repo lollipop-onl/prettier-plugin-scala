@@ -28,7 +28,8 @@
     "@types/node": "^22.10.2",
     "tsconfig": "workspace:*",
     "tsup": "^8.5.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.9"
   },
   "engines": {
     "node": ">=20.0.0"

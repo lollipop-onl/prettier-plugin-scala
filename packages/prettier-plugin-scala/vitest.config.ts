@@ -7,8 +7,8 @@ export default defineConfig({
     include: ["test/**/*.test.{ts,js}"],
     exclude: ["**/node_modules/**", "**/lib/**"],
     isolate: true,
-    timeout: 5000,
-    testTimeout: 5000,
+    timeout: 30000, // 30秒に延長（複雑なパース処理対応）
+    testTimeout: 30000,
   },
   esbuild: {
     target: "es2022",

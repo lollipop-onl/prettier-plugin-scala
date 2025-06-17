@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 jobs:
-  # パッケージごとの型チェック（並列実行）
+  # パッケージごとの型チェック（依存関係を考慮した順序実行）
   typecheck:
     name: Type Check (${{ matrix.package }})
     runs-on: ubuntu-latest
@@ -31,6 +31,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build dependency packages
+        run: |
+          # prettier-plugin-scalaの型チェック前にscala-parserをビルド
+          if [ "${{ matrix.package }}" = "@simochee/prettier-plugin-scala" ]; then
+            pnpm --filter @simochee/scala-parser build
+          fi
 
       - name: Type check ${{ matrix.package }}
         run: pnpm --filter ${{ matrix.package }} typecheck
@@ -79,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: test-results-${{ matrix.package }}-node-${{ matrix.node-version }}
+          name: test-results-${{ matrix.package == '@simochee/scala-parser' && 'scala-parser' || 'prettier-plugin-scala' }}-node-${{ matrix.node-version }}
           path: |
             packages/*/test-results/
             packages/*/coverage/
@@ -122,7 +129,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.package }}
+          name: build-${{ matrix.package == '@simochee/scala-parser' && 'scala-parser' || 'prettier-plugin-scala' }}
           path: |
             packages/*/dist/
             packages/*/lib/
