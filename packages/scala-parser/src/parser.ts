@@ -1,48 +1,28 @@
 /**
  * Main Scala parser implementation using modular architecture.
  *
- * This parser combines functionality from various modules in src/parser/:
- * - literals.ts: Literal value parsing
- * - expressions.ts: Expression parsing
- * - types.ts: Type system parsing
- * - patterns.ts: Pattern matching
- * - statements.ts: Import/export statements
- * - definitions.ts: Class/object/trait definitions
- * - scala3.ts: Scala 3 specific features
+ * This parser combines functionality from various modules:
+ * - parser-literals.ts: Literal value parsing
+ * - Future: expressions, types, patterns, statements, definitions, scala3
  *
  * Gradually migrating from monolithic to modular approach.
  */
 import * as tokens from "./lexer.js";
+import { LiteralParser } from "./parser-literals.js";
 import { CstParser } from "chevrotain";
 
-// TODO: Import additional parser modules as they are integrated:
-// import { LiteralParserMixin } from "./parser/literals.js";
-// import { ExpressionParserMixin } from "./parser/expressions.js";
-// import { TypeParserMixin } from "./parser/types.js";
-// import { PatternParserMixin } from "./parser/patterns.js";
-// import { StatementParserMixin } from "./parser/statements.js";
-// import { DefinitionParserMixin } from "./parser/definitions.js";
-// import { Scala3ParserMixin } from "./parser/scala3.js";
-
 export class ScalaParser extends CstParser {
-  // TODO: Modular parsers - to be integrated gradually:
-  // private literals: LiteralParserMixin;
-  // private expressions: ExpressionParserMixin;
-  // private types: TypeParserMixin;
-  // private patterns: PatternParserMixin;
-  // private statements: StatementParserMixin;
-  // private definitions: DefinitionParserMixin;
-  // private scala3: Scala3ParserMixin;
+  // Modular parser components
+  private literals: LiteralParser;
 
   constructor() {
     super(tokens.allTokens);
 
-    // TODO: Initialize modular parser components to avoid rule name conflicts:
-    // this.literals = new LiteralParserMixin(this as any);
-    // this.expressions = new ExpressionParserMixin(this as any);
-    // ... etc
+    // Initialize modular parser components
+    this.literals = new LiteralParser(this);
 
-    // TODO: Wire up dependencies between modules when they are added
+    // Initialize delegated rules
+    this.literal = this.literals.literal;
 
     this.performSelfAnalysis();
   }
@@ -1891,22 +1871,8 @@ export class ScalaParser extends CstParser {
     ]);
   });
 
-  // Literals - ready for modular integration
-  // TODO: Replace with LiteralParserMixin when rule name conflicts are resolved
-  private literal = this.RULE("literal", () => {
-    this.OR([
-      { ALT: () => this.CONSUME(tokens.ScientificNotationLiteral) },
-      { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
-      { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
-      { ALT: () => this.CONSUME(tokens.InterpolatedStringLiteral) },
-      { ALT: () => this.CONSUME(tokens.StringLiteral) },
-      { ALT: () => this.CONSUME(tokens.CharLiteral) },
-      { ALT: () => this.CONSUME(tokens.True) },
-      { ALT: () => this.CONSUME(tokens.False) },
-      { ALT: () => this.CONSUME(tokens.Null) },
-      { ALT: () => this.CONSUME(tokens.NotImplemented) },
-    ]);
-  });
+  // Literals - delegated to LiteralParser (initialized in constructor)
+  private literal: any;
 
   // Qualified identifier
   private qualifiedIdentifier = this.RULE("qualifiedIdentifier", () => {
