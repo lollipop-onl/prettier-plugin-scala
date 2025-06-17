@@ -132,10 +132,35 @@ export class TypeVisitorMethods {
 
     // Handle simple types with array notation
     const simpleType = getFirstChild(node, "simpleType");
-    if (!simpleType) {
+    let result = "";
+
+    if (simpleType) {
+      result = this.visitor.visit(simpleType, ctx);
+    } else {
+      // Handle direct token cases like Array, List, etc.
+      if ("children" in node && node.children) {
+        const children = node.children;
+        for (const [key, tokens] of Object.entries(children)) {
+          if (
+            Array.isArray(tokens) &&
+            tokens.length > 0 &&
+            "image" in tokens[0]
+          ) {
+            // Check if this is a type name token (not brackets or keywords)
+            if (
+              !["LeftBracket", "RightBracket", "typeArgument"].includes(key)
+            ) {
+              result = getNodeImage(tokens[0]);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    if (!result) {
       return "";
     }
-    let result = this.visitor.visit(simpleType, ctx);
 
     // Handle array types like Array[String]
     const leftBrackets = getChildNodes(node, "LeftBracket");
