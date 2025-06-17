@@ -3,6 +3,7 @@ import type {
   IToken,
   ILexingError,
   IRecognitionException,
+  CstElement,
 } from "chevrotain";
 
 export interface SourceLocation {
@@ -16,8 +17,16 @@ export interface SourceLocation {
 
 export interface ScalaCstNode extends CstNode {
   name: string;
-  children: Record<string, (ScalaCstNode | IToken)[]>;
+  children: Record<string, CstElement[]>;
   location?: SourceLocation;
+  // Additional properties for compatibility
+  image?: string;
+  type?: string;
+  originalComments?: string[];
+  startLine?: number;
+  value?: string;
+  startOffset?: number;
+  endOffset?: number;
 }
 
 export interface ParseResult {

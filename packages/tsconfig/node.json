@@ -6,7 +6,8 @@
   ],
   "compilerOptions": {
     // Fix target for esbuild compatibility
-    "target": "es2022",
+    "target": "esnext",
+    "module": "esnext",
 
     // Module resolution for bundler
     "moduleResolution": "bundler",

@@ -16,6 +16,7 @@ export type {
   TokenBounds,
   LineColumn,
 } from "./types";
+export type { IToken } from "chevrotain";
 
 // CSTノードに位置情報を自動設定するヘルパー関数
 function addLocationToCST(
@@ -61,19 +62,29 @@ function addLocationToCST(
       if (!n) return;
 
       // トークンの場合
-      if (n.startOffset !== undefined && n.endOffset !== undefined) {
+      if (
+        "startOffset" in n &&
+        "endOffset" in n &&
+        n.startOffset !== undefined &&
+        n.endOffset !== undefined
+      ) {
         minStart = Math.min(minStart, n.startOffset);
         maxEnd = Math.max(maxEnd, n.endOffset);
         return;
       }
 
       // CSTノードの場合
-      if (n.children) {
+      if ("children" in n && n.children) {
         for (const children of Object.values(n.children)) {
           if (Array.isArray(children)) {
-            children.forEach(findTokensInNode);
-          } else {
-            findTokensInNode(children);
+            children.forEach((child) => {
+              // CstElementをScalaCstNode | ITokenに安全に変換
+              if ("children" in child) {
+                findTokensInNode(child as ScalaCstNode);
+              } else {
+                findTokensInNode(child as IToken);
+              }
+            });
           }
         }
       }
@@ -100,7 +111,10 @@ function addLocationToCST(
     // CSTノードの場合
     if (node.children) {
       // 子ノードを先に処理
-      const processedChildren: Record<string, (ScalaCstNode | IToken)[]> = {};
+      const processedChildren: Record<
+        string,
+        import("chevrotain").CstElement[]
+      > = {};
       for (const [key, children] of Object.entries(node.children)) {
         if (Array.isArray(children)) {
           processedChildren[key] = children.map((child) => {
@@ -109,10 +123,6 @@ function addLocationToCST(
             }
             return child; // IToken
           });
-        } else if (children && "children" in children) {
-          processedChildren[key] = [setCSTLocation(children as ScalaCstNode)];
-        } else {
-          processedChildren[key] = [children]; // IToken
         }
       }
 
@@ -176,7 +186,11 @@ export function parseLegacy(text: string): ParseResult {
   }
 
   // CSTに位置情報を追加
-  const cstWithLocation = addLocationToCST(cst, lexResult.tokens, text);
+  const cstWithLocation = addLocationToCST(
+    cst as ScalaCstNode,
+    lexResult.tokens,
+    text,
+  );
 
   return {
     cst: cstWithLocation,

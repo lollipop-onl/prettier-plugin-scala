@@ -8,16 +8,29 @@
  * Gradually migrating from monolithic to modular approach.
  */
 import * as tokens from "./lexer";
-import { createLiteralRule } from "./parser-literals";
 import type { ParserMethodResult } from "./types";
 import { CstParser } from "chevrotain";
 
 export class ScalaParser extends CstParser {
+  [key: string]: unknown;
   constructor() {
     super(tokens.allTokens);
 
-    // Initialize modular parser rules
-    this.literal = createLiteralRule(this);
+    // Initialize modular parser rules within the class
+    this.literal = this.RULE("literal", () => {
+      this.OR([
+        { ALT: () => this.CONSUME(tokens.ScientificNotationLiteral) },
+        { ALT: () => this.CONSUME(tokens.FloatingPointLiteral) },
+        { ALT: () => this.CONSUME(tokens.IntegerLiteral) },
+        { ALT: () => this.CONSUME(tokens.InterpolatedStringLiteral) },
+        { ALT: () => this.CONSUME(tokens.StringLiteral) },
+        { ALT: () => this.CONSUME(tokens.CharLiteral) },
+        { ALT: () => this.CONSUME(tokens.True) },
+        { ALT: () => this.CONSUME(tokens.False) },
+        { ALT: () => this.CONSUME(tokens.Null) },
+        { ALT: () => this.CONSUME(tokens.NotImplemented) },
+      ]);
+    });
 
     this.performSelfAnalysis();
   }
