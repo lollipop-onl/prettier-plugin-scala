@@ -8,21 +8,15 @@
  * Gradually migrating from monolithic to modular approach.
  */
 import * as tokens from "./lexer.js";
-import { LiteralParser } from "./parser-literals.js";
+import { createLiteralRule } from "./parser-literals.js";
 import { CstParser } from "chevrotain";
 
 export class ScalaParser extends CstParser {
-  // Modular parser components
-  private literals: LiteralParser;
-
   constructor() {
     super(tokens.allTokens);
 
-    // Initialize modular parser components
-    this.literals = new LiteralParser(this);
-
-    // Initialize delegated rules
-    this.literal = this.literals.literal;
+    // Initialize modular parser rules
+    this.literal = createLiteralRule(this);
 
     this.performSelfAnalysis();
   }
@@ -1871,7 +1865,7 @@ export class ScalaParser extends CstParser {
     ]);
   });
 
-  // Literals - delegated to LiteralParser (initialized in constructor)
+  // Literals - delegated to createLiteralRule (initialized in constructor)
   private literal: any;
 
   // Qualified identifier

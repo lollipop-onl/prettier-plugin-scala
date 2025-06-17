@@ -4,24 +4,26 @@
 import * as tokens from "./lexer.js";
 import { CstParser } from "chevrotain";
 
-export class LiteralParser {
-  public literal: any;
-
-  constructor(private parser: CstParser) {
-    // Initialize the literal rule after the parser is available
-    this.literal = this.parser.RULE("literal", () => {
-      this.parser.OR([
-        { ALT: () => this.parser.CONSUME(tokens.ScientificNotationLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.FloatingPointLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.IntegerLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.InterpolatedStringLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.StringLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.CharLiteral) },
-        { ALT: () => this.parser.CONSUME(tokens.True) },
-        { ALT: () => this.parser.CONSUME(tokens.False) },
-        { ALT: () => this.parser.CONSUME(tokens.Null) },
-        { ALT: () => this.parser.CONSUME(tokens.NotImplemented) },
-      ]);
-    });
-  }
+/**
+ * Creates a literal parsing rule for the given parser instance.
+ * This function must be called within a CstParser subclass to access protected methods.
+ *
+ * @param parser - The CstParser instance (typed as any to access protected methods)
+ * @returns The literal parsing rule function
+ */
+export function createLiteralRule(parser: CstParser & any): any {
+  return parser.RULE("literal", () => {
+    parser.OR([
+      { ALT: () => parser.CONSUME(tokens.ScientificNotationLiteral) },
+      { ALT: () => parser.CONSUME(tokens.FloatingPointLiteral) },
+      { ALT: () => parser.CONSUME(tokens.IntegerLiteral) },
+      { ALT: () => parser.CONSUME(tokens.InterpolatedStringLiteral) },
+      { ALT: () => parser.CONSUME(tokens.StringLiteral) },
+      { ALT: () => parser.CONSUME(tokens.CharLiteral) },
+      { ALT: () => parser.CONSUME(tokens.True) },
+      { ALT: () => parser.CONSUME(tokens.False) },
+      { ALT: () => parser.CONSUME(tokens.Null) },
+      { ALT: () => parser.CONSUME(tokens.NotImplemented) },
+    ]);
+  });
 }
