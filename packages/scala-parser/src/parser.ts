@@ -1348,6 +1348,7 @@ export class ScalaParser extends CstParser {
     this.OR([
       { ALT: () => this.SUBRULE(this.literal) },
       { ALT: () => this.CONSUME(tokens.Identifier) },
+      { ALT: () => this.CONSUME(tokens.Array) }, // Support Array constructor calls
       { ALT: () => this.CONSUME(tokens.This) },
       { ALT: () => this.SUBRULE(this.newExpression) },
       { ALT: () => this.SUBRULE(this.forExpression) },
