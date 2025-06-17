@@ -980,15 +980,10 @@ export class ScalaParser extends CstParser {
           this.CONSUME(tokens.RightParen);
         },
       },
-      // Array type: Array[T]
+      // Simple type (without recursion to avoid left recursion)
       {
         ALT: () => {
           this.SUBRULE(this.simpleType);
-          this.MANY(() => {
-            this.CONSUME(tokens.LeftBracket);
-            this.SUBRULE2(this.type);
-            this.CONSUME(tokens.RightBracket);
-          });
         },
       },
     ]);
@@ -1042,8 +1037,10 @@ export class ScalaParser extends CstParser {
     this.OR([
       // Kind Projector notation: *
       { ALT: () => this.CONSUME(tokens.Star) },
-      // Regular type
-      { ALT: () => this.SUBRULE(this.type) },
+      // Array type constructor (to avoid left recursion)
+      { ALT: () => this.CONSUME(tokens.Array) },
+      // Regular type - use qualified identifier to avoid recursion
+      { ALT: () => this.SUBRULE(this.qualifiedIdentifier) },
     ]);
   });
 
