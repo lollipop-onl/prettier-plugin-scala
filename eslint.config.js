@@ -1,17 +1,9 @@
 import eslint from "@eslint/js";
+import gitignore from "eslint-config-flat-gitignore";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  {
-    ignores: [
-      "node_modules/**",
-      "**/node_modules/**",
-      "**/lib/**",
-      "**/dist/**",
-      "**/.turbo/**",
-      "coverage/**",
-    ],
-  },
+  gitignore(),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
 );
