@@ -335,7 +335,8 @@ export class Scala3VisitorMethods {
     return result;
   }
 
-  visitExportSelector(node: CSTNode): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitExportSelector(node: CSTNode, _ctx: PrintContext): string {
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
     const givens = getChildNodes(node, "Given");

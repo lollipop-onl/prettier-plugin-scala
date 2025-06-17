@@ -1,3 +1,5 @@
+import type { ScalaCstNode, IToken } from "@simochee/scala-parser";
+
 /**
  * Shared utilities and formatting helpers for the visitor pattern
  */
@@ -12,18 +14,8 @@ export interface PrettierOptions {
   scalaLineWidth?: number; // Deprecated, for backward compatibility
 }
 
-export interface CSTNode {
-  name?: string;
-  image?: string;
-  children?: Record<string, CSTNode[]>;
-  tokenType?: {
-    name: string;
-  };
-  startOffset?: number;
-  startLine?: number;
-  value?: string;
-  [key: string]: unknown;
-}
+// Union type for CST elements (nodes or tokens)
+export type CSTNode = ScalaCstNode | IToken;
 
 export type PrintContext = {
   path: unknown;
@@ -36,7 +28,10 @@ export type PrintContext = {
  * Safe access to node children with null check
  */
 export function getChildren(node: CSTNode): Record<string, CSTNode[]> {
-  return node.children || {};
+  if ("children" in node && node.children) {
+    return node.children as Record<string, CSTNode[]>;
+  }
+  return {};
 }
 
 /**
@@ -58,14 +53,20 @@ export function getFirstChild(node: CSTNode, key: string): CSTNode | undefined {
  * Get node image with safe fallback
  */
 export function getNodeImage(node: CSTNode): string {
-  return node.image || "";
+  if ("image" in node && node.image) {
+    return node.image;
+  }
+  return "";
 }
 
 /**
  * Get node image with safe fallback for potentially null nodes
  */
 export function getNodeImageSafe(node: CSTNode | undefined | null): string {
-  return node?.image || "";
+  if (node && "image" in node && node.image) {
+    return node.image;
+  }
+  return "";
 }
 
 /**
@@ -217,11 +218,19 @@ export function attachOriginalComments(
 
   // Group comments by line number
   originalComments.forEach((comment) => {
-    const line = comment.startLine || 1;
+    const line = ("startLine" in comment && comment.startLine) || 1;
     if (!commentMap.has(line)) {
       commentMap.set(line, []);
     }
-    commentMap.get(line)!.push(comment.image || comment.value || "");
+    let commentText = "";
+    if ("image" in comment && comment.image) {
+      commentText = comment.image;
+    } else if ("value" in comment && comment.value) {
+      commentText = String(comment.value);
+    }
+    if (commentText) {
+      commentMap.get(line)!.push(commentText);
+    }
   });
 
   // Insert comments into lines

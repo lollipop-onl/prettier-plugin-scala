@@ -27,6 +27,9 @@ import type { ScalaCstNode } from "@simochee/scala-parser";
 // Re-export types from utils for external use
 export type { PrintContext, CSTNode, PrettierOptions } from "./visitor/utils";
 
+// Type alias for backward compatibility
+type VisitorContext = PrintContext;
+
 export class CstNodeVisitor
   implements
     DeclarationVisitor,
@@ -42,12 +45,17 @@ export class CstNodeVisitor
   private types = new TypeVisitorMethods(this);
   private scala3 = new Scala3VisitorMethods(this);
 
-  visit(node: CSTNode, ctx: PrintContext): string {
+  visit(node: ScalaCstNode, ctx: PrintContext): string {
     if (!node) return "";
 
     try {
       // Handle root node with original comments
-      if (node.type === "compilationUnit" && node.originalComments) {
+      if (
+        "type" in node &&
+        node.type === "compilationUnit" &&
+        "originalComments" in node &&
+        node.originalComments
+      ) {
         const nodeResult = this.visitCore(node, ctx);
         return attachOriginalComments(
           nodeResult,
@@ -57,26 +65,27 @@ export class CstNodeVisitor
 
       return this.visitCore(node, ctx);
     } catch (error) {
-      console.error(`Error visiting node ${node.name || "unknown"}:`, error);
+      const nodeName = "name" in node ? node.name : "unknown";
+      console.error(`Error visiting node ${nodeName}:`, error);
 
       // Return a safe fallback for formatting errors
-      if (node.image) {
-        return node.image;
+      if ("image" in node && node.image) {
+        return String(node.image);
       }
 
-      return `/* FORMAT ERROR: ${node.name || "unknown"} */`;
+      return `/* FORMAT ERROR: ${nodeName} */`;
     }
   }
 
   private visitCore(node: CSTNode, ctx: PrintContext): string {
     try {
       // Handle token nodes
-      if (node.image !== undefined) {
+      if ("image" in node && node.image !== undefined) {
         return node.image;
       }
 
       // Handle CST nodes by rule name
-      if (node.name) {
+      if ("name" in node && node.name) {
         // Capitalize the first letter of the rule name
         const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
         const methodName = `visit${ruleName}`;
@@ -93,52 +102,60 @@ export class CstNodeVisitor
       }
 
       // If no specific visitor method exists, try default handling by type
-      if (node.children) {
+      if ("children" in node && node.children) {
         return this.visitChildren(node, ctx);
       }
 
       return "";
     } catch (error) {
-      console.error(`Error in visitCore for ${node.name || "unknown"}:`, error);
+      const nodeName = "name" in node ? node.name : "unknown";
+      console.error(`Error in visitCore for ${nodeName}:`, error);
 
       // Try to recover by visiting children directly
-      if (node.children) {
+      if ("children" in node && node.children) {
         try {
           return this.visitChildren(node, ctx);
         } catch (childError) {
-          console.error(
-            `Error visiting children of ${node.name || "unknown"}:`,
-            childError,
-          );
-          return `/* ERROR: ${node.name || "unknown"} */`;
+          console.error(`Error visiting children of ${nodeName}:`, childError);
+          return `/* ERROR: ${nodeName} */`;
         }
       }
 
-      return node.image || "";
+      return "image" in node && node.image ? node.image : "";
     }
   }
 
   visitChildren(node: CSTNode, ctx: PrintContext): string {
     const parts: string[] = [];
 
-    if (!node.children) return "";
+    if (!("children" in node) || !node.children) return "";
 
     try {
       for (const [key, children] of Object.entries(node.children)) {
         if (Array.isArray(children)) {
           for (const child of children) {
             try {
-              const part = this.visit(child, ctx);
-              if (part) {
-                parts.push(part);
+              // Type guard for ScalaCstNode
+              if ("children" in child && "name" in child) {
+                const part = this.visit(child as ScalaCstNode, ctx);
+                if (part) {
+                  parts.push(part);
+                }
+              } else {
+                // Handle IToken
+                const tokenImage = "image" in child ? child.image : "";
+                if (tokenImage) {
+                  parts.push(tokenImage);
+                }
               }
             } catch (childError) {
+              const childName = "name" in child ? child.name : "token";
               console.error(
-                `Error visiting child ${child.name || "unknown"} in ${key}:`,
+                `Error visiting child ${childName || "unknown"} in ${key}:`,
                 childError,
               );
               // Continue with next child instead of failing completely
-              parts.push(`/* ERROR: ${child.name || "unknown"} */`);
+              parts.push(`/* ERROR: ${childName || "unknown"} */`);
             }
           }
         }
@@ -185,31 +202,31 @@ export class CstNodeVisitor
   }
 
   // Package and imports/exports
-  visitPackageClause(node: CSTNode, ctx: PrintContext): string {
+  visitPackageClause(node: ScalaCstNode, ctx: PrintContext): string {
     return this.statements.visitPackageClause(node, ctx);
   }
 
-  visitImportClause(node: CSTNode, ctx: PrintContext): string {
+  visitImportClause(node: ScalaCstNode, ctx: PrintContext): string {
     return this.statements.visitImportClause(node, ctx);
   }
 
-  visitImportExpression(node: CSTNode, ctx: PrintContext): string {
+  visitImportExpression(node: ScalaCstNode, ctx: PrintContext): string {
     return this.statements.visitImportExpression(node, ctx);
   }
 
-  visitImportSelector(node: CSTNode, ctx: PrintContext): string {
+  visitImportSelector(node: ScalaCstNode, ctx: PrintContext): string {
     return this.statements.visitImportSelector(node, ctx);
   }
 
-  visitExportClause(node: CSTNode, ctx: PrintContext): string {
+  visitExportClause(node: ScalaCstNode, ctx: PrintContext): string {
     return this.scala3.visitExportClause(node, ctx);
   }
 
-  visitExportExpression(node: CSTNode, ctx: PrintContext): string {
+  visitExportExpression(node: ScalaCstNode, ctx: PrintContext): string {
     return this.scala3.visitExportExpression(node, ctx);
   }
 
-  visitExportSelector(node: CSTNode, ctx: PrintContext): string {
+  visitExportSelector(node: ScalaCstNode, ctx: PrintContext): string {
     return this.scala3.visitExportSelector(node, ctx);
   }
 
@@ -385,15 +402,15 @@ export class CstNodeVisitor
     return this.expressions.visitAssignmentOrInfixExpression(node, ctx);
   }
 
-  visitInfixOperator(node: CSTNode, ctx: PrintContext): string {
+  visitInfixOperator(node: ScalaCstNode, ctx: PrintContext): string {
     return this.expressions.visitInfixOperator(node, ctx);
   }
 
-  visitLiteral(node: CSTNode, ctx: PrintContext): string {
+  visitLiteral(node: ScalaCstNode, ctx: PrintContext): string {
     return this.expressions.visitLiteral(node, ctx);
   }
 
-  visitQualifiedIdentifier(node: CSTNode, ctx: PrintContext): string {
+  visitQualifiedIdentifier(node: ScalaCstNode, ctx: PrintContext): string {
     return this.expressions.visitQualifiedIdentifier(node, ctx);
   }
 

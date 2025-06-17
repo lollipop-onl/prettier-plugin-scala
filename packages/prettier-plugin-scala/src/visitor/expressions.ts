@@ -435,7 +435,8 @@ export class ExpressionVisitorMethods {
     return result;
   }
 
-  visitInfixOperator(node: CSTNode): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitInfixOperator(node: CSTNode, _ctx: PrintContext): string {
     // Handle all possible infix operators
     const operators = [
       "Plus",
@@ -518,7 +519,8 @@ export class ExpressionVisitorMethods {
     return "";
   }
 
-  visitQualifiedIdentifier(node: CSTNode): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitQualifiedIdentifier(node: CSTNode, _ctx: PrintContext): string {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length === 0) {
       return "";

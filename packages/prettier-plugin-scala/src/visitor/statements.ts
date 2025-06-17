@@ -76,7 +76,8 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitImportSelector(node: CSTNode): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  visitImportSelector(node: CSTNode, _ctx: PrintContext): string {
     // Handle wildcard import
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");

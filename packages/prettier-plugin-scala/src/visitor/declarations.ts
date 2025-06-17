@@ -7,6 +7,7 @@ import {
   getChildNodes,
   getFirstChild,
   createIndent,
+  getNodeImage,
 } from "./utils";
 import type { PrintContext, CSTNode } from "./utils";
 
@@ -29,13 +30,13 @@ export class DeclarationVisitorMethods {
     // Add class keyword (don't duplicate if already handled by modifiers)
     const classToken = getFirstChild(node, "Class");
     if (classToken) {
-      result += classToken.image + " ";
+      result += getNodeImage(classToken) + " ";
     }
 
     // Add class name
     const identifierToken = getFirstChild(node, "Identifier");
     if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     }
 
     const typeParameters = getFirstChild(node, "typeParameters");
@@ -73,7 +74,8 @@ export class DeclarationVisitorMethods {
 
   visitObjectDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
-    let result = "object " + (identifierToken?.image || "");
+    let result =
+      "object " + (identifierToken ? getNodeImage(identifierToken) : "");
 
     const extendsClause = getFirstChild(node, "extendsClause");
     if (extendsClause) {
@@ -90,7 +92,7 @@ export class DeclarationVisitorMethods {
 
   visitTraitDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifier = getFirstChild(node, "Identifier");
-    let result = "trait " + (identifier?.image || "");
+    let result = "trait " + (identifier ? getNodeImage(identifier) : "");
 
     const typeParameters = getFirstChild(node, "typeParameters");
     if (typeParameters) {
@@ -112,7 +114,8 @@ export class DeclarationVisitorMethods {
 
   visitEnumDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
-    let result = "enum " + (identifierToken?.image || "");
+    let result =
+      "enum " + (identifierToken ? getNodeImage(identifierToken) : "");
 
     const typeParameters = getFirstChild(node, "typeParameters");
     if (typeParameters) {
@@ -147,7 +150,8 @@ export class DeclarationVisitorMethods {
 
   visitEnumCase(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
-    let result = "case " + (identifierToken?.image || "");
+    let result =
+      "case " + (identifierToken ? getNodeImage(identifierToken) : "");
 
     const classParameters = getFirstChild(node, "classParameters");
     if (classParameters) {
@@ -172,7 +176,8 @@ export class DeclarationVisitorMethods {
 
     const identifierToken = getFirstChild(node, "Identifier");
     const typeNode = getFirstChild(node, "type");
-    result += " (" + (identifierToken?.image || "") + ": ";
+    result +=
+      " (" + (identifierToken ? getNodeImage(identifierToken) : "") + ": ";
     if (typeNode) {
       result += this.visitor.visit(typeNode, ctx);
     }
@@ -213,7 +218,7 @@ export class DeclarationVisitorMethods {
     if (pattern) {
       result += this.visitor.visit(pattern, ctx);
     } else if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     }
 
     const colonToken = getFirstChild(node, "Colon");
@@ -237,7 +242,8 @@ export class DeclarationVisitorMethods {
 
   visitVarDefinition(node: CSTNode, ctx: PrintContext): string {
     const identifierToken = getFirstChild(node, "Identifier");
-    let result = "var " + (identifierToken?.image || "");
+    let result =
+      "var " + (identifierToken ? getNodeImage(identifierToken) : "");
 
     const colonToken = getFirstChild(node, "Colon");
     if (colonToken) {
@@ -262,7 +268,7 @@ export class DeclarationVisitorMethods {
     const thisToken = getFirstChild(node, "This");
 
     if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     } else if (thisToken) {
       result += "this";
     }
@@ -303,7 +309,7 @@ export class DeclarationVisitorMethods {
     const identifierToken = getFirstChild(node, "Identifier");
     if (identifierToken) {
       // Named given with potential parameters: given name[T](using ord: Type): Type
-      result += " " + identifierToken.image;
+      result += " " + getNodeImage(identifierToken);
 
       const typeParameters = getFirstChild(node, "typeParameters");
       if (typeParameters) {
@@ -348,7 +354,7 @@ export class DeclarationVisitorMethods {
     }
 
     const identifierToken = getFirstChild(node, "Identifier");
-    result += "type " + (identifierToken?.image || "");
+    result += "type " + (identifierToken ? getNodeImage(identifierToken) : "");
 
     const typeParameters = getFirstChild(node, "typeParameters");
     if (typeParameters) {
@@ -427,7 +433,7 @@ export class DeclarationVisitorMethods {
 
     const identifierToken = getFirstChild(node, "Identifier");
     if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     }
     result += ": ";
 
@@ -478,7 +484,7 @@ export class DeclarationVisitorMethods {
 
     const identifierToken = getFirstChild(node, "Identifier");
     if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     }
     result += ": ";
 
@@ -523,7 +529,7 @@ export class DeclarationVisitorMethods {
 
     const identifierToken = getFirstChild(node, "Identifier");
     if (identifierToken) {
-      result += identifierToken.image;
+      result += getNodeImage(identifierToken);
     }
 
     // Add bounds

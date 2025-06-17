@@ -1,6 +1,5 @@
-import { CstNodeVisitor } from "./visitor";
-import type { ScalaCstNode } from "@simochee/scala-parser";
-import type { IToken } from "chevrotain";
+import { CstNodeVisitor, type CSTNode } from "./visitor";
+import type { ScalaCstNode, IToken } from "@simochee/scala-parser";
 import { type Doc, type Printer, type AstPath, type Options } from "prettier";
 
 export function createScalaPrinter(): Printer {
@@ -15,8 +14,23 @@ export function createScalaPrinter(): Printer {
       const visitor = new CstNodeVisitor();
       const result = visitor.visit(node, {
         path,
-        options,
-        print,
+        options: {
+          printWidth: options.printWidth,
+          tabWidth: options.tabWidth,
+          useTabs: options.useTabs,
+          semi: options.semi,
+          singleQuote: options.singleQuote,
+          trailingComma:
+            options.trailingComma === "es5" ? "all" : options.trailingComma,
+        },
+        print: (childNode: CSTNode) => {
+          // Create a mock path for the child node
+          const mockPath = {
+            getValue: () => childNode,
+            call: (fn: () => unknown) => fn(),
+          };
+          return String(print(mockPath as AstPath<unknown>));
+        },
         indentLevel: 0,
       });
 
@@ -27,12 +41,12 @@ export function createScalaPrinter(): Printer {
       const comment = path.getValue();
       if (!comment) return "";
 
-      // Prettier標準のvalueプロパティを使用
-      if (typeof comment.value === "string") {
-        return comment.value;
+      // Chevrotainのimageプロパティを使用
+      if (typeof comment.image === "string") {
+        return comment.image;
       }
 
-      // fallback: Chevrotainのimageプロパティ
+      // fallback
       if (typeof comment.image === "string") {
         return comment.image;
       }
