@@ -40,7 +40,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       this.subrule(this.postfixExpression);
       this.parser.MANY(() => {
         this.subrule(this.infixOperator);
-        this.subrule(this.postfixExpression, { LABEL: "postfixExpression2" });
+        this.subrule(this.postfixExpression);
       });
     },
   );
@@ -56,8 +56,7 @@ export class ExpressionParserMixin extends BaseParserModule {
             this.consumeTokenType(tokens.LeftParen);
             this.parser.MANY_SEP({
               SEP: tokens.Comma,
-              DEF: () =>
-                this.subrule(this.expression, { LABEL: "expression2" }),
+              DEF: () => this.subrule(this.expression),
             });
             this.consumeTokenType(tokens.RightParen);
           },
@@ -106,9 +105,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       {
         ALT: () => {
           this.consumeTokenType(tokens.LeftParen);
-          this.parser.OPTION(() =>
-            this.subrule(this.expression, { LABEL: "expression3" }),
-          );
+          this.parser.OPTION(() => this.subrule(this.expression));
           this.consumeTokenType(tokens.RightParen);
         },
       },
@@ -133,7 +130,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       // Match expression
       {
         ALT: () => {
-          this.subrule(this.expression, { LABEL: "expression4" });
+          this.subrule(this.expression);
           this.consumeTokenType(tokens.Match);
           this.consumeTokenType(tokens.LeftBrace);
           this.parser.MANY(() => this.subrule(this.caseClause));
@@ -143,41 +140,33 @@ export class ExpressionParserMixin extends BaseParserModule {
       // Lambda expression
       {
         ALT: () => {
-          this.parser.OR3([
+          this.parser.OR([
             // Simple identifier lambda: x =>
             {
               ALT: () => {
-                this.consumeTokenType(tokens.Identifier, {
-                  LABEL: "Identifier2",
-                });
+                this.consumeTokenType(tokens.Identifier);
               },
             },
             // Multiple parameters with optional types: (x, y) =>
             {
               ALT: () => {
-                this.consumeTokenType(tokens.LeftParen, {
-                  LABEL: "LeftParen2",
-                });
+                this.consumeTokenType(tokens.LeftParen);
                 this.parser.MANY_SEP({
                   SEP: tokens.Comma,
                   DEF: () => {
-                    this.consumeTokenType(tokens.Identifier, {
-                      LABEL: "Identifier3",
-                    });
+                    this.consumeTokenType(tokens.Identifier);
                     this.parser.OPTION(() => {
                       this.consumeTokenType(tokens.Colon);
-                      this.subrule(this.type, { LABEL: "type2" });
+                      this.subrule(this.type);
                     });
                   },
                 });
-                this.consumeTokenType(tokens.RightParen, {
-                  LABEL: "RightParen2",
-                });
+                this.consumeTokenType(tokens.RightParen);
               },
             },
           ]);
           this.consumeTokenType(tokens.Arrow);
-          this.subrule(this.expression, { LABEL: "expression5" });
+          this.subrule(this.expression);
         },
         GATE: () => {
           const la1 = this.parser.LA(1);
@@ -222,7 +211,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       { ALT: () => this.consumeTokenType(tokens.AppendEquals) },
       // sbt-specific operators
       { ALT: () => this.consumeTokenType(tokens.SbtAssign) },
-      { ALT: () => this.consumeTokenType(tokens.PercentPercent) },
+      { ALT: () => this.consumeTokenType(tokens.DoublePercent) },
       // Basic operators
       { ALT: () => this.consumeTokenType(tokens.Plus) },
       { ALT: () => this.consumeTokenType(tokens.Minus) },
@@ -261,8 +250,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       { ALT: () => this.consumeTokenType(tokens.OperatorIdentifier) },
       // Identifier as operator (for named methods used as infix)
       {
-        ALT: () =>
-          this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier4" }),
+        ALT: () => this.consumeTokenType(tokens.Identifier),
       },
     ]);
   });
@@ -278,7 +266,7 @@ export class ExpressionParserMixin extends BaseParserModule {
       });
       this.consumeTokenType(tokens.RightBracket);
       this.consumeTokenType(tokens.Arrow);
-      this.subrule(this.expression, { LABEL: "expression6" });
+      this.subrule(this.expression);
     },
   );
 
@@ -289,15 +277,14 @@ export class ExpressionParserMixin extends BaseParserModule {
       // New with class instantiation
       {
         ALT: () => {
-          this.subrule(this.type, { LABEL: "type3" });
+          this.subrule(this.type);
           this.parser.MANY(() => {
-            this.consumeTokenType(tokens.LeftParen, { LABEL: "LeftParen3" });
+            this.consumeTokenType(tokens.LeftParen);
             this.parser.MANY_SEP({
               SEP: tokens.Comma,
-              DEF: () =>
-                this.subrule(this.expression, { LABEL: "expression7" }),
+              DEF: () => this.subrule(this.expression),
             });
-            this.consumeTokenType(tokens.RightParen, { LABEL: "RightParen3" });
+            this.consumeTokenType(tokens.RightParen);
           });
         },
       },
@@ -325,9 +312,7 @@ export class ExpressionParserMixin extends BaseParserModule {
   // Partial function literal
   partialFunctionLiteral = this.parser.RULE("partialFunctionLiteral", () => {
     this.consumeTokenType(tokens.LeftBrace);
-    this.parser.MANY1(() =>
-      this.subrule(this.caseClause, { LABEL: "caseClause2" }),
-    );
+    this.parser.AT_LEAST_ONE(() => this.subrule(this.caseClause));
     this.consumeTokenType(tokens.RightBrace);
   });
 
@@ -335,7 +320,7 @@ export class ExpressionParserMixin extends BaseParserModule {
   quoteExpression = this.parser.RULE("quoteExpression", () => {
     this.consumeTokenType(tokens.Quote);
     this.consumeTokenType(tokens.LeftBrace);
-    this.subrule(this.expression, { LABEL: "expression8" });
+    this.subrule(this.expression);
     this.consumeTokenType(tokens.RightBrace);
   });
 
@@ -343,7 +328,7 @@ export class ExpressionParserMixin extends BaseParserModule {
   spliceExpression = this.parser.RULE("spliceExpression", () => {
     this.consumeTokenType(tokens.Dollar);
     this.consumeTokenType(tokens.LeftBrace);
-    this.subrule(this.expression, { LABEL: "expression9" });
+    this.subrule(this.expression);
     this.consumeTokenType(tokens.RightBrace);
   });
 
@@ -351,12 +336,12 @@ export class ExpressionParserMixin extends BaseParserModule {
   ifExpression = this.parser.RULE("ifExpression", () => {
     this.consumeTokenType(tokens.If);
     this.consumeTokenType(tokens.LeftParen);
-    this.subrule(this.expression, { LABEL: "expression10" });
+    this.subrule(this.expression);
     this.consumeTokenType(tokens.RightParen);
-    this.subrule(this.expression, { LABEL: "expression11" });
+    this.subrule(this.expression);
     this.parser.OPTION(() => {
       this.consumeTokenType(tokens.Else);
-      this.subrule(this.expression, { LABEL: "expression12" });
+      this.subrule(this.expression);
     });
   });
 
@@ -364,15 +349,15 @@ export class ExpressionParserMixin extends BaseParserModule {
   whileExpression = this.parser.RULE("whileExpression", () => {
     this.consumeTokenType(tokens.While);
     this.consumeTokenType(tokens.LeftParen);
-    this.subrule(this.expression, { LABEL: "expression13" });
+    this.subrule(this.expression);
     this.consumeTokenType(tokens.RightParen);
-    this.subrule(this.expression, { LABEL: "expression14" });
+    this.subrule(this.expression);
   });
 
   // Try expression
   tryExpression = this.parser.RULE("tryExpression", () => {
     this.consumeTokenType(tokens.Try);
-    this.subrule(this.expression, { LABEL: "expression15" });
+    this.subrule(this.expression);
     this.parser.OPTION(() => {
       this.consumeTokenType(tokens.Catch);
       this.parser.OR([
@@ -380,21 +365,19 @@ export class ExpressionParserMixin extends BaseParserModule {
         {
           ALT: () => {
             this.consumeTokenType(tokens.LeftBrace);
-            this.parser.MANY(() =>
-              this.subrule(this.caseClause, { LABEL: "caseClause3" }),
-            );
+            this.parser.MANY(() => this.subrule(this.caseClause));
             this.consumeTokenType(tokens.RightBrace);
           },
         },
         // Expression-based catch
         {
-          ALT: () => this.subrule(this.expression, { LABEL: "expression16" }),
+          ALT: () => this.subrule(this.expression),
         },
       ]);
     });
-    this.parser.OPTION2(() => {
+    this.parser.OPTION(() => {
       this.consumeTokenType(tokens.Finally);
-      this.subrule(this.expression, { LABEL: "expression17" });
+      this.subrule(this.expression);
     });
   });
 
@@ -417,15 +400,13 @@ export class ExpressionParserMixin extends BaseParserModule {
       {
         ALT: () => {
           this.consumeTokenType(tokens.LeftBrace);
-          this.parser.MANY(() =>
-            this.subrule(this.generator, { LABEL: "generator2" }),
-          );
+          this.parser.MANY(() => this.subrule(this.generator));
           this.consumeTokenType(tokens.RightBrace);
         },
       },
     ]);
     this.parser.OPTION(() => this.consumeTokenType(tokens.Yield));
-    this.subrule(this.expression, { LABEL: "expression18" });
+    this.subrule(this.expression);
   });
 
   // Helper rule dependencies (to be implemented in other modules)

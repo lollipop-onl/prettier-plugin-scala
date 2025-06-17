@@ -19,8 +19,8 @@ export class TypeParserMixin extends BaseParserModule {
   unionType = this.parser.RULE("unionType", () => {
     this.subrule(this.intersectionType);
     this.parser.MANY(() => {
-      this.consumeTokenType(tokens.Pipe);
-      this.subrule(this.intersectionType, { LABEL: "intersectionType2" });
+      this.consumeTokenType(tokens.BitwiseOr);
+      this.subrule(this.intersectionType);
     });
   });
 
@@ -28,8 +28,8 @@ export class TypeParserMixin extends BaseParserModule {
   intersectionType = this.parser.RULE("intersectionType", () => {
     this.subrule(this.baseType);
     this.parser.MANY(() => {
-      this.consumeTokenType(tokens.Ampersand);
-      this.subrule(this.baseType, { LABEL: "baseType2" });
+      this.consumeTokenType(tokens.BitwiseAnd);
+      this.subrule(this.baseType);
     });
   });
 
@@ -41,11 +41,10 @@ export class TypeParserMixin extends BaseParserModule {
       // Function type: A => B or (A, B) => C
       {
         ALT: () => {
-          this.parser.OR2([
+          this.parser.OR([
             // Single parameter without parentheses
             {
-              ALT: () =>
-                this.subrule(this.simpleType, { LABEL: "simpleType2" }),
+              ALT: () => this.subrule(this.simpleType),
             },
             // Multiple parameters or single with parentheses
             {
@@ -53,14 +52,14 @@ export class TypeParserMixin extends BaseParserModule {
                 this.consumeTokenType(tokens.LeftParen);
                 this.parser.MANY_SEP({
                   SEP: tokens.Comma,
-                  DEF: () => this.subrule(this.type, { LABEL: "type2" }),
+                  DEF: () => this.subrule(this.type),
                 });
                 this.consumeTokenType(tokens.RightParen);
               },
             },
           ]);
           this.consumeTokenType(tokens.Arrow);
-          this.subrule(this.type, { LABEL: "type3" });
+          this.subrule(this.type);
         },
         GATE: () => {
           // Look ahead to detect function types
@@ -163,11 +162,10 @@ export class TypeParserMixin extends BaseParserModule {
           return (
             la1?.tokenType === tokens.IntegerLiteral ||
             la1?.tokenType === tokens.FloatingPointLiteral ||
-            la1?.tokenType === tokens.BooleanLiteral ||
-            la1?.tokenType === tokens.CharacterLiteral ||
+            la1?.tokenType === tokens.True ||
+            la1?.tokenType === tokens.CharLiteral ||
             la1?.tokenType === tokens.StringLiteral ||
-            la1?.tokenType === tokens.SymbolLiteral ||
-            la1?.tokenType === tokens.NullLiteral
+            la1?.tokenType === tokens.Null
           );
         },
       },
@@ -176,7 +174,7 @@ export class TypeParserMixin extends BaseParserModule {
       // Type projection: T#U
       {
         ALT: () => {
-          this.subrule(this.simpleType, { LABEL: "simpleType3" });
+          this.subrule(this.simpleType);
           this.consumeTokenType(tokens.Hash);
           this.consumeTokenType(tokens.Identifier);
         },
@@ -226,7 +224,7 @@ export class TypeParserMixin extends BaseParserModule {
       // Kind projector: * or ?
       {
         ALT: () => {
-          this.parser.OR2([
+          this.parser.OR([
             { ALT: () => this.consumeTokenType(tokens.Star) },
             { ALT: () => this.consumeTokenType(tokens.Question) },
           ]);
@@ -235,9 +233,7 @@ export class TypeParserMixin extends BaseParserModule {
       // Regular type with optional type arguments
       {
         ALT: () => {
-          this.subrule(this.qualifiedIdentifier, {
-            LABEL: "qualifiedIdentifier2",
-          });
+          this.subrule(this.qualifiedIdentifier);
           this.parser.OPTION(() => {
             this.consumeTokenType(tokens.LeftBracket);
             this.parser.MANY_SEP({
@@ -260,7 +256,7 @@ export class TypeParserMixin extends BaseParserModule {
         { ALT: () => this.consumeTokenType(tokens.Minus) },
       ]);
     });
-    this.subrule(this.type, { LABEL: "type4" });
+    this.subrule(this.type);
   });
 
   // Tuple type or parenthesized type
@@ -269,10 +265,10 @@ export class TypeParserMixin extends BaseParserModule {
     () => {
       this.consumeTokenType(tokens.LeftParen);
       this.parser.OPTION(() => {
-        this.subrule(this.type, { LABEL: "type5" });
+        this.subrule(this.type);
         this.parser.MANY(() => {
           this.consumeTokenType(tokens.Comma);
-          this.subrule(this.type, { LABEL: "type6" });
+          this.subrule(this.type);
         });
       });
       this.consumeTokenType(tokens.RightParen);
@@ -283,21 +279,21 @@ export class TypeParserMixin extends BaseParserModule {
   contextFunctionType = this.parser.RULE("contextFunctionType", () => {
     this.parser.OR([
       // Single parameter
-      { ALT: () => this.subrule(this.simpleType, { LABEL: "simpleType4" }) },
+      { ALT: () => this.subrule(this.simpleType) },
       // Multiple parameters
       {
         ALT: () => {
           this.consumeTokenType(tokens.LeftParen);
           this.parser.MANY_SEP({
             SEP: tokens.Comma,
-            DEF: () => this.subrule(this.type, { LABEL: "type7" }),
+            DEF: () => this.subrule(this.type),
           });
           this.consumeTokenType(tokens.RightParen);
         },
       },
     ]);
     this.consumeTokenType(tokens.QuestionArrow);
-    this.subrule(this.type, { LABEL: "type8" });
+    this.subrule(this.type);
   });
 
   // Dependent function type (Scala 3)
@@ -309,14 +305,14 @@ export class TypeParserMixin extends BaseParserModule {
     });
     this.consumeTokenType(tokens.RightParen);
     this.consumeTokenType(tokens.Arrow);
-    this.subrule(this.type, { LABEL: "type9" });
+    this.subrule(this.type);
   });
 
   // Dependent parameter
   dependentParameter = this.parser.RULE("dependentParameter", () => {
     this.consumeTokenType(tokens.Identifier);
     this.consumeTokenType(tokens.Colon);
-    this.subrule(this.type, { LABEL: "type10" });
+    this.subrule(this.type);
   });
 
   // Polymorphic function type (Scala 3)
@@ -328,7 +324,7 @@ export class TypeParserMixin extends BaseParserModule {
     });
     this.consumeTokenType(tokens.RightBracket);
     this.consumeTokenType(tokens.DoubleArrow);
-    this.subrule(this.type, { LABEL: "type11" });
+    this.subrule(this.type);
   });
 
   // Type lambda (Scala 3)
@@ -336,14 +332,11 @@ export class TypeParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.LeftBracket);
     this.parser.MANY_SEP({
       SEP: tokens.Comma,
-      DEF: () =>
-        this.subrule(this.typeLambdaParameter, {
-          LABEL: "typeLambdaParameter2",
-        }),
+      DEF: () => this.subrule(this.typeLambdaParameter),
     });
     this.consumeTokenType(tokens.RightBracket);
     this.consumeTokenType(tokens.DoubleArrow);
-    this.subrule(this.type, { LABEL: "type12" });
+    this.subrule(this.type);
   });
 
   // Type lambda parameter
@@ -357,18 +350,18 @@ export class TypeParserMixin extends BaseParserModule {
     });
     this.consumeTokenType(tokens.Identifier);
     // Optional type bounds
-    this.parser.OPTION2(() => {
-      this.parser.OR2([
+    this.parser.OPTION(() => {
+      this.parser.OR([
         {
           ALT: () => {
             this.consumeTokenType(tokens.ColonLess);
-            this.subrule(this.type, { LABEL: "type13" });
+            this.subrule(this.type);
           },
         },
         {
           ALT: () => {
             this.consumeTokenType(tokens.GreaterColon);
-            this.subrule(this.type, { LABEL: "type14" });
+            this.subrule(this.type);
           },
         },
       ]);
@@ -396,18 +389,18 @@ export class TypeParserMixin extends BaseParserModule {
     });
     this.consumeTokenType(tokens.Identifier);
     // Optional type bounds
-    this.parser.OPTION2(() => {
-      this.parser.OR2([
+    this.parser.OPTION(() => {
+      this.parser.OR([
         {
           ALT: () => {
             this.consumeTokenType(tokens.ColonLess);
-            this.subrule(this.type, { LABEL: "type15" });
+            this.subrule(this.type);
           },
         },
         {
           ALT: () => {
             this.consumeTokenType(tokens.GreaterColon);
-            this.subrule(this.type, { LABEL: "type16" });
+            this.subrule(this.type);
           },
         },
       ]);
@@ -416,7 +409,7 @@ export class TypeParserMixin extends BaseParserModule {
 
   // Match type (Scala 3)
   matchType = this.parser.RULE("matchType", () => {
-    this.subrule(this.type, { LABEL: "type17" });
+    this.subrule(this.type);
     this.consumeTokenType(tokens.Match);
     this.consumeTokenType(tokens.LeftBrace);
     this.parser.MANY(() => this.subrule(this.matchTypeCase));
@@ -426,8 +419,8 @@ export class TypeParserMixin extends BaseParserModule {
   // Match type case
   matchTypeCase = this.parser.RULE("matchTypeCase", () => {
     this.consumeTokenType(tokens.Case);
-    this.subrule(this.type, { LABEL: "type18" });
+    this.subrule(this.type);
     this.consumeTokenType(tokens.Arrow);
-    this.subrule(this.type, { LABEL: "type19" });
+    this.subrule(this.type);
   });
 }

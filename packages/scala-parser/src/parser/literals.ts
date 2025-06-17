@@ -11,27 +11,24 @@ export class LiteralParserMixin extends BaseParserModule {
       // Numeric literals
       { ALT: () => this.consumeTokenType(tokens.IntegerLiteral) },
       { ALT: () => this.consumeTokenType(tokens.FloatingPointLiteral) },
-      { ALT: () => this.consumeTokenType(tokens.BinaryLiteral) },
-      { ALT: () => this.consumeTokenType(tokens.HexLiteral) },
+      { ALT: () => this.consumeTokenType(tokens.ScientificNotationLiteral) },
 
       // Boolean literals
-      { ALT: () => this.consumeTokenType(tokens.BooleanLiteral) },
+      { ALT: () => this.consumeTokenType(tokens.True) },
+      { ALT: () => this.consumeTokenType(tokens.False) },
 
       // Character literal
-      { ALT: () => this.consumeTokenType(tokens.CharacterLiteral) },
+      { ALT: () => this.consumeTokenType(tokens.CharLiteral) },
 
       // String literals
       { ALT: () => this.consumeTokenType(tokens.StringLiteral) },
-      { ALT: () => this.consumeTokenType(tokens.MultilineStringLiteral) },
+      { ALT: () => this.consumeTokenType(tokens.InterpolatedStringLiteral) },
 
       // Interpolated strings
       { ALT: () => this.subrule(this.interpolatedString) },
 
-      // Symbol literal
-      { ALT: () => this.consumeTokenType(tokens.SymbolLiteral) },
-
       // Null literal
-      { ALT: () => this.consumeTokenType(tokens.NullLiteral) },
+      { ALT: () => this.consumeTokenType(tokens.Null) },
 
       // Unit literal ()
       {
@@ -65,7 +62,7 @@ export class LiteralParserMixin extends BaseParserModule {
         ALT: () => {
           this.consumeTokenType(tokens.IntegerLiteral);
           this.parser.OPTION(() => {
-            this.parser.OR2([
+            this.parser.OR([
               { ALT: () => this.consumeTokenType(tokens.LongSuffix) },
               { ALT: () => this.consumeTokenType(tokens.IntSuffix) },
               { ALT: () => this.consumeTokenType(tokens.ShortSuffix) },
@@ -79,7 +76,7 @@ export class LiteralParserMixin extends BaseParserModule {
         ALT: () => {
           this.consumeTokenType(tokens.FloatingPointLiteral);
           this.parser.OPTION(() => {
-            this.parser.OR3([
+            this.parser.OR([
               { ALT: () => this.consumeTokenType(tokens.FloatSuffix) },
               { ALT: () => this.consumeTokenType(tokens.DoubleSuffix) },
             ]);
@@ -106,7 +103,7 @@ export class LiteralParserMixin extends BaseParserModule {
           this.consumeTokenType(tokens.LeftParen);
           this.parser.MANY_SEP({
             SEP: tokens.Comma,
-            DEF: () => this.subrule(this.literal, { LABEL: "literal2" }),
+            DEF: () => this.subrule(this.literal),
           });
           this.consumeTokenType(tokens.RightParen);
         },
@@ -118,7 +115,7 @@ export class LiteralParserMixin extends BaseParserModule {
           this.consumeTokenType(tokens.LeftParen);
           this.parser.MANY_SEP({
             SEP: tokens.Comma,
-            DEF: () => this.subrule(this.literal, { LABEL: "literal3" }),
+            DEF: () => this.subrule(this.literal),
           });
           this.consumeTokenType(tokens.RightParen);
         },

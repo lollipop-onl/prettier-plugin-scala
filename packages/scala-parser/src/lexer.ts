@@ -232,6 +232,44 @@ export const QuestionArrow = createToken({
   pattern: /\?\=>/,
 });
 
+// String interpolation tokens
+export const InterpolatedString = createToken({
+  name: "InterpolatedString",
+  pattern: /s"([^"\\]|\\.|\\u[0-9A-Fa-f]{4})*"/,
+});
+export const FormattedString = createToken({
+  name: "FormattedString",
+  pattern: /f"([^"\\]|\\.|\\u[0-9A-Fa-f]{4})*"/,
+});
+export const RawString = createToken({
+  name: "RawString",
+  pattern: /raw"([^"\\]|\\.|\\u[0-9A-Fa-f]{4})*"/,
+});
+export const CustomInterpolatedString = createToken({
+  name: "CustomInterpolatedString",
+  pattern: /[a-zA-Z_][a-zA-Z0-9_]*"([^"\\]|\\.|\\u[0-9A-Fa-f]{4})*"/,
+});
+
+// Numeric suffix tokens
+export const LongSuffix = createToken({ name: "LongSuffix", pattern: /[lL]/ });
+export const IntSuffix = createToken({ name: "IntSuffix", pattern: /[iI]/ });
+export const ShortSuffix = createToken({
+  name: "ShortSuffix",
+  pattern: /[sS]/,
+});
+export const ByteSuffix = createToken({ name: "ByteSuffix", pattern: /[bB]/ });
+export const FloatSuffix = createToken({
+  name: "FloatSuffix",
+  pattern: /[fF]/,
+});
+export const DoubleSuffix = createToken({
+  name: "DoubleSuffix",
+  pattern: /[dD]/,
+});
+
+// Additional missing tokens
+export const Hash = createToken({ name: "Hash", pattern: /#/ });
+
 // Delimiters
 export const LeftParen = createToken({ name: "LeftParen", pattern: /\(/ });
 export const RightParen = createToken({ name: "RightParen", pattern: /\)/ });
@@ -326,9 +364,21 @@ export const allTokens = [
   ScientificNotationLiteral, // Must come before FloatingPointLiteral
   FloatingPointLiteral, // Must come before IntegerLiteral
   IntegerLiteral,
+  // String interpolation literals (must come before StringLiteral)
+  CustomInterpolatedString,
+  InterpolatedString,
+  FormattedString,
+  RawString,
   InterpolatedStringLiteral, // Must come before StringLiteral
   StringLiteral,
   CharLiteral,
+  // Numeric suffixes
+  LongSuffix,
+  IntSuffix,
+  ShortSuffix,
+  ByteSuffix,
+  FloatSuffix,
+  DoubleSuffix,
 
   // Multi-character operators (must come before single-character)
   TypeLambdaArrow, // Must come before Arrow to avoid ambiguity
@@ -389,6 +439,7 @@ export const allTokens = [
   Question,
   Quote,
   Dollar,
+  Hash,
 
   // Delimiters
   LeftParen,

@@ -25,14 +25,14 @@ export class Scala3ParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.Enum);
     this.consumeTokenType(tokens.Identifier);
     this.parser.OPTION(() => this.subrule(this.typeParameters));
-    this.parser.OPTION2(() => this.subrule(this.extendsClause));
+    this.parser.OPTION(() => this.subrule(this.extendsClause));
     this.consumeTokenType(tokens.LeftBrace);
     this.parser.MANY(() => {
       this.parser.OR([
         { ALT: () => this.subrule(this.enumCase) },
         { ALT: () => this.subrule(this.classMember) },
       ]);
-      this.parser.OPTION3(() => this.consumeTokenType(tokens.Semicolon));
+      this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
     });
     this.consumeTokenType(tokens.RightBrace);
   });
@@ -46,16 +46,16 @@ export class Scala3ParserMixin extends BaseParserModule {
       this.parser.MANY_SEP({
         SEP: tokens.Comma,
         DEF: () => {
-          this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier2" });
+          this.consumeTokenType(tokens.Identifier);
           this.consumeTokenType(tokens.Colon);
           this.subrule(this.type);
         },
       });
       this.consumeTokenType(tokens.RightParen);
     });
-    this.parser.OPTION2(() => {
+    this.parser.OPTION(() => {
       this.consumeTokenType(tokens.Extends);
-      this.subrule(this.type, { LABEL: "type2" });
+      this.subrule(this.type);
     });
   });
 
@@ -68,9 +68,9 @@ export class Scala3ParserMixin extends BaseParserModule {
 
     // Extended type with parameters
     this.consumeTokenType(tokens.LeftParen);
-    this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier3" });
+    this.consumeTokenType(tokens.Identifier);
     this.consumeTokenType(tokens.Colon);
-    this.subrule(this.type, { LABEL: "type3" });
+    this.subrule(this.type);
     this.consumeTokenType(tokens.RightParen);
 
     // Optional using/given clauses
@@ -85,8 +85,8 @@ export class Scala3ParserMixin extends BaseParserModule {
         ALT: () => {
           this.consumeTokenType(tokens.LeftBrace);
           this.parser.MANY(() => {
-            this.subrule(this.extensionMember, { LABEL: "extensionMember2" });
-            this.parser.OPTION2(() => this.consumeTokenType(tokens.Semicolon));
+            this.subrule(this.extensionMember);
+            this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
           });
           this.consumeTokenType(tokens.RightBrace);
         },
@@ -97,7 +97,7 @@ export class Scala3ParserMixin extends BaseParserModule {
   // Extension member
   extensionMember = this.parser.RULE("extensionMember", () => {
     this.parser.MANY(() => this.subrule(this.annotation));
-    this.parser.MANY2(() => this.subrule(this.modifier));
+    this.parser.MANY(() => this.subrule(this.modifier));
     this.parser.OR([
       { ALT: () => this.subrule(this.defDefinition) },
       { ALT: () => this.subrule(this.valDefinition) },
@@ -111,21 +111,17 @@ export class Scala3ParserMixin extends BaseParserModule {
 
     // Optional given name
     this.parser.OPTION(() => {
-      this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier4" });
+      this.consumeTokenType(tokens.Identifier);
     });
 
     // Optional type parameters
-    this.parser.OPTION2(() =>
-      this.subrule(this.typeParameters, { LABEL: "typeParameters2" }),
-    );
+    this.parser.OPTION(() => this.subrule(this.typeParameters));
 
     // Optional parameter lists (for given with parameters)
-    this.parser.MANY(() =>
-      this.subrule(this.parameterLists, { LABEL: "parameterLists2" }),
-    );
+    this.parser.MANY(() => this.subrule(this.parameterLists));
 
     this.consumeTokenType(tokens.Colon);
-    this.subrule(this.type, { LABEL: "type4" });
+    this.subrule(this.type);
 
     // Implementation
     this.parser.OR([
@@ -133,7 +129,7 @@ export class Scala3ParserMixin extends BaseParserModule {
       {
         ALT: () => {
           this.consumeTokenType(tokens.With);
-          this.parser.OR2([
+          this.parser.OR([
             // Block implementation
             { ALT: () => this.subrule(this.classBody) },
             // Expression implementation
@@ -150,7 +146,7 @@ export class Scala3ParserMixin extends BaseParserModule {
       {
         ALT: () => {
           this.consumeTokenType(tokens.Equals);
-          this.subrule(this.expression, { LABEL: "expression2" });
+          this.subrule(this.expression);
         },
       },
     ]);
@@ -161,30 +157,28 @@ export class Scala3ParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.Opaque);
     this.consumeTokenType(tokens.Type);
     this.consumeTokenType(tokens.Identifier);
-    this.parser.OPTION(() =>
-      this.subrule(this.typeParameters, { LABEL: "typeParameters3" }),
-    );
+    this.parser.OPTION(() => this.subrule(this.typeParameters));
 
     // Optional type bounds
-    this.parser.OPTION2(() => {
+    this.parser.OPTION(() => {
       this.parser.OR([
         {
           ALT: () => {
             this.consumeTokenType(tokens.ColonLess);
-            this.subrule(this.type, { LABEL: "type5" });
+            this.subrule(this.type);
           },
         },
         {
           ALT: () => {
             this.consumeTokenType(tokens.GreaterColon);
-            this.subrule(this.type, { LABEL: "type6" });
+            this.subrule(this.type);
           },
         },
       ]);
     });
 
     this.consumeTokenType(tokens.Equals);
-    this.subrule(this.type, { LABEL: "type7" });
+    this.subrule(this.type);
   });
 
   // Inline modifier handling (Scala 3)
@@ -192,12 +186,10 @@ export class Scala3ParserMixin extends BaseParserModule {
     this.consumeTokenType(tokens.Inline);
     this.parser.OR([
       {
-        ALT: () =>
-          this.subrule(this.defDefinition, { LABEL: "defDefinition2" }),
+        ALT: () => this.subrule(this.defDefinition),
       },
       {
-        ALT: () =>
-          this.subrule(this.valDefinition, { LABEL: "valDefinition2" }),
+        ALT: () => this.subrule(this.valDefinition),
       },
     ]);
   });
@@ -206,7 +198,7 @@ export class Scala3ParserMixin extends BaseParserModule {
   transparentDefinition = this.parser.RULE("transparentDefinition", () => {
     this.consumeTokenType(tokens.Transparent);
     this.consumeTokenType(tokens.Inline);
-    this.subrule(this.defDefinition, { LABEL: "defDefinition3" });
+    this.subrule(this.defDefinition);
   });
 
   // Export clause (already implemented in statements, but Scala 3 specific)
@@ -221,11 +213,10 @@ export class Scala3ParserMixin extends BaseParserModule {
     this.subrule(this.qualifiedIdentifier);
     this.consumeTokenType(tokens.Dot);
     this.parser.MANY(() => {
-      this.consumeTokenType(tokens.Dot, { LABEL: "Dot2" });
+      this.consumeTokenType(tokens.Dot);
       this.parser.OR([
         {
-          ALT: () =>
-            this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier5" }),
+          ALT: () => this.consumeTokenType(tokens.Identifier),
         },
         { ALT: () => this.consumeTokenType(tokens.Underscore) },
         { ALT: () => this.consumeTokenType(tokens.Given) },
@@ -246,29 +237,25 @@ export class Scala3ParserMixin extends BaseParserModule {
   exportSelector = this.parser.RULE("exportSelector", () => {
     this.parser.OR([
       // given selector
-      { ALT: () => this.consumeTokenType(tokens.Given, { LABEL: "Given2" }) },
+      { ALT: () => this.consumeTokenType(tokens.Given) },
       // Regular selector with optional rename
       {
         ALT: () => {
-          this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier6" });
+          this.consumeTokenType(tokens.Identifier);
           this.parser.OPTION(() => {
-            this.parser.OR2([
+            this.parser.OR([
               // Rename: x => y
               {
                 ALT: () => {
                   this.consumeTokenType(tokens.Arrow);
-                  this.consumeTokenType(tokens.Identifier, {
-                    LABEL: "Identifier7",
-                  });
+                  this.consumeTokenType(tokens.Identifier);
                 },
               },
               // Hide: x => _
               {
                 ALT: () => {
-                  this.consumeTokenType(tokens.Arrow, { LABEL: "Arrow2" });
-                  this.consumeTokenType(tokens.Underscore, {
-                    LABEL: "Underscore2",
-                  });
+                  this.consumeTokenType(tokens.Arrow);
+                  this.consumeTokenType(tokens.Underscore);
                 },
               },
             ]);
@@ -285,9 +272,9 @@ export class Scala3ParserMixin extends BaseParserModule {
     this.parser.MANY_SEP({
       SEP: tokens.Comma,
       DEF: () => {
-        this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier8" });
+        this.consumeTokenType(tokens.Identifier);
         this.consumeTokenType(tokens.Colon);
-        this.subrule(this.type, { LABEL: "type8" });
+        this.subrule(this.type);
       },
     });
     this.consumeTokenType(tokens.RightParen);
@@ -298,16 +285,13 @@ export class Scala3ParserMixin extends BaseParserModule {
     // Placeholder - should be in definitions.ts
     this.parser.OR([
       {
-        ALT: () =>
-          this.subrule(this.valDefinition, { LABEL: "valDefinition3" }),
+        ALT: () => this.subrule(this.valDefinition),
       },
       {
-        ALT: () =>
-          this.subrule(this.defDefinition, { LABEL: "defDefinition4" }),
+        ALT: () => this.subrule(this.defDefinition),
       },
       {
-        ALT: () =>
-          this.subrule(this.typeDefinition, { LABEL: "typeDefinition2" }),
+        ALT: () => this.subrule(this.typeDefinition),
       },
     ]);
   });

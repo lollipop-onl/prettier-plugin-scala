@@ -38,13 +38,11 @@ export class PatternParserMixin extends BaseParserModule {
       // Constructor pattern: Type(patterns...)
       {
         ALT: () => {
-          this.subrule(this.qualifiedIdentifier, {
-            LABEL: "qualifiedIdentifier2",
-          });
+          this.subrule(this.qualifiedIdentifier);
           this.consumeTokenType(tokens.LeftParen);
           this.parser.MANY_SEP({
             SEP: tokens.Comma,
-            DEF: () => this.subrule(this.pattern, { LABEL: "pattern2" }),
+            DEF: () => this.subrule(this.pattern),
           });
           this.consumeTokenType(tokens.RightParen);
         },
@@ -67,7 +65,7 @@ export class PatternParserMixin extends BaseParserModule {
           this.consumeTokenType(tokens.LeftParen);
           this.parser.MANY_SEP({
             SEP: tokens.Comma,
-            DEF: () => this.subrule(this.pattern, { LABEL: "pattern3" }),
+            DEF: () => this.subrule(this.pattern),
           });
           this.consumeTokenType(tokens.RightParen);
         },
@@ -75,7 +73,7 @@ export class PatternParserMixin extends BaseParserModule {
       // Typed pattern: pattern : Type
       {
         ALT: () => {
-          this.subrule(this.pattern, { LABEL: "pattern4" });
+          this.subrule(this.pattern);
           this.consumeTokenType(tokens.Colon);
           this.subrule(this.type);
         },
@@ -107,10 +105,10 @@ export class PatternParserMixin extends BaseParserModule {
       // Alternative pattern: p1 | p2 | ...
       {
         ALT: () => {
-          this.subrule(this.pattern, { LABEL: "pattern5" });
+          this.subrule(this.pattern);
           this.parser.MANY(() => {
-            this.consumeTokenType(tokens.Pipe);
-            this.subrule(this.pattern, { LABEL: "pattern6" });
+            this.consumeTokenType(tokens.BitwiseOr);
+            this.subrule(this.pattern);
           });
         },
         GATE: () => {
@@ -122,7 +120,7 @@ export class PatternParserMixin extends BaseParserModule {
             if (!token) return false;
             if (token.tokenType === tokens.LeftParen) parenDepth++;
             if (token.tokenType === tokens.RightParen) parenDepth--;
-            if (parenDepth === 0 && token.tokenType === tokens.Pipe) {
+            if (parenDepth === 0 && token.tokenType === tokens.BitwiseOr) {
               return true;
             }
             if (
@@ -143,7 +141,7 @@ export class PatternParserMixin extends BaseParserModule {
   // Case clause (used in match expressions and partial functions)
   caseClause = this.parser.RULE("caseClause", () => {
     this.consumeTokenType(tokens.Case);
-    this.subrule(this.pattern, { LABEL: "pattern7" });
+    this.subrule(this.pattern);
 
     // Optional guard
     this.parser.OPTION(() => {
@@ -159,8 +157,8 @@ export class PatternParserMixin extends BaseParserModule {
       {
         ALT: () => {
           this.parser.MANY(() => {
-            this.subrule(this.expression, { LABEL: "expression2" });
-            this.parser.OPTION2(() => this.consumeTokenType(tokens.Semicolon));
+            this.subrule(this.expression);
+            this.parser.OPTION(() => this.consumeTokenType(tokens.Semicolon));
           });
         },
         GATE: () => {
@@ -183,24 +181,24 @@ export class PatternParserMixin extends BaseParserModule {
       // Pattern generator: pattern <- expression
       {
         ALT: () => {
-          this.subrule(this.pattern, { LABEL: "pattern8" });
+          this.subrule(this.pattern);
           this.consumeTokenType(tokens.LeftArrow);
-          this.subrule(this.expression, { LABEL: "expression3" });
+          this.subrule(this.expression);
         },
       },
       // Value definition: pattern = expression
       {
         ALT: () => {
-          this.subrule(this.pattern, { LABEL: "pattern9" });
+          this.subrule(this.pattern);
           this.consumeTokenType(tokens.Equals);
-          this.subrule(this.expression, { LABEL: "expression4" });
+          this.subrule(this.expression);
         },
       },
       // Guard: if expression
       {
         ALT: () => {
           this.consumeTokenType(tokens.If);
-          this.subrule(this.expression, { LABEL: "expression5" });
+          this.subrule(this.expression);
         },
       },
     ]);
@@ -208,20 +206,18 @@ export class PatternParserMixin extends BaseParserModule {
 
   // Extractor pattern (for advanced pattern matching)
   extractorPattern = this.parser.RULE("extractorPattern", () => {
-    this.subrule(this.qualifiedIdentifier, { LABEL: "qualifiedIdentifier3" });
+    this.subrule(this.qualifiedIdentifier);
     this.consumeTokenType(tokens.LeftParen);
     this.parser.MANY_SEP({
       SEP: tokens.Comma,
       DEF: () => {
         this.parser.OR([
           // Regular pattern
-          { ALT: () => this.subrule(this.pattern, { LABEL: "pattern10" }) },
+          { ALT: () => this.subrule(this.pattern) },
           // Sequence pattern: _*
           {
             ALT: () => {
-              this.consumeTokenType(tokens.Underscore, {
-                LABEL: "Underscore2",
-              });
+              this.consumeTokenType(tokens.Underscore);
               this.consumeTokenType(tokens.Star);
             },
           },
@@ -233,9 +229,9 @@ export class PatternParserMixin extends BaseParserModule {
 
   // Infix pattern (for pattern matching with infix operators)
   infixPattern = this.parser.RULE("infixPattern", () => {
-    this.subrule(this.pattern, { LABEL: "pattern11" });
-    this.consumeTokenType(tokens.Identifier, { LABEL: "Identifier2" });
-    this.subrule(this.pattern, { LABEL: "pattern12" });
+    this.subrule(this.pattern);
+    this.consumeTokenType(tokens.Identifier);
+    this.subrule(this.pattern);
   });
 
   // XML pattern (if XML support is needed)
