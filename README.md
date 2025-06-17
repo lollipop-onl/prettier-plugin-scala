@@ -5,8 +5,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/simochee/prettier-plugin-scala/actions">
-    <img alt="CI Status" src="https://github.com/simochee/prettier-plugin-scala/workflows/CI/badge.svg">
+  <a href="https://github.com/lollipop-onl/prettier-plugin-scala/actions">
+    <img alt="CI Status" src="https://github.com/lollipop-onl/prettier-plugin-scala/workflows/CI/badge.svg">
+  </a>
+  <a href="https://github.com/lollipop-onl/prettier-plugin-scala/network/dependencies">
+    <img alt="Dependency Graph" src="https://img.shields.io/badge/dependency-graph-blue.svg">
+  </a>
+  <a href="https://github.com/lollipop-onl/prettier-plugin-scala/security">
+    <img alt="Security" src="https://img.shields.io/badge/security-advisories-green.svg">
   </a>
   <a href="LICENSE">
     <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
@@ -64,7 +70,7 @@ This project uses:
 
 ```bash
 # Clone the repository
-git clone https://github.com/simochee/prettier-plugin-scala
+git clone https://github.com/lollipop-onl/prettier-plugin-scala
 cd prettier-plugin-scala
 
 # Install dependencies
@@ -107,6 +113,6 @@ MIT © [Simochee](https://github.com/simochee)
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/simochee/prettier-plugin-scala)
-- [Issue Tracker](https://github.com/simochee/prettier-plugin-scala/issues)
-- [Discussions](https://github.com/simochee/prettier-plugin-scala/discussions)
+- [GitHub Repository](https://github.com/lollipop-onl/prettier-plugin-scala)
+- [Issue Tracker](https://github.com/lollipop-onl/prettier-plugin-scala/issues)
+- [Discussions](https://github.com/lollipop-onl/prettier-plugin-scala/discussions)
