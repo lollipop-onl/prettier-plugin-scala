@@ -346,10 +346,11 @@ export class ExpressionVisitorMethods {
     if (exclamation.length > 0) {
       // Handle negation operator
       const postfixExpression = getFirstChild(node, "postfixExpression");
-      return (
-        "!" +
-        (postfixExpression ? this.visitor.visit(postfixExpression, ctx) : "")
-      );
+      if (postfixExpression) {
+        const result = this.visitor.visit(postfixExpression, ctx);
+        return "!" + result;
+      }
+      return "!";
     }
 
     const bitwiseTilde = getChildNodes(node, "BitwiseTilde");
@@ -365,9 +366,19 @@ export class ExpressionVisitorMethods {
     const leftParen = getChildNodes(node, "LeftParen");
     if (leftParen.length > 0) {
       const expression = getFirstChild(node, "expression");
-      return (
-        "(" + (expression ? this.visitor.visit(expression, ctx) : "") + ")"
+      const assignmentOrInfixExpression = getFirstChild(
+        node,
+        "assignmentOrInfixExpression",
       );
+
+      // Try expression first, then assignmentOrInfixExpression
+      const content = expression
+        ? this.visitor.visit(expression, ctx)
+        : assignmentOrInfixExpression
+          ? this.visitor.visit(assignmentOrInfixExpression, ctx)
+          : "";
+
+      return "(" + content + ")";
     }
 
     const blockExpression = getFirstChild(node, "blockExpression");
