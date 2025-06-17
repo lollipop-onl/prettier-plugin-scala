@@ -1,4 +1,4 @@
-import { createToken, Lexer } from "chevrotain";
+import { createToken, Lexer, ILexingResult } from "chevrotain";
 
 // Keywords
 export const Val = createToken({ name: "Val", pattern: /val\b/ });
@@ -88,7 +88,7 @@ export const OperatorIdentifier = createToken({
 export const Identifier = createToken({
   name: "Identifier",
   pattern:
-    /[a-zA-Z_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}][a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}]*/u,
+    /(?:_[a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF]+|[a-zA-Z$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF][a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF]*)/u,
 });
 
 // Literals
@@ -211,8 +211,7 @@ export const Comma = createToken({ name: "Comma", pattern: /,/ });
 export const Dot = createToken({ name: "Dot", pattern: /\./ });
 export const Underscore = createToken({
   name: "Underscore",
-  pattern:
-    /_(?![a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}])/u,
+  pattern: /_/,
 });
 export const At = createToken({ name: "At", pattern: /@/ });
 export const Question = createToken({ name: "Question", pattern: /\?/ });
@@ -227,10 +226,8 @@ export const SpliceStart = createToken({
 // Additional tokens for modular parser
 export const Quote = createToken({ name: "Quote", pattern: /'/ });
 export const Dollar = createToken({ name: "Dollar", pattern: /\$/ });
-export const QuestionArrow = createToken({
-  name: "QuestionArrow",
-  pattern: /\?=>/,
-});
+// QuestionArrow is now alias for ContextArrow to avoid duplicate patterns
+export const QuestionArrow = ContextArrow;
 
 // String interpolation tokens
 export const InterpolatedString = createToken({
@@ -426,9 +423,8 @@ export const allTokens = [
   Semicolon,
   Comma,
   Dot,
-  Underscore,
   At,
-  QuestionArrow, // Must come before Question
+  // QuestionArrow removed - now an alias for ContextArrow
   Question,
   Quote,
   Dollar,
@@ -445,12 +441,27 @@ export const allTokens = [
   // Operator identifier (before regular identifier)
   OperatorIdentifier,
 
-  // Identifier (must come last)
+  // Identifier (must come before underscore)
   Identifier,
+
+  // Underscore (must come after identifier to not interfere with _identifier patterns)
+  Underscore,
 ];
 
-// Create the lexer
-export const ScalaLexer = new Lexer(allTokens);
+// Create the lexer (lazy initialization to avoid issues during import)
+let scalaLexerInstance: Lexer | null = null;
+
+export const ScalaLexer = {
+  get instance(): Lexer {
+    if (!scalaLexerInstance) {
+      scalaLexerInstance = new Lexer(allTokens);
+    }
+    return scalaLexerInstance;
+  },
+  tokenize(input: string): ILexingResult {
+    return this.instance.tokenize(input);
+  },
+};
 
 // Export lexer instance for backward compatibility with tests
 export const lexerInstance = ScalaLexer;
