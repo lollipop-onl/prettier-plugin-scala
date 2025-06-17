@@ -7,6 +7,7 @@
     "url": "https://github.com/simochee/prettier-plugin-scala.git",
     "directory": "packages/scala-parser"
   },
+  "license": "MIT",
   "type": "module",
   "exports": {
     ".": "./dist/index.js"

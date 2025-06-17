@@ -187,7 +187,7 @@ If you encounter issues:
 
 ## 📄 License
 
-MIT © [Simochee](https://github.com/simochee)
+MIT © [simochee](https://github.com/simochee)
 
 ## 🔗 Links
 

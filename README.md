@@ -109,7 +109,7 @@ See [CLAUDE.md](./CLAUDE.md) for detailed development guidelines.
 
 ## 📄 License
 
-MIT © [Simochee](https://github.com/simochee)
+MIT © [simochee](https://github.com/simochee)
 
 ## 🔗 Links
 
