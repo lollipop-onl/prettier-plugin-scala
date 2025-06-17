@@ -361,26 +361,72 @@ export class TypeVisitorMethods {
   }
 
   visitTypeArgumentUnion(node: CSTNode, ctx: PrintContext): string {
-    const typeArgumentIntersection = getFirstChild(
+    const typeArgumentIntersections = getChildNodes(
       node,
       "typeArgumentIntersection",
     );
-    return typeArgumentIntersection
-      ? this.visitor.visit(typeArgumentIntersection, ctx)
-      : "";
+
+    if (typeArgumentIntersections.length === 1) {
+      return this.visitor.visit(typeArgumentIntersections[0], ctx);
+    }
+
+    // Handle union types with | operator
+    if (typeArgumentIntersections.length > 1) {
+      const typeStrings = typeArgumentIntersections.map((t: CSTNode) =>
+        this.visitor.visit(t, ctx),
+      );
+      return typeStrings.join(" | ");
+    }
+
+    return "";
   }
 
   visitTypeArgumentIntersection(node: CSTNode, ctx: PrintContext): string {
-    const typeArgumentSimple = getFirstChild(node, "typeArgumentSimple");
-    return typeArgumentSimple
-      ? this.visitor.visit(typeArgumentSimple, ctx)
-      : "";
+    const typeArgumentSimples = getChildNodes(node, "typeArgumentSimple");
+
+    if (typeArgumentSimples.length === 1) {
+      return this.visitor.visit(typeArgumentSimples[0], ctx);
+    }
+
+    // Handle intersection types with & operator
+    if (typeArgumentSimples.length > 1) {
+      const typeStrings = typeArgumentSimples.map((t: CSTNode) =>
+        this.visitor.visit(t, ctx),
+      );
+      return typeStrings.join(" & ");
+    }
+
+    return "";
   }
 
   visitTypeArgumentSimple(node: CSTNode, ctx: PrintContext): string {
     const qualifiedIdentifier = getFirstChild(node, "qualifiedIdentifier");
     if (qualifiedIdentifier) {
-      return this.visitor.visit(qualifiedIdentifier, ctx);
+      let result = this.visitor.visit(qualifiedIdentifier, ctx);
+
+      // Handle type parameters like List[*] within type arguments
+      const leftBrackets = getChildNodes(node, "LeftBracket");
+      if (leftBrackets.length > 0) {
+        const typeArgs = getChildNodes(node, "typeArgument");
+        const typeStrings = typeArgs.map((t: CSTNode) =>
+          this.visitor.visit(t, ctx),
+        );
+        result += "[" + typeStrings.join(", ") + "]";
+      }
+
+      return result;
+    }
+
+    // Handle simple type structures like List[*]
+    const simpleType = getFirstChild(node, "simpleType");
+    if (simpleType) {
+      return this.visitor.visit(simpleType, ctx);
+    }
+
+    // Handle base type structures
+    const baseType = getFirstChild(node, "baseType");
+    if (baseType) {
+      return this.visitor.visit(baseType, ctx);
     }
 
     // Handle other type argument patterns
