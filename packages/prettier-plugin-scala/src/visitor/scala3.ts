@@ -1,13 +1,7 @@
 /**
  * Scala 3 specific visitor methods for modern language features
  */
-import {
-  getChildNodes,
-  getFirstChild,
-  getChildren,
-  getNodeImage,
-  getNodeImageSafe,
-} from "./utils.js";
+import { getChildNodes, getFirstChild, getNodeImage } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface Scala3Visitor {
@@ -341,7 +335,7 @@ export class Scala3VisitorMethods {
     return result;
   }
 
-  visitExportSelector(node: CSTNode, _ctx: PrintContext): string {
+  visitExportSelector(node: CSTNode): string {
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
     const givens = getChildNodes(node, "Given");
@@ -408,11 +402,11 @@ export class Scala3VisitorMethods {
   }
 
   // Inline and transparent modifiers
-  visitInlineModifier(node: CSTNode, _ctx: PrintContext): string {
+  visitInlineModifier(): string {
     return "inline";
   }
 
-  visitTransparentModifier(node: CSTNode, _ctx: PrintContext): string {
+  visitTransparentModifier(): string {
     return "transparent";
   }
 

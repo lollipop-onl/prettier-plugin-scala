@@ -2,12 +2,12 @@
  * Statement parsing module for package, import, and export declarations
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+import type { ParserMethod, CstNode } from "chevrotain";
 
 export class StatementParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  qualifiedIdentifier!: ParserMethod<any[], CstNode>;
-  expression!: ParserMethod<any[], CstNode>;
+  qualifiedIdentifier!: ParserMethod<unknown[], CstNode>;
+  expression!: ParserMethod<unknown[], CstNode>;
 
   // Package declaration
   packageClause = this.parser.RULE("packageClause", () => {

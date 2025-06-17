@@ -1,13 +1,7 @@
 /**
  * Type-related visitor methods for handling type expressions, type parameters, and type systems
  */
-import {
-  getChildNodes,
-  getFirstChild,
-  getChildren,
-  getNodeImage,
-  getNodeImageSafe,
-} from "./utils.js";
+import { getChildNodes, getFirstChild, getNodeImage } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface TypeVisitor {

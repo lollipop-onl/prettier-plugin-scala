@@ -80,7 +80,7 @@ export const Transparent = createToken({
 // Operator identifier for custom operators (e.g., +++, <~>, etc.)
 export const OperatorIdentifier = createToken({
   name: "OperatorIdentifier",
-  pattern: /[+\-*\/:%&|^<>=!~?#@$\\]+/,
+  pattern: /[+\-*/%:&|^<>=!~?#@$\\]+/,
 });
 
 // Backward compatible with existing implementation, enhanced mathematical symbol support
@@ -88,7 +88,7 @@ export const OperatorIdentifier = createToken({
 export const Identifier = createToken({
   name: "Identifier",
   pattern:
-    /[a-zA-Z_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\uD83C-\uDBFF\uDC00-\uDFFF][a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\uD83C-\uDBFF\uDC00-\uDFFF]*/,
+    /[a-zA-Z_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}][a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}]*/u,
 });
 
 // Literals
@@ -212,7 +212,7 @@ export const Dot = createToken({ name: "Dot", pattern: /\./ });
 export const Underscore = createToken({
   name: "Underscore",
   pattern:
-    /_(?![a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\uD83C-\uDBFF\uDC00-\uDFFF])/,
+    /_(?![a-zA-Z0-9_$\u00C0-\u00FF\u0370-\u03FF\u0400-\u04FF\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0590-\u05FF\u0600-\u06FF\u2200-\u22FF\u27C0-\u27EF\u2980-\u29FF\u2A00-\u2AFF\u{1F300}-\u{1F6FF}])/u,
 });
 export const At = createToken({ name: "At", pattern: /@/ });
 export const Question = createToken({ name: "Question", pattern: /\?/ });
@@ -229,7 +229,7 @@ export const Quote = createToken({ name: "Quote", pattern: /'/ });
 export const Dollar = createToken({ name: "Dollar", pattern: /\$/ });
 export const QuestionArrow = createToken({
   name: "QuestionArrow",
-  pattern: /\?\=>/,
+  pattern: /\?=>/,
 });
 
 // String interpolation tokens

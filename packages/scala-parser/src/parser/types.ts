@@ -2,13 +2,13 @@
  * Type system parsing module for Scala types
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+import type { ParserMethod, CstNode } from "chevrotain";
 
 export class TypeParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  qualifiedIdentifier!: ParserMethod<any[], CstNode>;
-  expression!: ParserMethod<any[], CstNode>;
-  literal!: ParserMethod<any[], CstNode>;
+  qualifiedIdentifier!: ParserMethod<unknown[], CstNode>;
+  expression!: ParserMethod<unknown[], CstNode>;
+  literal!: ParserMethod<unknown[], CstNode>;
 
   // Main type rule
   type = this.parser.RULE("type", () => {
@@ -133,7 +133,6 @@ export class TypeParserMixin extends BaseParserModule {
         ALT: () => this.subrule(this.polymorphicFunctionType),
         GATE: () => {
           const la1 = this.parser.LA(1);
-          const la2 = this.parser.LA(2);
           if (la1?.tokenType !== tokens.LeftBracket) return false;
 
           // Look for ] =>> pattern

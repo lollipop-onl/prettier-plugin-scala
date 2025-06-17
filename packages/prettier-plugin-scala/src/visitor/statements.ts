@@ -1,13 +1,7 @@
 /**
  * Statement visitor methods for import/export, package, and other statements
  */
-import {
-  getChildNodes,
-  getFirstChild,
-  getChildren,
-  getNodeImage,
-  getNodeImageSafe,
-} from "./utils.js";
+import { getChildNodes, getFirstChild, getNodeImage } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
 export interface StatementVisitor {
@@ -82,7 +76,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitImportSelector(node: CSTNode, _ctx: PrintContext): string {
+  visitImportSelector(node: CSTNode): string {
     // Handle wildcard import
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
@@ -169,7 +163,7 @@ export class StatementVisitorMethods {
     return result;
   }
 
-  visitExportSelector(node: CSTNode, _ctx: PrintContext): string {
+  visitExportSelector(node: CSTNode): string {
     const underscores = getChildNodes(node, "Underscore");
     const identifiers = getChildNodes(node, "Identifier");
     const givens = getChildNodes(node, "Given");
@@ -437,7 +431,6 @@ export class StatementVisitorMethods {
 
     // Handle multiple parameter lists: @Inject() or @Inject()(val x: Type)
     const leftParens = getChildNodes(node, "LeftParen");
-    const rightParens = getChildNodes(node, "RightParen");
 
     if (leftParens.length > 0) {
       const annotationArguments = getChildNodes(node, "annotationArgument");

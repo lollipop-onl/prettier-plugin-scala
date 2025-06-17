@@ -1,5 +1,6 @@
 import { createScalaPrinter } from "./printer.js";
-import { parse } from "@simochee/scala-parser";
+import { parse, type ScalaCstNode } from "@simochee/scala-parser";
+import type { IToken } from "chevrotain";
 import { type Plugin, type SupportOption } from "prettier";
 
 // Language definition
@@ -28,7 +29,7 @@ const parsers = {
       return ast;
     },
     astFormat: "scala-cst",
-    locStart: (node: any) => {
+    locStart: (node: ScalaCstNode | IToken) => {
       // Handle comment tokens (from Chevrotain lexer)
       if (node.startOffset !== undefined) {
         return node.startOffset;
@@ -39,7 +40,7 @@ const parsers = {
       }
       return 0;
     },
-    locEnd: (node: any) => {
+    locEnd: (node: ScalaCstNode | IToken) => {
       // Handle comment tokens (from Chevrotain lexer)
       if (node.endOffset !== undefined) {
         return node.endOffset + 1; // Chevrotain endOffset is inclusive, Prettier expects exclusive

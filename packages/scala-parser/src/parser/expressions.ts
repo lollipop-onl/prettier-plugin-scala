@@ -2,20 +2,20 @@
  * Expression parsing module for all types of expressions in Scala
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+import type { ParserMethod, CstNode } from "chevrotain";
 
 export class ExpressionParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  annotation!: ParserMethod<any[], CstNode>;
-  modifier!: ParserMethod<any[], CstNode>;
-  type!: ParserMethod<any[], CstNode>;
-  literal!: ParserMethod<any[], CstNode>;
-  qualifiedIdentifier!: ParserMethod<any[], CstNode>;
-  pattern!: ParserMethod<any[], CstNode>;
-  parameterLists!: ParserMethod<any[], CstNode>;
-  typeArgument!: ParserMethod<any[], CstNode>;
-  caseClause!: ParserMethod<any[], CstNode>;
-  generator!: ParserMethod<any[], CstNode>;
+  annotation!: ParserMethod<unknown[], CstNode>;
+  modifier!: ParserMethod<unknown[], CstNode>;
+  type!: ParserMethod<unknown[], CstNode>;
+  literal!: ParserMethod<unknown[], CstNode>;
+  qualifiedIdentifier!: ParserMethod<unknown[], CstNode>;
+  pattern!: ParserMethod<unknown[], CstNode>;
+  parameterLists!: ParserMethod<unknown[], CstNode>;
+  typeArgument!: ParserMethod<unknown[], CstNode>;
+  caseClause!: ParserMethod<unknown[], CstNode>;
+  generator!: ParserMethod<unknown[], CstNode>;
 
   // Main expression rule
   expression = this.parser.RULE("expression", () => {

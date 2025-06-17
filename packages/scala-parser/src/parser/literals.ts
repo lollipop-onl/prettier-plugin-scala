@@ -2,7 +2,8 @@
  * Literal parsing module for all Scala literal types
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+
+// Module for literal parsing - no additional imports needed
 
 export class LiteralParserMixin extends BaseParserModule {
   // Main literal rule

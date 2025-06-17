@@ -2,20 +2,20 @@
  * Definition parsing module for class, object, trait, method, and variable definitions
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+import type { ParserMethod, CstNode } from "chevrotain";
 
 export class DefinitionParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  annotation!: ParserMethod<any[], CstNode>;
-  modifier!: ParserMethod<any[], CstNode>;
-  typeParameters!: ParserMethod<any[], CstNode>;
-  classParameters!: ParserMethod<any[], CstNode>;
-  extendsClause!: ParserMethod<any[], CstNode>;
-  classBody!: ParserMethod<any[], CstNode>;
-  type!: ParserMethod<any[], CstNode>;
-  expression!: ParserMethod<any[], CstNode>;
-  pattern!: ParserMethod<any[], CstNode>;
-  parameterLists!: ParserMethod<any[], CstNode>;
+  annotation!: ParserMethod<unknown[], CstNode>;
+  modifier!: ParserMethod<unknown[], CstNode>;
+  typeParameters!: ParserMethod<unknown[], CstNode>;
+  classParameters!: ParserMethod<unknown[], CstNode>;
+  extendsClause!: ParserMethod<unknown[], CstNode>;
+  classBody!: ParserMethod<unknown[], CstNode>;
+  type!: ParserMethod<unknown[], CstNode>;
+  expression!: ParserMethod<unknown[], CstNode>;
+  pattern!: ParserMethod<unknown[], CstNode>;
+  parameterLists!: ParserMethod<unknown[], CstNode>;
 
   // Class definition
   classDefinition = this.parser.RULE("classDefinition", () => {

@@ -2,14 +2,14 @@
  * Pattern matching parsing module
  */
 import { BaseParserModule, tokens } from "./base.js";
-import type { Rule, ParserMethod, CstNode } from "chevrotain";
+import type { ParserMethod, CstNode } from "chevrotain";
 
 export class PatternParserMixin extends BaseParserModule {
   // Dependencies from other modules
-  literal!: ParserMethod<any[], CstNode>;
-  qualifiedIdentifier!: ParserMethod<any[], CstNode>;
-  type!: ParserMethod<any[], CstNode>;
-  expression!: ParserMethod<any[], CstNode>;
+  literal!: ParserMethod<unknown[], CstNode>;
+  qualifiedIdentifier!: ParserMethod<unknown[], CstNode>;
+  type!: ParserMethod<unknown[], CstNode>;
+  expression!: ParserMethod<unknown[], CstNode>;
 
   // Pattern rule
   pattern = this.parser.RULE("pattern", () => {

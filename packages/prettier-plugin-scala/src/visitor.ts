@@ -19,10 +19,10 @@ import {
   formatStatement,
   formatStringLiteral,
   createIndent,
-  formatTrailingComma,
   attachOriginalComments,
 } from "./visitor/utils.js";
 import type { PrintContext, CSTNode } from "./visitor/utils.js";
+import type { ScalaCstNode } from "@simochee/scala-parser";
 
 // Re-export types from utils for external use
 export type {
@@ -84,8 +84,15 @@ export class CstNodeVisitor
         // Capitalize the first letter of the rule name
         const ruleName = node.name.charAt(0).toUpperCase() + node.name.slice(1);
         const methodName = `visit${ruleName}`;
-        if (typeof (this as any)[methodName] === "function") {
-          return (this as any)[methodName](node, ctx);
+        if (
+          typeof (this as Record<string, unknown>)[methodName] === "function"
+        ) {
+          return (
+            (this as Record<string, unknown>)[methodName] as (
+              node: ScalaCstNode,
+              ctx: VisitorContext,
+            ) => string
+          )(node, ctx);
         }
       }
 

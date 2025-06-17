@@ -5,10 +5,8 @@ import {
   formatStringLiteral,
   getChildNodes,
   getFirstChild,
-  getChildren,
   createIndent,
   getNodeImage,
-  getNodeImageSafe,
 } from "./utils.js";
 import type { PrintContext, CSTNode } from "./utils.js";
 
@@ -437,7 +435,7 @@ export class ExpressionVisitorMethods {
     return result;
   }
 
-  visitInfixOperator(node: CSTNode, _ctx: PrintContext): string {
+  visitInfixOperator(node: CSTNode): string {
     // Handle all possible infix operators
     const operators = [
       "Plus",
@@ -520,7 +518,7 @@ export class ExpressionVisitorMethods {
     return "";
   }
 
-  visitQualifiedIdentifier(node: CSTNode, _ctx: PrintContext): string {
+  visitQualifiedIdentifier(node: CSTNode): string {
     const identifiers = getChildNodes(node, "Identifier");
     if (identifiers.length === 0) {
       return "";

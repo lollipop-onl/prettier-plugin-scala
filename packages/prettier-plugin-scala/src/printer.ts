@@ -1,15 +1,21 @@
 import { CstNodeVisitor } from "./visitor.js";
-import { type Doc, type Printer, type AstPath } from "prettier";
+import type { ScalaCstNode } from "@simochee/scala-parser";
+import type { IToken } from "chevrotain";
+import { type Doc, type Printer, type AstPath, type Options } from "prettier";
 
 export function createScalaPrinter(): Printer {
   return {
-    print(path: AstPath, _options: any, print: any): Doc {
+    print(
+      path: AstPath<ScalaCstNode>,
+      options: Options,
+      print: (path: AstPath) => Doc,
+    ): Doc {
       const node = path.getValue();
 
       const visitor = new CstNodeVisitor();
       const result = visitor.visit(node, {
         path,
-        options: _options,
+        options,
         print,
         indentLevel: 0,
       });
@@ -17,7 +23,7 @@ export function createScalaPrinter(): Printer {
       // 文字列結果をPrettierのDocに変換
       return result;
     },
-    printComment(path: AstPath, _options: any): Doc {
+    printComment(path: AstPath<IToken>): Doc {
       const comment = path.getValue();
       if (!comment) return "";
 
@@ -35,7 +41,7 @@ export function createScalaPrinter(): Printer {
       console.log("Unexpected comment structure in printComment:", comment);
       return "";
     },
-    canAttachComment(_node: any): boolean {
+    canAttachComment(): boolean {
       // コメント機能を一時的に無効化
       return false;
     },
@@ -48,7 +54,7 @@ export function createScalaPrinter(): Printer {
     hasPrettierIgnore(): boolean {
       return false;
     },
-    isBlockComment(comment: any): boolean {
+    isBlockComment(comment: IToken): boolean {
       return comment.tokenType?.name === "BlockComment";
     },
   };

@@ -2,7 +2,8 @@
  * Base parser module with shared utilities and interfaces
  */
 import * as tokens from "../lexer.js";
-import { CstParser, Rule, ParserMethod, CstNode } from "chevrotain";
+import { CstParser, ParserMethod, CstNode } from "chevrotain";
+import type { TokenType } from "chevrotain";
 
 export interface ParserRuleMixin {
   // Utility methods for parser rules - these need to match CstParser access levels
@@ -27,11 +28,11 @@ export abstract class BaseParserModule {
   }
 
   // Helper methods for common patterns
-  protected consumeTokenType(tokenType: any) {
+  protected consumeTokenType(tokenType: TokenType) {
     return this.parser.CONSUME(tokenType);
   }
 
-  protected optionalConsume(tokenType: any) {
+  protected optionalConsume(tokenType: TokenType) {
     return this.parser.OPTION(() => this.parser.CONSUME(tokenType));
   }
 
@@ -45,7 +46,7 @@ export abstract class BaseParserModule {
     return this.parser.OR(alternatives);
   }
 
-  protected subrule(rule: ParserMethod<any[], CstNode>) {
+  protected subrule(rule: ParserMethod<unknown[], CstNode>) {
     return this.parser.SUBRULE(rule);
   }
 

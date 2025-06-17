@@ -1,17 +1,28 @@
 import { ScalaLexer } from "./lexer.js";
 import { parserInstance } from "./parser.js";
+import type {
+  ParseResult,
+  ScalaCstNode,
+  TokenBounds,
+  LineColumn,
+} from "./types.js";
+import type { IToken } from "chevrotain";
 
 export { ScalaLexer, allTokens } from "./lexer.js";
 export { ScalaParser, parserInstance } from "./parser.js";
-
-export interface ParseResult {
-  cst: any;
-  errors: any[];
-  comments: any[];
-}
+export type {
+  ParseResult,
+  ScalaCstNode,
+  TokenBounds,
+  LineColumn,
+} from "./types.js";
 
 // CSTノードに位置情報を自動設定するヘルパー関数
-function addLocationToCST(cst: any, tokens: any[], text: string): any {
+function addLocationToCST(
+  cst: ScalaCstNode,
+  tokens: IToken[],
+  text: string,
+): ScalaCstNode {
   if (!cst || !tokens) return cst;
 
   // テキストから行の開始位置を計算
@@ -23,7 +34,7 @@ function addLocationToCST(cst: any, tokens: any[], text: string): any {
   }
 
   // オフセットから行番号と列番号を取得
-  function getLineAndColumn(offset: number): { line: number; column: number } {
+  function getLineAndColumn(offset: number): LineColumn {
     let line = 1;
     for (let i = 0; i < lineStarts.length - 1; i++) {
       if (offset >= lineStarts[i] && offset < lineStarts[i + 1]) {
@@ -40,13 +51,13 @@ function addLocationToCST(cst: any, tokens: any[], text: string): any {
   }
 
   // トークンから最小・最大位置を計算
-  function findTokenBounds(node: any): { start: number; end: number } | null {
+  function findTokenBounds(node: ScalaCstNode): TokenBounds | null {
     if (!node) return null;
 
     let minStart = Infinity;
     let maxEnd = -1;
 
-    function findTokensInNode(n: any): void {
+    function findTokensInNode(n: ScalaCstNode | IToken): void {
       if (!n) return;
 
       // トークンの場合
@@ -78,7 +89,7 @@ function addLocationToCST(cst: any, tokens: any[], text: string): any {
   }
 
   // 再帰的にCSTノードに位置情報を設定
-  function setCSTLocation(node: any): any {
+  function setCSTLocation(node: ScalaCstNode): ScalaCstNode {
     if (!node) return node;
 
     // トークンの場合はそのまま返す
@@ -89,17 +100,24 @@ function addLocationToCST(cst: any, tokens: any[], text: string): any {
     // CSTノードの場合
     if (node.children) {
       // 子ノードを先に処理
-      const processedChildren: any = {};
+      const processedChildren: Record<string, (ScalaCstNode | IToken)[]> = {};
       for (const [key, children] of Object.entries(node.children)) {
         if (Array.isArray(children)) {
-          processedChildren[key] = children.map(setCSTLocation);
+          processedChildren[key] = children.map((child) => {
+            if ("children" in child) {
+              return setCSTLocation(child as ScalaCstNode);
+            }
+            return child; // IToken
+          });
+        } else if (children && "children" in children) {
+          processedChildren[key] = [setCSTLocation(children as ScalaCstNode)];
         } else {
-          processedChildren[key] = setCSTLocation(children);
+          processedChildren[key] = [children]; // IToken
         }
       }
 
       // このノードの位置を計算
-      const bounds = findTokenBounds({ children: processedChildren });
+      const bounds = findTokenBounds({ ...node, children: processedChildren });
 
       if (bounds) {
         const startLoc = getLineAndColumn(bounds.start);

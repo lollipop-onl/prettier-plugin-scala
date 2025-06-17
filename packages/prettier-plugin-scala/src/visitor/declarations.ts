@@ -4,8 +4,6 @@
 import {
   formatStatement,
   getPrintWidth,
-  getTabWidth,
-  getChildren,
   getChildNodes,
   getFirstChild,
   createIndent,

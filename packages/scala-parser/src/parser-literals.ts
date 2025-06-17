@@ -2,16 +2,19 @@
  * Literal parsing utilities for Scala parser
  */
 import * as tokens from "./lexer.js";
+import type { ParserRule, ParserMethodResult } from "./types.js";
 import { CstParser } from "chevrotain";
 
 /**
  * Creates a literal parsing rule for the given parser instance.
  * This function must be called within a CstParser subclass to access protected methods.
  *
- * @param parser - The CstParser instance (typed as any to access protected methods)
+ * @param parser - The CstParser instance
  * @returns The literal parsing rule function
  */
-export function createLiteralRule(parser: CstParser & any): any {
+export function createLiteralRule(
+  parser: CstParser & Record<string, unknown>,
+): ParserRule<ParserMethodResult> {
   return parser.RULE("literal", () => {
     parser.OR([
       { ALT: () => parser.CONSUME(tokens.ScientificNotationLiteral) },

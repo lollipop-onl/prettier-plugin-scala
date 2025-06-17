@@ -9,6 +9,7 @@
  */
 import * as tokens from "./lexer.js";
 import { createLiteralRule } from "./parser-literals.js";
+import type { ParserMethodResult } from "./types.js";
 import { CstParser } from "chevrotain";
 
 export class ScalaParser extends CstParser {
@@ -1866,7 +1867,7 @@ export class ScalaParser extends CstParser {
   });
 
   // Literals - delegated to createLiteralRule (initialized in constructor)
-  private literal: any;
+  private literal: () => ParserMethodResult;
 
   // Qualified identifier
   private qualifiedIdentifier = this.RULE("qualifiedIdentifier", () => {
