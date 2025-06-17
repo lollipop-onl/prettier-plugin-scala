@@ -1,4 +1,4 @@
-name: 📚 Deploy Documentation
+name: Documentation
 
 on:
   push:
@@ -17,46 +17,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # TypeDocによるAPIドキュメント生成とGitHub Pagesへのデプロイ
   build-docs:
+    name: Build Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
     steps:
-      - name: 📁 Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
           
-      - name: 📦 Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: pnpm
+          node-version: '24'
+          cache: 'pnpm'
           
-      - name: 📥 Install dependencies
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
         
-      - name: 🔨 Build packages
+      - name: Build packages
         run: pnpm build
         
-      - name: 📚 Generate TypeDoc
+      - name: Generate TypeDoc documentation
         run: pnpm --filter docs build
         
-      - name: 📄 Setup Pages
+      - name: Setup Pages
         uses: actions/configure-pages@v4
         
-      - name: 📤 Upload Pages artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./packages/docs/dist
 
+  # GitHub Pagesへのデプロイ（mainブランチのみ）
   deploy-docs:
+    name: Deploy to GitHub Pages
     if: github.ref == 'refs/heads/main'
     needs: build-docs
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+      
     steps:
-      - name: 🚀 Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
