@@ -22,7 +22,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "scala-parser": "workspace:*"
+    "@simochee/scala-parser": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

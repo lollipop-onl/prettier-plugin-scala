@@ -10,5 +10,5 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   minify: false,
-  external: ["scala-parser", "prettier"],
+  external: ["@simochee/scala-parser", "prettier"],
 });

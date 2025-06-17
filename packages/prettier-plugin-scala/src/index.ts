@@ -1,6 +1,6 @@
 import { createScalaPrinter } from "./printer.js";
+import { parse } from "@simochee/scala-parser";
 import { type Plugin, type SupportOption } from "prettier";
-import { parse } from "scala-parser";
 
 // Language definition
 const languages = [

@@ -29,7 +29,7 @@ importers:
 
   packages/prettier-plugin-scala:
     dependencies:
-      scala-parser:
+      '@simochee/scala-parser':
         specifier: workspace:*
         version: link:../scala-parser
     devDependencies:
