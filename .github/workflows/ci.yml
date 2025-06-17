@@ -164,8 +164,18 @@ jobs:
           pattern: build-*
           merge-multiple: true
 
+      - name: Build packages (fallback if artifacts missing)
+        run: |
+          # Ensure packages are built
+          pnpm build
+
       - name: Test plugin loading and basic functionality
         run: |
+          # Debug: Check what files exist
+          echo "📁 Checking dist directories:"
+          ls -la packages/prettier-plugin-scala/dist/ || echo "❌ prettier-plugin-scala/dist not found"
+          ls -la packages/scala-parser/dist/ || echo "❌ scala-parser/dist not found"
+          
           # Verify plugin can be loaded
           node -e "
             const plugin = require('./packages/prettier-plugin-scala/dist/index.js');
