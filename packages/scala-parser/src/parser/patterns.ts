@@ -1,7 +1,7 @@
 /**
  * Pattern matching parsing module
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class PatternParserMixin extends BaseParserModule {

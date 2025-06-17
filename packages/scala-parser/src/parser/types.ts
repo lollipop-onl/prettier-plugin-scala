@@ -1,7 +1,7 @@
 /**
  * Type system parsing module for Scala types
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class TypeParserMixin extends BaseParserModule {

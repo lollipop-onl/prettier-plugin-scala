@@ -1,8 +1,8 @@
 /**
  * Scala 3 specific visitor methods for modern language features
  */
-import { getChildNodes, getFirstChild, getNodeImage } from "./utils.js";
-import type { PrintContext, CSTNode } from "./utils.js";
+import { getChildNodes, getFirstChild, getNodeImage } from "./utils";
+import type { PrintContext, CSTNode } from "./utils";
 
 export interface Scala3Visitor {
   visit(node: CSTNode, ctx: PrintContext): string;

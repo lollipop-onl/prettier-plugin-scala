@@ -1,4 +1,4 @@
-import { CstNodeVisitor } from "./visitor.js";
+import { CstNodeVisitor } from "./visitor";
 import type { ScalaCstNode } from "@simochee/scala-parser";
 import type { IToken } from "chevrotain";
 import { type Doc, type Printer, type AstPath, type Options } from "prettier";

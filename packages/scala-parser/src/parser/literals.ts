@@ -1,7 +1,7 @@
 /**
  * Literal parsing module for all Scala literal types
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 
 // Module for literal parsing - no additional imports needed
 

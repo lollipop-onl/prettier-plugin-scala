@@ -1,7 +1,7 @@
 /**
  * Expression parsing module for all types of expressions in Scala
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class ExpressionParserMixin extends BaseParserModule {

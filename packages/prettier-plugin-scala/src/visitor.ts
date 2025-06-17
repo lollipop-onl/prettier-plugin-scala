@@ -2,17 +2,17 @@
 import {
   DeclarationVisitorMethods,
   type DeclarationVisitor,
-} from "./visitor/declarations.js";
+} from "./visitor/declarations";
 import {
   ExpressionVisitorMethods,
   type ExpressionVisitor,
-} from "./visitor/expressions.js";
-import { Scala3VisitorMethods, type Scala3Visitor } from "./visitor/scala3.js";
+} from "./visitor/expressions";
+import { Scala3VisitorMethods, type Scala3Visitor } from "./visitor/scala3";
 import {
   StatementVisitorMethods,
   type StatementVisitor,
-} from "./visitor/statements.js";
-import { TypeVisitorMethods, type TypeVisitor } from "./visitor/types.js";
+} from "./visitor/statements";
+import { TypeVisitorMethods, type TypeVisitor } from "./visitor/types";
 import {
   getPrintWidth,
   getTabWidth,
@@ -20,16 +20,12 @@ import {
   formatStringLiteral,
   createIndent,
   attachOriginalComments,
-} from "./visitor/utils.js";
-import type { PrintContext, CSTNode } from "./visitor/utils.js";
+} from "./visitor/utils";
+import type { PrintContext, CSTNode } from "./visitor/utils";
 import type { ScalaCstNode } from "@simochee/scala-parser";
 
 // Re-export types from utils for external use
-export type {
-  PrintContext,
-  CSTNode,
-  PrettierOptions,
-} from "./visitor/utils.js";
+export type { PrintContext, CSTNode, PrettierOptions } from "./visitor/utils";
 
 export class CstNodeVisitor
   implements

@@ -1,7 +1,7 @@
 /**
  * Definition parsing module for class, object, trait, method, and variable definitions
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class DefinitionParserMixin extends BaseParserModule {

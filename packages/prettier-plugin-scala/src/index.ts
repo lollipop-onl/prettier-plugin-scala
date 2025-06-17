@@ -1,4 +1,4 @@
-import { createScalaPrinter } from "./printer.js";
+import { createScalaPrinter } from "./printer";
 import { parse, type ScalaCstNode } from "@simochee/scala-parser";
 import type { IToken } from "chevrotain";
 import { type Plugin, type SupportOption } from "prettier";

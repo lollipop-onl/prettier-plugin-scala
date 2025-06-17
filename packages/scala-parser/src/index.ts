@@ -1,21 +1,21 @@
-import { ScalaLexer } from "./lexer.js";
-import { parserInstance } from "./parser.js";
+import { ScalaLexer } from "./lexer";
+import { parserInstance } from "./parser";
 import type {
   ParseResult,
   ScalaCstNode,
   TokenBounds,
   LineColumn,
-} from "./types.js";
+} from "./types";
 import type { IToken } from "chevrotain";
 
-export { ScalaLexer, allTokens } from "./lexer.js";
-export { ScalaParser, parserInstance } from "./parser.js";
+export { ScalaLexer, allTokens } from "./lexer";
+export { ScalaParser, parserInstance } from "./parser";
 export type {
   ParseResult,
   ScalaCstNode,
   TokenBounds,
   LineColumn,
-} from "./types.js";
+} from "./types";
 
 // CSTノードに位置情報を自動設定するヘルパー関数
 function addLocationToCST(

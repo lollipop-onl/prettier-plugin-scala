@@ -7,9 +7,9 @@
  *
  * Gradually migrating from monolithic to modular approach.
  */
-import * as tokens from "./lexer.js";
-import { createLiteralRule } from "./parser-literals.js";
-import type { ParserMethodResult } from "./types.js";
+import * as tokens from "./lexer";
+import { createLiteralRule } from "./parser-literals";
+import type { ParserMethodResult } from "./types";
 import { CstParser } from "chevrotain";
 
 export class ScalaParser extends CstParser {

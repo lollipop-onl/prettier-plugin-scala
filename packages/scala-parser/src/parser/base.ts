@@ -1,7 +1,7 @@
 /**
  * Base parser module with shared utilities and interfaces
  */
-import * as tokens from "../lexer.js";
+import * as tokens from "../lexer";
 import { CstParser, ParserMethod, CstNode } from "chevrotain";
 import type { TokenType } from "chevrotain";
 

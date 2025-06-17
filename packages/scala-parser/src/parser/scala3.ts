@@ -1,7 +1,7 @@
 /**
  * Scala 3 specific features parsing module
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class Scala3ParserMixin extends BaseParserModule {

@@ -1,7 +1,7 @@
 /**
  * Statement parsing module for package, import, and export declarations
  */
-import { BaseParserModule, tokens } from "./base.js";
+import { BaseParserModule, tokens } from "./base";
 import type { ParserMethod, CstNode } from "chevrotain";
 
 export class StatementParserMixin extends BaseParserModule {

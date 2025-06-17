@@ -8,6 +8,9 @@
     // Fix target for esbuild compatibility
     "target": "es2022",
 
+    // Module resolution for bundler
+    "moduleResolution": "bundler",
+
     // Disable problematic TS 5.7 features
     "rewriteRelativeImportExtensions": false,
     "verbatimModuleSyntax": false,

@@ -1,8 +1,8 @@
 /**
  * Literal parsing utilities for Scala parser
  */
-import * as tokens from "./lexer.js";
-import type { ParserRule, ParserMethodResult } from "./types.js";
+import * as tokens from "./lexer";
+import type { ParserRule, ParserMethodResult } from "./types";
 import { CstParser } from "chevrotain";
 
 /**

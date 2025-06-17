@@ -1,8 +1,8 @@
 /**
  * Statement visitor methods for import/export, package, and other statements
  */
-import { getChildNodes, getFirstChild, getNodeImage } from "./utils.js";
-import type { PrintContext, CSTNode } from "./utils.js";
+import { getChildNodes, getFirstChild, getNodeImage } from "./utils";
+import type { PrintContext, CSTNode } from "./utils";
 
 export interface StatementVisitor {
   visit(node: CSTNode, ctx: PrintContext): string;

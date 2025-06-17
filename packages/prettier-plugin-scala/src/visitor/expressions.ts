@@ -7,8 +7,8 @@ import {
   getFirstChild,
   createIndent,
   getNodeImage,
-} from "./utils.js";
-import type { PrintContext, CSTNode } from "./utils.js";
+} from "./utils";
+import type { PrintContext, CSTNode } from "./utils";
 
 export interface ExpressionVisitor {
   visit(node: CSTNode, ctx: PrintContext): string;
