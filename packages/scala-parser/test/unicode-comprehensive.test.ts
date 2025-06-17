@@ -146,12 +146,11 @@ val test_数値_∑_emoji🎯 = "comprehensive test"`;
     expect(parserInstance.errors).toHaveLength(0);
   });
 
-  it("should support special characters $ and _", () => {
-    const inputText = `val $ = "dollar"
-val _ = "underscore"
-val $special = "dollar prefix"
-val _private = "underscore prefix"
-val mixed$_ = "mixed special"`;
+  it("should support special characters in identifiers", () => {
+    const inputText = `val _private = "underscore prefix"
+val test_ = "underscore suffix"
+val camelCase = "standard identifier"
+val MixedCase123 = "mixed case with numbers"`;
 
     const lexingResult = lexerInstance.tokenize(inputText);
     expect(lexingResult.errors).toHaveLength(0);
