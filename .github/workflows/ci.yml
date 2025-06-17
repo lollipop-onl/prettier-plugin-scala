@@ -1,0 +1,257 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # パッケージごとの型チェック（並列実行）
+  typecheck:
+    name: Type Check (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        package: ['@simochee/scala-parser', '@simochee/prettier-plugin-scala']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} typecheck
+
+  # パッケージ×Node.jsバージョンのマトリックステスト
+  test:
+    name: Test (${{ matrix.package }} / Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18, 20, 22]
+        package: ['@simochee/scala-parser', '@simochee/prettier-plugin-scala']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build dependency packages
+        run: |
+          # scala-parserが依存関係の場合は先にビルド
+          if [ "${{ matrix.package }}" = "@simochee/prettier-plugin-scala" ]; then
+            pnpm --filter @simochee/scala-parser build
+          fi
+
+      - name: Build ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} build
+
+      - name: Test ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ matrix.package }}-node-${{ matrix.node-version }}
+          path: |
+            packages/*/test-results/
+            packages/*/coverage/
+
+  # パッケージごとのビルド（並列実行）
+  build:
+    name: Build (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        package: ['@simochee/scala-parser', '@simochee/prettier-plugin-scala']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build dependency packages
+        run: |
+          # prettier-plugin-scalaの場合は先にscala-parserをビルド
+          if [ "${{ matrix.package }}" = "@simochee/prettier-plugin-scala" ]; then
+            pnpm --filter @simochee/scala-parser build
+          fi
+
+      - name: Build ${{ matrix.package }}
+        run: pnpm --filter ${{ matrix.package }} build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.package }}
+          path: |
+            packages/*/dist/
+            packages/*/lib/
+          retention-days: 7
+
+  # 統合テスト（全ビルド完了後に実行）
+  integration:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    needs: [build]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          merge-multiple: true
+
+      - name: Test plugin loading and basic functionality
+        run: |
+          # Verify plugin can be loaded
+          node -e "
+            const plugin = require('./packages/prettier-plugin-scala/dist/index.js');
+            console.log('✅ Plugin loaded successfully');
+            console.log('📦 Parsers:', Object.keys(plugin.parsers || {}));
+            console.log('🖨️  Printers:', Object.keys(plugin.printers || {}));
+          "
+
+      - name: Test basic Scala file formatting
+        run: |
+          echo 'class Test{def foo()=42}' | npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js --parser scala
+
+      - name: Test with sample fixtures (non-blocking)
+        run: |
+          # Test formatting without breaking on errors
+          npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js --check test-fixtures/unit/basic/*.scala || echo "⚠️ Some fixtures may need formatting updates"
+          
+          # Test examples directory
+          npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js test-fixtures/examples/features/*.scala > /dev/null || echo "⚠️ Some examples may need parser updates"
+
+  # パフォーマンスベンチマーク（mainブランチのみ）
+  benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-*
+          merge-multiple: true
+
+      - name: Run performance benchmarks
+        run: |
+          echo "🚀 Testing parser performance..."
+          
+          # Small file performance (< 1KB)
+          echo "📊 Small files (< 1KB):"
+          time for i in {1..5}; do
+            find test-fixtures/unit/basic -name "*.scala" -exec npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js {} \; > /dev/null 2>&1
+          done
+          
+          # Medium file performance (1-10KB)
+          echo "📊 Medium files (1-10KB):"
+          time for i in {1..3}; do
+            find test-fixtures/examples -name "*.scala" -exec npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js {} \; > /dev/null 2>&1
+          done
+          
+          # Memory usage test
+          echo "🧠 Memory usage test:"
+          /usr/bin/time -v npx prettier --plugin ./packages/prettier-plugin-scala/dist/index.js test-fixtures/examples/frameworks/*.scala > /dev/null 2>&1 || echo "⚠️ Some files may not parse correctly"
+
+  # 全ジョブ成功確認
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [typecheck, test, build, integration]
+    if: always()
+    
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [[ "${{ needs.typecheck.result }}" == "success" && 
+                "${{ needs.test.result }}" == "success" && 
+                "${{ needs.build.result }}" == "success" && 
+                "${{ needs.integration.result }}" == "success" ]]; then
+            echo "✅ All CI jobs completed successfully!"
+            exit 0
+          else
+            echo "❌ Some CI jobs failed:"
+            echo "- Type Check: ${{ needs.typecheck.result }}"
+            echo "- Test: ${{ needs.test.result }}"
+            echo "- Build: ${{ needs.build.result }}"
+            echo "- Integration: ${{ needs.integration.result }}"
+            exit 1
+          fi

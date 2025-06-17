@@ -3,12 +3,24 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["lib/**"]
+      "outputs": ["lib/**", "dist/**"]
     },
     "test": {
       "dependsOn": ["build"],
       "outputs": [],
       "cache": false
+    },
+    "typecheck": {
+      "dependsOn": [],
+      "outputs": [],
+      "cache": true,
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "package.json"]
+    },
+    "lint": {
+      "dependsOn": [],
+      "outputs": [],
+      "cache": true,
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", ".eslintrc*", "package.json"]
     },
     "clean": {
       "cache": false

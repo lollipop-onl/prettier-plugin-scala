@@ -4,9 +4,12 @@
   "scripts": {
     "build": "turbo run build",
     "check": "prettier --check --plugin ./packages/prettier-plugin-scala/lib/index.js test-fixtures/**/*.scala",
+    "ci": "pnpm typecheck && pnpm build && pnpm test",
     "clean": "turbo run clean",
+    "format": "prettier --write --plugin ./packages/prettier-plugin-scala/lib/index.js test-fixtures/**/*.scala",
     "postinstall": "lefthook install",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",

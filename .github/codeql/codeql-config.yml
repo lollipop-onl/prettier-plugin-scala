@@ -1,0 +1,21 @@
+name: "CodeQL Config"
+
+disable-default-queries: false
+
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: js/useless-assignment-to-local
+
+paths:
+  - packages/*/src
+  - packages/*/test
+
+paths-ignore:
+  - node_modules
+  - "**/*.test.ts"
+  - "**/*.test.js"
+  - "**/dist/**"
+  - "**/lib/**"
+  - test-fixtures
