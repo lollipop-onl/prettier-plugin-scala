@@ -1006,15 +1006,36 @@ export class ScalaParser extends CstParser {
   );
 
   private simpleType = this.RULE("simpleType", () => {
-    this.SUBRULE(this.qualifiedIdentifier);
-    this.OPTION(() => {
-      this.CONSUME(tokens.LeftBracket);
-      this.MANY_SEP({
-        SEP: tokens.Comma,
-        DEF: () => this.SUBRULE(this.typeArgument),
-      });
-      this.CONSUME(tokens.RightBracket);
-    });
+    this.OR([
+      // Array type constructor
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Array);
+          this.OPTION(() => {
+            this.CONSUME(tokens.LeftBracket);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE(this.typeArgument),
+            });
+            this.CONSUME(tokens.RightBracket);
+          });
+        },
+      },
+      // Regular type with optional type arguments
+      {
+        ALT: () => {
+          this.SUBRULE(this.qualifiedIdentifier);
+          this.OPTION2(() => {
+            this.CONSUME2(tokens.LeftBracket);
+            this.MANY_SEP2({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE2(this.typeArgument),
+            });
+            this.CONSUME2(tokens.RightBracket);
+          });
+        },
+      },
+    ]);
   });
 
   private typeArgument = this.RULE("typeArgument", () => {
@@ -1136,14 +1157,41 @@ export class ScalaParser extends CstParser {
       // },
       {
         ALT: () => {
+          // Array pattern: Array[T] or Array(args)
+          this.CONSUME(tokens.Array);
+          this.OR2([
+            {
+              ALT: () => {
+                // Array type pattern: Array[T]
+                this.CONSUME(tokens.LeftBracket);
+                this.CONSUME(tokens.Identifier); // Use Identifier instead of pattern to avoid recursion
+                this.CONSUME(tokens.RightBracket);
+              },
+            },
+            {
+              ALT: () => {
+                // Array constructor pattern: Array(args)
+                this.CONSUME2(tokens.LeftParen);
+                this.MANY_SEP({
+                  SEP: tokens.Comma,
+                  DEF: () => this.SUBRULE2(this.pattern),
+                });
+                this.CONSUME2(tokens.RightParen);
+              },
+            },
+          ]);
+        },
+      },
+      {
+        ALT: () => {
           // Constructor pattern: SomeClass(args)
           this.CONSUME2(tokens.Identifier);
-          this.CONSUME2(tokens.LeftParen);
+          this.CONSUME3(tokens.LeftParen);
           this.MANY_SEP2({
             SEP: tokens.Comma,
-            DEF: () => this.SUBRULE2(this.pattern),
+            DEF: () => this.SUBRULE3(this.pattern),
           });
-          this.CONSUME2(tokens.RightParen);
+          this.CONSUME3(tokens.RightParen);
         },
         GATE: () => {
           // Only try if we see Identifier followed by LeftParen
@@ -1153,8 +1201,29 @@ export class ScalaParser extends CstParser {
       },
       {
         ALT: () => {
-          // Simple variable pattern
+          // Type pattern with type arguments: List[T]
           this.CONSUME3(tokens.Identifier);
+          this.OPTION(() => {
+            this.CONSUME2(tokens.LeftBracket);
+            this.MANY_SEP3({
+              SEP: tokens.Comma,
+              DEF: () => {
+                this.CONSUME5(tokens.Identifier); // Use Identifier instead of pattern to avoid recursion
+              },
+            });
+            this.CONSUME2(tokens.RightBracket);
+          });
+        },
+        GATE: () => {
+          // Only try if we see Identifier followed by LeftBracket
+          const nextToken = this.LA(2);
+          return nextToken && nextToken.tokenType === tokens.LeftBracket;
+        },
+      },
+      {
+        ALT: () => {
+          // Simple variable pattern
+          this.CONSUME4(tokens.Identifier);
         },
       },
       { ALT: () => this.CONSUME(tokens.Underscore) },

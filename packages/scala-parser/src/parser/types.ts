@@ -230,6 +230,20 @@ export class TypeParserMixin extends BaseParserModule {
           ]);
         },
       },
+      // Array type constructor
+      {
+        ALT: () => {
+          this.consumeTokenType(tokens.Array);
+          this.parser.OPTION(() => {
+            this.consumeTokenType(tokens.LeftBracket);
+            this.parser.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.subrule(this.typeArgument),
+            });
+            this.consumeTokenType(tokens.RightBracket);
+          });
+        },
+      },
       // Regular type with optional type arguments
       {
         ALT: () => {
