@@ -57,10 +57,11 @@ export class CstNodeVisitor
         node.originalComments
       ) {
         const nodeResult = this.visitCore(node, ctx);
-        return attachOriginalComments(
-          nodeResult,
-          node.originalComments as CSTNode[],
-        );
+        // Safe type conversion for originalComments
+        const comments = Array.isArray(node.originalComments)
+          ? (node.originalComments as unknown as CSTNode[])
+          : [];
+        return attachOriginalComments(nodeResult, comments);
       }
 
       return this.visitCore(node, ctx);
