@@ -779,6 +779,20 @@ export class ScalaParser extends CstParser {
 
   private baseType = this.RULE("baseType", () => {
     this.OR([
+      // Array type constructor (highest priority)
+      {
+        ALT: () => {
+          this.CONSUME(tokens.Array);
+          this.OPTION(() => {
+            this.CONSUME(tokens.LeftBracket);
+            this.MANY_SEP({
+              SEP: tokens.Comma,
+              DEF: () => this.SUBRULE(this.typeArgument),
+            });
+            this.CONSUME(tokens.RightBracket);
+          });
+        },
+      },
       // Type lambda: [X] =>> F[X]
       {
         ALT: () => {
@@ -1001,36 +1015,16 @@ export class ScalaParser extends CstParser {
   );
 
   private simpleType = this.RULE("simpleType", () => {
-    this.OR([
-      // Array type constructor
-      {
-        ALT: () => {
-          this.CONSUME(tokens.Array);
-          this.OPTION(() => {
-            this.CONSUME(tokens.LeftBracket);
-            this.MANY_SEP({
-              SEP: tokens.Comma,
-              DEF: () => this.SUBRULE(this.typeArgument),
-            });
-            this.CONSUME(tokens.RightBracket);
-          });
-        },
-      },
-      // Regular type with optional type arguments
-      {
-        ALT: () => {
-          this.SUBRULE(this.qualifiedIdentifier);
-          this.OPTION2(() => {
-            this.CONSUME2(tokens.LeftBracket);
-            this.MANY_SEP2({
-              SEP: tokens.Comma,
-              DEF: () => this.SUBRULE2(this.typeArgument),
-            });
-            this.CONSUME2(tokens.RightBracket);
-          });
-        },
-      },
-    ]);
+    // Regular type with optional type arguments
+    this.SUBRULE(this.qualifiedIdentifier);
+    this.OPTION(() => {
+      this.CONSUME(tokens.LeftBracket);
+      this.MANY_SEP({
+        SEP: tokens.Comma,
+        DEF: () => this.SUBRULE(this.typeArgument),
+      });
+      this.CONSUME(tokens.RightBracket);
+    });
   });
 
   private typeArgument = this.RULE("typeArgument", () => {
