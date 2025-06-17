@@ -221,6 +221,40 @@ export class TypeVisitorMethods {
       return this.visitor.visit(typeArgumentUnion, ctx);
     }
 
+    // Handle direct type tokens like Array[t] within type arguments
+    if ("children" in node && node.children) {
+      const children = node.children;
+      let result = "";
+
+      // Find the type name token
+      for (const [key, tokens] of Object.entries(children)) {
+        if (
+          Array.isArray(tokens) &&
+          tokens.length > 0 &&
+          "image" in tokens[0]
+        ) {
+          if (!["LeftBracket", "RightBracket", "typeArgument"].includes(key)) {
+            result = getNodeImage(tokens[0]);
+            break;
+          }
+        }
+      }
+
+      if (result) {
+        // Handle type parameters like Array[t] within type arguments
+        const leftBrackets = getChildNodes(node, "LeftBracket");
+        const typeArguments = getChildNodes(node, "typeArgument");
+        for (
+          let i = 0;
+          i < leftBrackets.length && i < typeArguments.length;
+          i++
+        ) {
+          result += "[" + this.visitor.visit(typeArguments[i], ctx) + "]";
+        }
+        return result;
+      }
+    }
+
     return "";
   }
 
