@@ -1,0 +1,13 @@
+{
+  "name": "docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "typedoc",
+    "serve": "typedoc --watch"
+  },
+  "devDependencies": {
+    "tsconfig": "workspace:*",
+    "typedoc": "^0.28.5"
+  }
+}
