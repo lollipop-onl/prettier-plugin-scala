@@ -1,5 +1,5 @@
 {
-  "name": "prettier-plugin-scala",
+  "name": "@simochee/prettier-plugin-scala",
   "version": "0.1.0",
   "description": "Prettier plugin for Scala, compatible with scalafmt",
   "repository": {

@@ -1,5 +1,5 @@
 {
-  "name": "scala-parser",
+  "name": "@simochee/scala-parser",
   "version": "0.1.0",
   "description": "Scala parser based on Chevrotain for prettier-plugin-scala",
   "repository": {
