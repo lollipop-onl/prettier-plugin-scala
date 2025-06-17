@@ -1371,7 +1371,7 @@ export class ScalaParser extends CstParser {
       {
         ALT: () => {
           this.CONSUME(tokens.LeftParen);
-          this.SUBRULE(this.expression);
+          this.SUBRULE(this.assignmentOrInfixExpression);
           this.CONSUME(tokens.RightParen);
         },
       },

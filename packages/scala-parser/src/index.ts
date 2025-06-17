@@ -134,6 +134,12 @@ function addLocationToCST(cst: any, tokens: any[], text: string): any {
 }
 
 export function parse(text: string): ParseResult {
+  // Use legacy parser for now until modular parser is fixed
+  return parseLegacy(text);
+}
+
+// Legacy parser function (has left recursion issues)
+export function parseLegacy(text: string): ParseResult {
   // Tokenize
   const lexResult = ScalaLexer.tokenize(text);
 
