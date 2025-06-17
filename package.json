@@ -9,15 +9,22 @@
     "clean": "turbo run clean",
     "format": "prettier --write --plugin ./packages/prettier-plugin-scala/lib/index.js test-fixtures/**/*.scala",
     "postinstall": "lefthook install",
+    "lint": "eslint packages/**/*.ts --max-warnings 0",
+    "lint:fix": "eslint packages/**/*.ts --fix",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@eslint/js": "^9.29.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "eslint": "^9.29.0",
     "lefthook": "^1.11.13",
     "prettier": "^3.5.3",
     "prettier-plugin-packagejson": "^2.5.15",
     "turbo": "^2.5.4",
+    "typescript-eslint": "^8.34.1",
     "vitest": "^3.2.1"
   },
   "packageManager": "pnpm@10.11.1+sha512.e519b9f7639869dc8d5c3c5dfef73b3f091094b0a006d7317353c72b124e80e1afd429732e28705ad6bfa1ee879c1fce46c128ccebd3192101f43dd67c667912"
